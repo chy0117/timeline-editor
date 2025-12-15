@@ -1251,20 +1251,24 @@
     animFrameId=requestAnimationFrame(frame);
   }
 
-  if (hasTitle){
-    // 제목 표시 시 첫 블록이 중간보다 약간 아래 보이도록
+ if (hasTitle){
+  // 제목 표시 시에는 스크롤 이동 없이 현재 위치 유지
+  titleOverlay.textContent=title;
+  titleOverlay.style.display='flex';
+  
+  setTimeout(()=>{
+    titleOverlay.style.display='none';
+    // 제목이 사라진 후 첫 블록이 중간보다 약간 아래 보이도록 스크롤
     const initialScroll = Math.max(minTop - viewportHeight * 0.6, 0);
     viewport.scrollTop = initialScroll;
     
-    titleOverlay.textContent=title;
-    titleOverlay.style.display='flex';
-    setTimeout(()=>{
-      titleOverlay.style.display='none';
+    // 약간의 딜레이 후 애니메이션 시작 (스크롤 이동이 보이도록)
+    setTimeout(() => {
       startScrollAnimation();
-    },5000);
-  } else {
-    startScrollAnimation();
-  }
+    }, 100);
+  },5000);
+} else {
+  startScrollAnimation();
 }
 
     playBtn.addEventListener('click',runAnimation);
@@ -1499,5 +1503,6 @@ playFullscreenBtn.addEventListener('click',async()=>{
   </script>
 </body>
 </html>
+
 
 
