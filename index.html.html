@@ -1,0 +1,1494 @@
+<!-- Timeline Story Editor v2.1 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>타임라인 스토리 에디터</title>
+  <style>
+    :root {
+      --bg: #020617;
+      --fg: #e5e7eb;
+      --sidebar-bg: #020617;
+      --border: #111827;
+      --viewport-bg: #020617;
+      --block-bg: #020617;
+      --hour-label: #6b7280;
+      --hour-line: rgba(31,41,55,0.8);
+      --accent: #22c55e;
+      --accent-strong: #16a34a;
+      --muted: #6b7280;
+    }
+
+    body.theme-light {
+      --bg: #f9fafb;
+      --fg: #020617;
+      --sidebar-bg: #ffffff;
+      --border: #e5e7eb;
+      --viewport-bg: #f3f4f6;
+      --block-bg: #ffffff;
+      --hour-label: #9ca3af;
+      --hour-line: #e5e7eb;
+      --accent: #22c55e;
+      --accent-strong: #15803d;
+      --muted: #9ca3af;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 360px;
+      padding: 16px 20px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 2;
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0 0 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-theme {
+      padding: 2px 8px;
+      font-size: 10px;
+      border-radius: 12px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      max-width: 80px;
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 4px;
+      color: var(--muted);
+    }
+    input,select,textarea,button {
+      width: 100%;
+      padding: 6px 8px;
+      font-size: 13px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--fg);
+    }
+    input[type="file"] { padding: 4px; background: transparent; }
+    textarea { resize: vertical; min-height: 60px; }
+    button {
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent-strong);
+      color: #020617;
+    }
+    .btn-primary:hover { background: var(--accent-strong); }
+    .btn-secondary {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--fg);
+    }
+    .btn-secondary:hover { background: rgba(148,163,184,0.12); }
+
+    .hint {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .row > * { flex: 1; }
+
+    .btn-date {
+      flex: 0 0 auto;
+      width: auto;
+      padding: 6px 10px;
+      margin-top: 0;
+      font-size: 12px;
+    }
+
+    .item-type-toggle {
+      display: flex;
+      gap: 6px;
+    }
+    .item-type-toggle .toggle-btn {
+      flex: 1;
+      padding: 6px 8px;
+      font-size: 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      margin-top: 0;
+      white-space: nowrap;
+    }
+    .item-type-toggle .toggle-btn.active {
+      background: var(--accent);
+      border-color: var(--accent-strong);
+      color: #020617;
+    }
+
+    .animation-mode-toggle {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .animation-mode-toggle .toggle-btn {
+      flex: 1;
+      padding: 6px 8px;
+      font-size: 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      margin-top: 0;
+      white-space: nowrap;
+    }
+    .animation-mode-toggle .toggle-btn.active {
+      background: var(--accent);
+      border-color: var(--accent-strong);
+      color: #020617;
+    }
+
+    .speed-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .speed-row input[type="range"] { flex: 1; }
+    .speed-row span {
+      font-size: 12px;
+      color: var(--muted);
+      min-width: 40px;
+      text-align: right;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .timeline-viewport {
+      width: 360px;
+      height: 640px;
+      max-width: 100%;
+      border-radius: 24px;
+      background: var(--viewport-bg);
+      border: 2px solid var(--border);
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+
+    /* 편집 모드 배경 오버레이 */
+    .timeline-viewport::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 5;
+    }
+    body.theme-light .timeline-viewport::before {
+      background: rgba(0,0,0,0.2);
+    }
+    .timeline-viewport.edit-mode::before {
+      opacity: 1;
+    }
+
+    .viewport-header {
+      position: sticky;
+      top: 0;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 6px 0;
+      background: linear-gradient(to bottom,rgba(2,6,23,0.9),rgba(2,6,23,0));
+      z-index: 6;
+    }
+    body.theme-light .viewport-header {
+      background: linear-gradient(to bottom,rgba(249,250,251,0.95),rgba(249,250,251,0));
+    }
+
+    .timeline-title-overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.4;
+      background: rgba(0,0,0,0.6);
+      color: #f9fafb;
+      z-index: 7;
+    }
+    body.theme-light .timeline-title-overlay {
+      background: rgba(15,23,42,0.25);
+      color: #020617;
+    }
+
+    .timeline-inner {
+      position: relative;
+      width: 100%;
+      height: 5760px;
+      background: repeating-linear-gradient(
+        to bottom,
+        var(--viewport-bg),
+        var(--viewport-bg) 60px,
+        rgba(15,23,42,0.03) 60px,
+        rgba(15,23,42,0.03) 120px
+      );
+    }
+    body.theme-light .timeline-inner {
+      background: repeating-linear-gradient(
+        #f3f4f6,
+        #f3f4f6 60px,
+        #e5e7eb 60px,
+        #e5e7eb 120px
+      );
+    }
+
+    .hour-label {
+      position: absolute;
+      left: 8px;
+      font-size: 10px;
+      color: var(--hour-label);
+      transition: color .2s,font-weight .2s;
+    }
+    .hour-label.active {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .hour-line {
+      position: absolute;
+      left: 52px;
+      right: 8px;
+      height: 1px;
+      background: var(--hour-line);
+    }
+
+    .time-block {
+      position: absolute;
+      left: 60px;
+      right: 12px;
+      border-radius: 18px;
+      background: var(--block-bg);
+      border: 1px solid var(--border);
+      padding: 4px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.22);
+      overflow: hidden;
+      transition: box-shadow .2s;
+    }
+    .time-block.highlight {
+      box-shadow: 0 0 0 2px var(--accent),0 6px 14px rgba(0,0,0,0.35);
+    }
+
+    .time-block-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 14px;
+      background: radial-gradient(circle at top left,rgba(59,130,246,0.12),transparent 60%);
+    }
+
+    .timeline-item {
+      position: absolute;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      box-shadow: 0 0 0 1px rgba(148,163,184,0.4);
+      transform-origin: center center;
+      background: rgba(15,23,42,0.9);
+      opacity: 1;
+      transition: opacity .4s ease;
+      z-index: 1;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      will-change: transform;
+    }
+    
+    /* 편집 중일 때는 transition 제거 (즉각 반응) */
+    .timeline-item.editing {
+      transition: none;
+    }
+    
+    /* 편집 모드 강조 */
+    .timeline-item.edit-mode {
+      box-shadow: 0 0 0 3px var(--accent), 0 8px 20px rgba(34,197,94,0.3);
+      z-index: 10 !important;
+    }
+    
+    /* 드래그 중 효과 */
+    .timeline-item.dragging {
+      transform: scale(1.05);
+      box-shadow: 0 0 0 3px var(--accent), 0 12px 24px rgba(0,0,0,0.4);
+    }
+
+    .timeline-item img,
+    .timeline-item video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+    }
+    .timeline-item-text {
+      width: 100%;
+      height: 100%;
+      padding: 6px 8px;
+      font-size: 13px;
+      line-height: 1.3;
+      color: #f9fafb;
+      word-break: break-word;
+    }
+    body.theme-light .timeline-item-text {
+      color: #111827;
+      background: rgba(255,255,255,0.9);
+    }
+
+    .timeline-item.reveal-hidden { opacity: 0; }
+    .timeline-item.reveal-visible { opacity: 1; }
+
+    .step-nav {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+      margin-top: 4px;
+    }
+    .step-btn {
+      flex: 1;
+      padding: 6px 4px;
+      font-size: 11px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      margin-top: 0;
+      white-space: nowrap;
+    }
+    .step-btn.active {
+      background: var(--accent);
+      border-color: var(--accent-strong);
+      color: #020617;
+    }
+    .step-panel { display:none; }
+    .step-panel.active { display:block; }
+
+    .block-list {
+      list-style: none;
+      padding-left: 0;
+      margin: 4px 0 0;
+      max-height: 120px;
+      overflow-y: auto;
+      font-size: 11px;
+    }
+
+    .block-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 8px;
+      margin-bottom: 4px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .block-list span.time {
+      flex: 1 1 auto;
+      min-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 500;
+      color: var(--fg);
+    }
+
+    .block-right-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .block-list span.count {
+      font-size: 10px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .block-delete-btn {
+      width: 16px;
+      height: 16px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--muted);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .step1-placeholder {
+      display:none;
+      align-items:center;
+      justify-content:center;
+      font-size:13px;
+      color:var(--muted);
+      text-align:center;
+      padding:16px;
+      height:100%;
+      box-sizing:border-box;
+    }
+
+    body[data-step="1"] .timeline-viewport { display:none; }
+    body[data-step="1"] .step1-placeholder { display:flex; }
+
+    body[data-step="1"] .main {
+      display:none !important;
+    }
+    body[data-step="1"] .sidebar {
+      width:100% !important;
+      max-width:480px;
+      margin:0 auto;
+      border-right:none;
+      height:100vh;
+      overflow-y:auto;
+    }
+
+    body[data-step="2"] .timeline-viewport,
+    body[data-step="3"] .timeline-viewport { display:block; }
+    body[data-step="2"] .step1-placeholder,
+    body[data-step="3"] .step1-placeholder { display:none; }
+
+    @media (max-width:768px){
+      body { flex-direction:column; height:auto; }
+      .sidebar {
+        width:100%;
+        border-right:none;
+        border-bottom:1px solid var(--border);
+      }
+      .main { padding:8px; }
+      .timeline-viewport {
+        width:100%;
+        height:70vh;
+        border-radius:16px;
+      }
+      body[data-step="1"] .sidebar {
+        max-width:100%;
+        border-bottom:none;
+      }
+    }
+
+    /* ⭐ 전체 화면에서도 세로 비율 유지 강제 (가로로 눕는 현상 방지) */
+    .timeline-viewport:fullscreen,
+    .timeline-viewport:-webkit-full-screen,
+    .timeline-viewport:-moz-full-screen,
+    .timeline-viewport:-ms-fullscreen {
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: 100vw !important;
+      max-height: 100vh !important;
+      border-radius: 0 !important;
+      border: none !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+    }
+    
+    /* 전체화면 내부 컨텐츠도 세로 유지 */
+    .timeline-viewport:fullscreen .timeline-inner,
+    .timeline-viewport:-webkit-full-screen .timeline-inner {
+      width: 100% !important;
+    }
+    
+    /* 가로 모드에서도 세로 비율 강제 */
+    @media screen and (orientation: landscape) {
+      .timeline-viewport:fullscreen,
+      .timeline-viewport:-webkit-full-screen {
+        width: 56.25vh !important; /* 9:16 비율 유지 */
+        max-width: 56.25vh !important;
+        margin: 0 auto !important;
+        background: #000 !important;
+      }
+    }
+
+  </style>
+</head>
+<body class="theme-dark" data-step="1">
+  <div class="sidebar">
+    <h1>
+      타임라인 에디터
+      <button id="themeToggle" class="btn-theme">라이트 모드</button>
+    </h1>
+
+    <div class="step-nav">
+      <button type="button" class="step-btn active" data-step="1">1. 아이템 추가</button>
+      <button type="button" class="step-btn" data-step="2">2. 타임라인 편집</button>
+      <button type="button" class="step-btn" data-step="3">3. 애니메이션</button>
+    </div>
+
+    <!-- STEP 1 -->
+    <div id="step1Panel" class="step-panel active">
+      <div>
+        <label for="date">날짜 선택 (날짜 바꾸면 새 타임라인 시작)</label>
+        <div class="row">
+          <input type="date" id="date" />
+          <button type="button" id="datePickerBtn" class="btn-secondary btn-date">📅</button>
+        </div>
+      </div>
+
+      <div>
+        <label>시간 구간 (시작 ~ 끝)</label>
+        <div class="row">
+          <select id="startTime"></select>
+          <select id="endTime"></select>
+        </div>
+        <p class="hint">
+          시작 시간과 끝 시간을 선택해서 해당 구간 블록 안에 아이템을 추가해요.<br/>
+          다음날 새벽까지 필요하면 <b>다음날 01:00</b> 이런 식으로 선택할 수 있어요.
+        </p>
+      </div>
+
+      <div>
+        <label>아이템 타입</label>
+        <div class="item-type-toggle">
+          <button type="button" class="toggle-btn active" data-type="file">이미지/동영상</button>
+          <button type="button" class="toggle-btn" data-type="text">텍스트</button>
+        </div>
+      </div>
+
+      <div id="textInputGroup">
+        <label for="textContent">텍스트 내용</label>
+        <textarea id="textContent" placeholder="텍스트 아이템 내용을 적어주세요"></textarea>
+      </div>
+
+      <div id="imageInputGroup">
+        <label for="imageFile">이미지 / 동영상 파일</label>
+        <input type="file" id="imageFile" accept="image/*,video/*" />
+        <p class="hint">
+          스티커 PNG, 사진, 짧은 타임랩스 영상 등 파일을 추가할 수 있어요.<br/>
+          한 번에 한 개씩 추가 (여러 개면 여러 번 추가).
+        </p>
+      </div>
+
+      <button id="addItemBtn" class="btn-primary">아이템 추가</button>
+
+      <p id="timeSummary" class="hint">아직 추가된 시간이 없습니다.</p>
+      <ul id="blockList" class="block-list"></ul>
+    </div>
+
+    <!-- STEP 2 -->
+    <div id="step2Panel" class="step-panel">
+      <p class="hint">
+        타임라인에서 아이템을 <b>길게 누르면</b> 편집 모드로 들어갑니다.<br/>
+        편집 모드에서는:
+      </p>
+      <ul class="hint" style="margin: 8px 0; padding-left: 20px;">
+        <li>한 손가락 드래그로 자유롭게 위치 이동</li>
+        <li>두 손가락 핀치로 크기 조절</li>
+        <li>두 손가락 회전으로 각도 조절</li>
+      </ul>
+      <p class="hint">
+        빈 공간을 탭하면 편집 모드가 해제됩니다.<br/>
+        아이템들이 겹칠 수 있으며, 편집하는 아이템이 가장 위에 표시됩니다.
+      </p>
+    </div>
+
+    <!-- STEP 3 -->
+    <div id="step3Panel" class="step-panel">
+      <div style="margin-top:4px;">
+        <label for="videoTitle">영상 제목</label>
+        <input id="videoTitle" type="text" placeholder="오늘 브리로그 제목을 입력하세요" />
+        <p class="hint">애니메이션 시작 전에 5초 동안 제목 카드로 보여줘요.</p>
+      </div>
+
+      <div style="margin-top:8px;">
+        <label>애니메이션 모드</label>
+        <div class="animation-mode-toggle">
+          <button type="button" class="toggle-btn active" data-mode="scroll">스크롤만</button>
+          <button type="button" class="toggle-btn" data-mode="scrollReveal">스크롤 + 순차 등장</button>
+        </div>
+      </div>
+
+      <div style="margin-top: 8px;">
+        <label>애니메이션 재생 시간 (전체 스크롤 시간)</label>
+        <div class="speed-row">
+          <input type="range" id="speed" min="3" max="20" step="1" value="8" />
+          <span id="speedLabel">8초</span>
+        </div>
+      </div>
+
+      <button id="playBtn" class="btn-secondary">▶ 애니메이션 재생</button>
+      <button id="playFullscreenBtn" class="btn-secondary">⛶ 전체 화면 재생</button>
+
+      <p class="hint">
+        전체 화면 재생 후 휴대폰 화면 녹화 기능을 사용하면<br/>
+        타임라인 영상으로 바로 저장할 수 있어요.
+      </p>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="step1-placeholder">
+      2단계에서 타임라인을 편집할 수 있어요.<br/>
+      먼저 1단계에서 아이템을 추가해주세요.
+    </div>
+
+    <div class="timeline-viewport" id="viewport">
+      <div class="viewport-header" id="headerLabel">
+        날짜를 선택해주세요
+      </div>
+      <div class="timeline-title-overlay" id="titleOverlay"></div>
+      <div class="timeline-inner" id="timeline"></div>
+    </div>
+  </div>
+
+  <script>
+    const HOUR_HEIGHT = 120;
+    const MINUTE_PX = HOUR_HEIGHT / 60;
+    const TOTAL_HOURS = 48;
+    const MAX_MINUTES = TOTAL_HOURS * 60;
+
+    const timeline = document.getElementById('timeline');
+    const viewport = document.getElementById('viewport');
+    const headerLabel = document.getElementById('headerLabel');
+    const titleOverlay = document.getElementById('titleOverlay');
+
+    const dateInput = document.getElementById('date');
+    const datePickerBtn = document.getElementById('datePickerBtn');
+
+    const startTimeSelect = document.getElementById('startTime');
+    const endTimeSelect = document.getElementById('endTime');
+
+    const textContentInput = document.getElementById('textContent');
+    const imageFileInput = document.getElementById('imageFile');
+    const textInputGroup = document.getElementById('textInputGroup');
+    const imageInputGroup = document.getElementById('imageInputGroup');
+    const addItemBtn = document.getElementById('addItemBtn');
+    const timeSummaryEl = document.getElementById('timeSummary');
+    const blockListEl = document.getElementById('blockList');
+    const themeToggleBtn = document.getElementById('themeToggle');
+
+    const speedInput = document.getElementById('speed');
+    const speedLabel = document.getElementById('speedLabel');
+    const playBtn = document.getElementById('playBtn');
+    const playFullscreenBtn = document.getElementById('playFullscreenBtn');
+    const videoTitleInput = document.getElementById('videoTitle');
+
+    const itemTypeButtons = document.querySelectorAll('.item-type-toggle .toggle-btn');
+    const stepButtons = document.querySelectorAll('.step-btn');
+    const animationModeButtons = document.querySelectorAll('.animation-mode-toggle .toggle-btn');
+
+    const stepPanels = {
+      1: document.getElementById('step1Panel'),
+      2: document.getElementById('step2Panel'),
+      3: document.getElementById('step3Panel')
+    };
+
+    let currentItemType = 'file';
+    let currentAnimationMode = 'scroll';
+
+    let blocks = [];
+    let items = [];
+    let editingItemEl = null;
+    let dragState = null;
+
+    let activeTouches = [];  
+    let gestureState = null;
+
+    let animFrameId = null;
+
+    let longPressTimer = null;
+    let longPressStartPos = null;
+    let zCounter = 1;
+
+    function minutesToTimeLabel(totalMinutes) {
+      const isNext = totalMinutes >= 1440;
+      let m = totalMinutes;
+      if (isNext) m -= 1440;
+      const h = Math.floor(m / 60);
+      const mm = m % 60;
+      const hh = String(h).padStart(2,'0');
+      const mmStr = String(mm).padStart(2,'0');
+      const base = `${hh}:${mmStr}`;
+      return isNext ? `다음날 ${base}` : base;
+    }
+
+    function scrollToBlock(blockId) {
+      const block = blocks.find(b => b.id === blockId);
+      if (!block || !block.element) return;
+      const blockTop = parseFloat(block.element.style.top) || 0;
+      const blockHeight = block.element.offsetHeight || 0;
+      const viewportHeight = viewport.clientHeight;
+      const maxScroll = Math.max(0, timeline.scrollHeight - viewportHeight);
+      let target = blockTop - (viewportHeight - blockHeight) / 2;
+      target = Math.max(0, Math.min(target, maxScroll));
+
+      viewport.scrollTo({ top: target, behavior: 'smooth' });
+
+      block.element.classList.add('highlight');
+      setTimeout(()=>block.element.classList.remove('highlight'),800);
+    }
+
+    function deleteBlockById(blockId) {
+      const block = blocks.find(b => b.id === blockId);
+      if (!block) return;
+
+      const blockItems = items.filter(it => it.blockId === blockId);
+      blockItems.forEach(it => {
+        const el = timeline.querySelector(`.timeline-item[data-id="${it.id}"]`);
+        if (el && el.parentElement) el.parentElement.removeChild(el);
+      });
+
+      items = items.filter(it => it.blockId !== blockId);
+
+      if (block.element && block.element.parentElement) {
+        block.element.parentElement.removeChild(block.element);
+      }
+      blocks = blocks.filter(b => b.id !== blockId);
+      editingItemEl = null;
+      updateTimeSummary();
+    }
+
+    function updateBlockList() {
+      blockListEl.innerHTML = '';
+      if (!blocks.length) return;
+
+      const sorted = blocks.slice().sort((a,b)=>a.startMinutes - b.startMinutes);
+
+      sorted.forEach(b => {
+        const li = document.createElement('li');
+        li.dataset.blockId = b.id;
+
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'time';
+        timeSpan.textContent =
+          minutesToTimeLabel(b.startMinutes) +
+          ' ~ ' +
+          minutesToTimeLabel(b.endMinutes);
+
+        const countSpan = document.createElement('span');
+        countSpan.className = 'count';
+        countSpan.textContent = `아이템 ${items.filter(it => it.blockId === b.id).length}개`;
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'block-delete-btn';
+        delBtn.textContent = '✕';
+        delBtn.addEventListener('click', ev => {
+          ev.stopPropagation();
+          if (confirm('이 시간 블록 전체를 삭제할까요?'))
+            deleteBlockById(b.id);
+        });
+
+        const rightGroup = document.createElement('div');
+        rightGroup.className = 'block-right-group';
+        rightGroup.appendChild(countSpan);
+        rightGroup.appendChild(delBtn);
+
+        li.appendChild(timeSpan);
+        li.appendChild(rightGroup);
+
+        li.addEventListener('click', () => scrollToBlock(b.id));
+        blockListEl.appendChild(li);
+      });
+    }
+
+    function updateTimeSummary() {
+      if (!blocks.length) {
+        timeSummaryEl.textContent = '아직 추가된 시간이 없습니다.';
+        blockListEl.innerHTML = '';
+        return;
+      }
+      timeSummaryEl.textContent = `추가된 시간 블록: ${blocks.length}개`;
+      updateBlockList();
+    }
+
+    function buildTimeOptions() {
+      startTimeSelect.innerHTML = '';
+      for (let m=0; m<=MAX_MINUTES-30; m+=30) {
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = minutesToTimeLabel(m);
+        if (m===7*60) opt.selected = true;
+        startTimeSelect.appendChild(opt);
+      }
+      updateEndTimeOptions(parseInt(startTimeSelect.value,10));
+    }
+
+    function updateEndTimeOptions(startMinutes) {
+      endTimeSelect.innerHTML = '';
+      const minEnd = startMinutes + 30;
+      for (let m=minEnd; m<=MAX_MINUTES; m+=30) {
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = minutesToTimeLabel(m);
+        endTimeSelect.appendChild(opt);
+      }
+    }
+
+    function buildHourGrid() {
+      for (let h=0; h<TOTAL_HOURS; h++) {
+        const top = h * HOUR_HEIGHT;
+        const label = document.createElement('div');
+        label.className='hour-label';
+        label.style.top = (top+4)+'px';
+        label.textContent = minutesToTimeLabel(h*60);
+
+        const line = document.createElement('div');
+        line.className='hour-line';
+        line.style.top = (top+20)+'px';
+
+        timeline.appendChild(label);
+        timeline.appendChild(line);
+      }
+    }
+
+    function clearHourHighlight() {
+      document.querySelectorAll('.hour-label')
+        .forEach(l => l.classList.remove('active'));
+    }
+
+    function highlightHourByScroll(scrollTop) {
+      const viewportHeight = viewport.clientHeight;
+      const centerY = scrollTop + viewportHeight/2;
+      const minutes = centerY / MINUTE_PX;
+      const hourIndex = Math.floor(minutes/60);
+      clearHourHighlight();
+      const labels = document.querySelectorAll('.hour-label');
+      if (hourIndex>=0 && hourIndex<labels.length) {
+        labels[hourIndex].classList.add('active');
+      }
+    }
+
+    function resetTimelineDataAndDom() {
+      blocks = [];
+      items = [];
+      editingItemEl = null;
+      dragState = null;
+      stopAnimation();
+      clearHourHighlight();
+      exitEditMode();
+      while (timeline.firstChild) timeline.removeChild(timeline.firstChild);
+      timeline.style.height = (TOTAL_HOURS*HOUR_HEIGHT)+'px';
+      buildHourGrid();
+      updateTimeSummary();
+    }
+
+    buildTimeOptions();
+    resetTimelineDataAndDom();
+
+    const today = new Date().toISOString().slice(0,10);
+    dateInput.value = today;
+    headerLabel.textContent = today + ' 타임라인';
+
+    dateInput.addEventListener('change', () => {
+      headerLabel.textContent = dateInput.value + ' 타임라인';
+      resetTimelineDataAndDom();
+    });
+
+    datePickerBtn.addEventListener('click', () => {
+      if (typeof dateInput.showPicker === 'function') {
+        dateInput.showPicker();
+      } else {
+        dateInput.focus();
+        dateInput.click();
+      }
+    });
+
+    startTimeSelect.addEventListener('change', () => {
+      updateEndTimeOptions(parseInt(startTimeSelect.value,10));
+    });
+
+    itemTypeButtons.forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        itemTypeButtons.forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        currentItemType = btn.dataset.type;
+        if (currentItemType==='text') {
+          textInputGroup.style.display='block';
+          imageInputGroup.style.display='none';
+        } else {
+          textInputGroup.style.display='none';
+          imageInputGroup.style.display='block';
+        }
+      });
+    });
+
+    animationModeButtons.forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        animationModeButtons.forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        currentAnimationMode = btn.dataset.mode;
+      });
+    });
+
+    textInputGroup.style.display='none';
+    imageInputGroup.style.display='block';
+
+    speedInput.addEventListener('input',()=>{
+      speedLabel.textContent = speedInput.value + '초';
+    });
+
+    function getOrCreateBlock(startMinutes,endMinutes){
+      const blockId = `block-${startMinutes}-${endMinutes}`;
+      let block = blocks.find(b=>b.id===blockId);
+      if (block) return block;
+
+      const top = startMinutes * MINUTE_PX;
+      const height = (endMinutes-startMinutes) * MINUTE_PX;
+
+      const blockEl = document.createElement('div');
+      blockEl.className='time-block';
+      blockEl.style.top = top+'px';
+      blockEl.style.height = height+'px';
+      blockEl.dataset.id = blockId;
+
+      const inner = document.createElement('div');
+      inner.className='time-block-inner';
+      blockEl.appendChild(inner);
+      timeline.appendChild(blockEl);
+
+      block = {id:blockId,startMinutes,endMinutes,duration:endMinutes-startMinutes,element:blockEl};
+      blocks.push(block);
+      updateTimeSummary();
+      return block;
+    }
+
+    function createItemElement(item) {
+      const el = document.createElement('div');
+      el.className = 'timeline-item';
+      el.dataset.id = item.id;
+      el.style.left = item.x + 'px';
+      el.style.top = item.y + 'px';
+      el.style.width = item.w + 'px';
+      el.style.height = item.h + 'px';
+      el.style.transform = `rotate(${item.rotation || 0}rad)`;
+      el.dataset.rotation = item.rotation || 0;
+      el.style.zIndex = (++zCounter).toString();
+
+      if (item.type === 'image') {
+        const img = document.createElement('img');
+        img.src = item.src;
+        // 🎯 contain으로 변경: 가로세로 비율 유지, 잘림 없음
+        img.style.objectFit = 'contain';
+        el.appendChild(img);
+      } else if (item.type === 'video') {
+        const v = document.createElement('video');
+        v.src = item.src;
+        v.muted = true;
+        v.loop = true;
+        v.autoplay = true;
+        v.playsInline = true;
+        // 🎯 contain으로 변경: 가로세로 비율 유지, 잘림 없음
+        v.style.objectFit = 'contain';
+        el.appendChild(v);
+      } else {
+        const t = document.createElement('div');
+        t.className = 'timeline-item-text';
+        t.textContent = item.text;
+        el.appendChild(t);
+      }
+
+      // 🟧 제스처 이벤트 연결
+      el.addEventListener('pointerdown', onGesturePointerDown);
+      el.addEventListener('pointermove', onGesturePointerMove);
+      el.addEventListener('pointerup', onGesturePointerUp);
+      el.addEventListener('pointercancel', onGesturePointerUp);
+      
+      // 컨텍스트 메뉴(길게 누르기) 방지
+      el.addEventListener('contextmenu', e => e.preventDefault());
+      
+      // 이미지/비디오 드래그 방지
+      el.addEventListener('dragstart', e => e.preventDefault());
+      
+      // 터치 기본 동작 방지 (확대, 스크롤 등)
+      el.style.touchAction = 'none';
+      el.style.userSelect = 'none';
+      el.style.webkitUserSelect = 'none';
+
+      timeline.appendChild(el);
+      return el;
+    }
+
+    addItemBtn.addEventListener('click',()=>{
+      if (!dateInput.value){
+        alert('날짜를 먼저 선택해주세요.');
+        return;
+      }
+      const startMinutes=parseInt(startTimeSelect.value,10);
+      const endMinutes=parseInt(endTimeSelect.value,10);
+      if (isNaN(startMinutes)||isNaN(endMinutes)||endMinutes<=startMinutes){
+        alert('시작/끝 시간을 올바르게 선택해주세요.');
+        return;
+      }
+
+      const itemData={
+        id:'item-'+Date.now()+'-'+Math.random().toString(16).slice(2),
+        blockId:null,type:'',x:0,y:0,w:0,h:0,rotation:0
+      };
+      let itemType;
+
+      if (currentItemType==='text'){
+        const text=textContentInput.value.trim();
+        if (!text){ alert('텍스트를 입력해주세요.'); return; }
+        itemType='text';
+        itemData.text=text;
+      } else {
+        const file=imageFileInput.files[0];
+        if (!file){ alert('파일을 선택해주세요.'); return; }
+        const url=URL.createObjectURL(file);
+        itemData.src=url;
+        itemType=file.type && file.type.startsWith('video/') ? 'video' : 'image';
+      }
+      itemData.type=itemType;
+
+      const block=getOrCreateBlock(startMinutes,endMinutes);
+      itemData.blockId=block.id;
+
+      const blockRect = block.element.getBoundingClientRect();
+      const timelineRect = timeline.getBoundingClientRect();
+      const blockTop = parseFloat(block.element.style.top) || 0;
+      const blockHeight = parseFloat(block.element.style.height) || 0;
+      
+      const existing=items.filter(it=>it.blockId===block.id);
+
+      if (!existing.length){
+        const padding=12;
+        const availableWidth = blockRect.width - 32;
+        const availableHeight = blockHeight - padding*2;
+        
+        itemData.x=70;
+        itemData.y=blockTop + padding;
+        itemData.w=availableWidth;
+        itemData.h=availableHeight;
+      } else {
+        const w=Math.max(80, blockRect.width*0.5);
+        const h=Math.max(80, blockRect.height*0.5);
+        itemData.w=w; itemData.h=h;
+        itemData.x=70 + (blockRect.width-w)/2;
+        itemData.y=blockTop + (blockRect.height-h)/2;
+      }
+
+      items.push(itemData);
+      const el=createItemElement(itemData);
+      scrollToBlock(block.id);
+
+      if (itemType==='image'||itemType==='video') imageFileInput.value='';
+      updateBlockList();
+    });
+
+    function enterEditMode(el) {
+      exitEditMode();
+      editingItemEl = el;
+      el.classList.add('edit-mode');
+      el.classList.add('editing');
+      viewport.classList.add('edit-mode');
+      el.style.zIndex = (++zCounter).toString();
+    }
+
+    function exitEditMode() {
+      if (editingItemEl) {
+        editingItemEl.classList.remove('edit-mode');
+        editingItemEl.classList.remove('editing');
+        editingItemEl = null;
+      }
+      viewport.classList.remove('edit-mode');
+    }
+
+    function getItemByElement(el){
+      const id=el.dataset.id;
+      return items.find(it=>it.id===id);
+    }
+
+    function stopAnimation(){
+      if (animFrameId!==null){
+        cancelAnimationFrame(animFrameId);
+        animFrameId=null;
+      }
+    }
+
+    function runAnimation(){
+      if (!blocks.length){
+        alert('먼저 시간 블록에 아이템을 추가해 주세요.');
+        return;
+      }
+      stopAnimation();
+      exitEditMode();
+
+      const mode=currentAnimationMode;
+      const viewportHeight=viewport.clientHeight;
+
+      const tops=blocks.map(b=>parseFloat(b.element.style.top)||0);
+      const bottoms=blocks.map(b=>{
+        const top=parseFloat(b.element.style.top)||0;
+        return top + b.element.offsetHeight;
+      });
+      const minTop=Math.min(...tops);
+      const maxBottom=Math.max(...bottoms);
+
+      let startScroll=Math.max(minTop-40,0);
+      let endScroll=Math.max(maxBottom-viewportHeight+40,0);
+      if (endScroll<startScroll){
+        const tmp=startScroll; startScroll=endScroll; endScroll=tmp;
+      }
+
+      const itemEls=timeline.querySelectorAll('.timeline-item');
+      const durationSec=parseFloat(speedInput.value)||8;
+      const durationMs=durationSec*1000;
+
+      const title=videoTitleInput.value.trim();
+      const hasTitle=!!title;
+
+      function startScrollAnimation(){
+        if (mode==='scrollReveal'){
+          itemEls.forEach(el=>{
+            el.classList.remove('reveal-visible');
+            el.classList.add('reveal-hidden');
+          });
+        } else {
+          itemEls.forEach(el=>{
+            el.classList.remove('reveal-hidden','reveal-visible');
+          });
+        }
+
+        const startTime=performance.now();
+        function frame(now){
+          const t=Math.min(1,(now-startTime)/durationMs);
+          const current=startScroll+(endScroll-startScroll)*t;
+          viewport.scrollTop=current;
+          highlightHourByScroll(current);
+
+          if (mode==='scrollReveal'){
+            const triggerLine=current+viewportHeight*0.4;
+            blocks.forEach(block=>{
+              const blockTop=parseFloat(block.element.style.top)||0;
+              const threshold=blockTop+block.element.offsetHeight*0.2;
+              if (triggerLine>=threshold){
+                const blockItems=items.filter(it=>it.blockId===block.id);
+                blockItems.forEach(it=>{
+                  const el=timeline.querySelector(`.timeline-item[data-id="${it.id}"]`);
+                  if (!el) return;
+                  if (el.classList.contains('reveal-hidden')){
+                    el.classList.remove('reveal-hidden');
+                    el.classList.add('reveal-visible');
+                  }
+                });
+              }
+            });
+          }
+
+          if (t<1){
+            animFrameId=requestAnimationFrame(frame);
+          } else {
+            animFrameId=null;
+            if (mode==='scrollReveal'){
+              itemEls.forEach(el=>{
+                el.classList.remove('reveal-hidden');
+                el.classList.add('reveal-visible');
+              });
+            }
+            clearHourHighlight();
+          }
+        }
+        viewport.scrollTop=startScroll;
+        highlightHourByScroll(startScroll);
+        animFrameId=requestAnimationFrame(frame);
+      }
+
+      if (hasTitle){
+        titleOverlay.textContent=title;
+        titleOverlay.style.display='flex';
+        setTimeout(()=>{
+          titleOverlay.style.display='none';
+          startScrollAnimation();
+        },5000);
+      } else {
+        startScrollAnimation();
+      }
+    }
+
+    playBtn.addEventListener('click',runAnimation);
+
+    playFullscreenBtn.addEventListener('click',async()=>{
+      try{
+        // 화면 회전 잠금 시도 (지원되는 경우)
+        if (screen.orientation && screen.orientation.lock) {
+          try {
+            await screen.orientation.lock('portrait');
+          } catch(e) {
+            console.log('화면 회전 잠금 미지원');
+          }
+        }
+        
+        if (viewport.requestFullscreen){
+          await viewport.requestFullscreen();
+        } else if (viewport.webkitRequestFullscreen){
+          await viewport.webkitRequestFullscreen();
+        } else if (viewport.mozRequestFullScreen){
+          await viewport.mozRequestFullScreen();
+        } else if (viewport.msRequestFullscreen){
+          await viewport.msRequestFullscreen();
+        }
+      }catch(e){ 
+        console.warn('전체 화면 진입 실패:',e); 
+      }
+      
+      // 전체 화면 진입 후 약간 딜레이 후 애니메이션 시작
+      setTimeout(() => {
+        runAnimation();
+      }, 100);
+    });
+
+    viewport.addEventListener('scroll',()=>{
+      if (animFrameId===null){
+        highlightHourByScroll(viewport.scrollTop);
+      }
+    });
+
+    stepButtons.forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const step=btn.dataset.step;
+        stepButtons.forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        Object.entries(stepPanels).forEach(([key,p])=>{
+          if (key===step) p.classList.add('active'); else p.classList.remove('active');
+        });
+        document.body.dataset.step=step;
+      });
+    });
+
+    themeToggleBtn.addEventListener('click', () => {
+      const body = document.body;
+      if (body.classList.contains('theme-dark')) {
+        body.classList.remove('theme-dark');
+        body.classList.add('theme-light');
+        themeToggleBtn.textContent = '다크 모드';
+      } else {
+        body.classList.remove('theme-light');
+        body.classList.add('theme-dark');
+        themeToggleBtn.textContent = '라이트 모드';
+      }
+    });
+   
+    function onGesturePointerDown(e) {
+      // 컨텍스트 메뉴 방지
+      e.preventDefault();
+      
+      const el = e.currentTarget;
+      el.setPointerCapture(e.pointerId);
+
+      activeTouches.push({
+        id: e.pointerId,
+        x: e.clientX,
+        y: e.clientY
+      });
+
+      const item = getItemByElement(el);
+
+      // 한 손가락 → 길게 누르기 시작
+      if (activeTouches.length === 1) {
+        longPressStartPos = { x: e.clientX, y: e.clientY };
+        
+        // 500ms 후 편집 모드 활성화
+        longPressTimer = setTimeout(() => {
+          enterEditMode(el);
+          
+          // 편집 모드 진입 후 이동 준비
+          gestureState = {
+            mode: 'move',
+            startX: e.clientX,
+            startY: e.clientY,
+            origX: item.x,
+            origY: item.y
+          };
+        }, 500);
+      }
+
+      // 두 손가락 → 확대 + 회전 (편집 모드일 때만)
+      if (activeTouches.length === 2 && editingItemEl === el) {
+        // 길게 누르기 타이머 취소
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+        
+        const [t1, t2] = activeTouches;
+
+        const dx = t2.x - t1.x;
+        const dy = t2.y - t1.y;
+
+        gestureState = {
+          mode: 'transform',
+
+          // 스케일 계산용
+          startDist: Math.hypot(dx, dy),
+
+          // 회전 계산용 (민감도 감소: 0.3배만 적용)
+          startAngle: Math.atan2(dy, dx),
+          startRotation: item.rotation || 0,
+          rotationSensitivity: 0.3,
+
+          // 사이즈 원본값
+          startWidth: item.w,
+          startHeight: item.h
+        };
+      }
+    }
+
+    function onGesturePointerMove(e) {
+      const el = e.currentTarget;
+      const item = getItemByElement(el);
+
+      // 길게 누르기 중 움직임 감지 → 타이머 취소
+      if (longPressTimer && longPressStartPos) {
+        const dx = Math.abs(e.clientX - longPressStartPos.x);
+        const dy = Math.abs(e.clientY - longPressStartPos.y);
+        
+        if (dx > 10 || dy > 10) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+          longPressStartPos = null;
+        }
+      }
+
+      // activeTouches 업데이트
+      activeTouches = activeTouches.map(t =>
+        t.id === e.pointerId ? { ...t, x: e.clientX, y: e.clientY } : t
+      );
+
+      if (!gestureState) return;
+
+      // ⭐ 이동 (편집 모드일 때만)
+      if (gestureState.mode === 'move' && activeTouches.length === 1 && editingItemEl === el) {
+        e.preventDefault();
+        
+        const dx = e.clientX - gestureState.startX;
+        const dy = e.clientY - gestureState.startY;
+
+        const newX = gestureState.origX + dx;
+        const newY = gestureState.origY + dy;
+
+        // 강제 리플로우로 잔상 제거
+        el.style.left = `${newX}px`;
+        el.style.top = `${newY}px`;
+        void el.offsetHeight; // 강제 리플로우
+
+        item.x = newX;
+        item.y = newY;
+      }
+
+      // ⭐ 확대/회전 (편집 모드일 때만)
+      if (gestureState.mode === 'transform' && activeTouches.length === 2 && editingItemEl === el) {
+        e.preventDefault();
+        
+        const [t1, t2] = activeTouches;
+
+        const dx = t2.x - t1.x;
+        const dy = t2.y - t1.y;
+
+        // 확대 비율
+        const dist = Math.hypot(dx, dy);
+        const scale = dist / gestureState.startDist;
+
+        // 회전 (민감도 적용)
+        const angle = Math.atan2(dy, dx);
+        const angleDiff = angle - gestureState.startAngle;
+        const rotation = gestureState.startRotation + (angleDiff * gestureState.rotationSensitivity);
+
+        // 적용
+        const newW = gestureState.startWidth * scale;
+        const newH = gestureState.startHeight * scale;
+
+        // 강제 리플로우로 잔상 제거
+        el.style.width = `${newW}px`;
+        el.style.height = `${newH}px`;
+        el.style.transform = `rotate(${rotation}rad)`;
+        void el.offsetHeight; // 강제 리플로우
+
+        item.w = newW;
+        item.h = newH;
+        item.rotation = rotation;
+      }
+    }
+
+    function onGesturePointerUp(e) {
+      // 길게 누르기 타이머 취소
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
+      longPressStartPos = null;
+      
+      activeTouches = activeTouches.filter(t => t.id !== e.pointerId);
+
+      // 손가락이 모두 떨어지면 제스처 종료
+      if (activeTouches.length === 0) {
+        gestureState = null;
+      }
+    }
+
+    // 타임라인 배경 클릭 시 편집 모드 해제
+    timeline.addEventListener('click', (e) => {
+      if (e.target === timeline || e.target.classList.contains('timeline-inner')) {
+        exitEditMode();
+      }
+    });
+
+  </script>
+</body>
+</html>
