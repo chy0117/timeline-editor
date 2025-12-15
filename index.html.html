@@ -1265,35 +1265,37 @@
 
     playBtn.addEventListener('click',runAnimation);
 
-    playFullscreenBtn.addEventListener('click',async()=>{
-      try{
-        // 화면 회전 잠금 시도 (지원되는 경우)
-        if (screen.orientation && screen.orientation.lock) {
-          try {
-            await screen.orientation.lock('portrait');
-          } catch(e) {
-            console.log('화면 회전 잠금 미지원');
-          }
+playFullscreenBtn.addEventListener('click',async()=>{
+  try{
+    // 전체 화면 진입
+    if (viewport.requestFullscreen){
+      await viewport.requestFullscreen();
+    } else if (viewport.webkitRequestFullscreen){
+      await viewport.webkitRequestFullscreen();
+    } else if (viewport.mozRequestFullScreen){
+      await viewport.mozRequestFullScreen();
+    } else if (viewport.msRequestFullscreen){
+      await viewport.msRequestFullscreen();
+    }
+    
+    // 전체 화면 진입 후 화면 회전 잠금
+    setTimeout(async () => {
+      if (screen.orientation && screen.orientation.lock) {
+        try {
+          await screen.orientation.lock('portrait-primary');
+        } catch(e) {
+          console.log('화면 회전 잠금 미지원:', e);
         }
-        
-        if (viewport.requestFullscreen){
-          await viewport.requestFullscreen();
-        } else if (viewport.webkitRequestFullscreen){
-          await viewport.webkitRequestFullscreen();
-        } else if (viewport.mozRequestFullScreen){
-          await viewport.mozRequestFullScreen();
-        } else if (viewport.msRequestFullscreen){
-          await viewport.msRequestFullscreen();
-        }
-      }catch(e){ 
-        console.warn('전체 화면 진입 실패:',e); 
       }
-      
-      // 전체 화면 진입 후 약간 딜레이 후 애니메이션 시작
-      setTimeout(() => {
-        runAnimation();
-      }, 100);
-    });
+    }, 100);
+  }catch(e){ 
+    console.warn('전체 화면 진입 실패:',e); 
+  }
+  
+  setTimeout(() => {
+    runAnimation();
+  }, 200);
+});
 
     viewport.addEventListener('scroll',()=>{
       if (animFrameId===null){
@@ -1493,3 +1495,4 @@
   </script>
 </body>
 </html>
+
