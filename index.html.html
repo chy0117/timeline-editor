@@ -1163,7 +1163,7 @@
       }
     }
 
-   function runAnimation(){
+ function runAnimation(){
   if (!blocks.length){
     alert('먼저 시간 블록에 아이템을 추가해 주세요.');
     return;
@@ -1171,32 +1171,29 @@
   stopAnimation();
   exitEditMode();
 
-  const mode=currentAnimationMode;
-  const viewportHeight=viewport.clientHeight;
+  const mode = currentAnimationMode;
+  const viewportHeight = viewport.clientHeight;
 
-  const tops=blocks.map(b=>parseFloat(b.element.style.top)||0);
-  const bottoms=blocks.map(b=>{
-    const top=parseFloat(b.element.style.top)||0;
+  const tops = blocks.map(b => parseFloat(b.element.style.top) || 0);
+  const bottoms = blocks.map(b => {
+    const top = parseFloat(b.element.style.top) || 0;
     return top + b.element.offsetHeight;
   });
-  const minTop=Math.min(...tops);
-  const maxBottom=Math.max(...bottoms);
 
-  let startScroll=Math.max(minTop-40,0);
-  let endScroll=Math.max(maxBottom-viewportHeight+40,0);
-  if (endScroll<startScroll){
-    const tmp=startScroll; startScroll=endScroll; endScroll=tmp;
-  }
+  const minTop = Math.min(...tops);
+  const maxBottom = Math.max(...bottoms);
 
-  const itemEls=timeline.querySelectorAll('.timeline-item');
-  const durationSec=parseFloat(speedInput.value)||8;
-  const durationMs=durationSec*1000;
+  const endScroll = Math.max(maxBottom - viewportHeight + 40, 0);
 
-  const title=videoTitleInput.value.trim();
-  const hasTitle=!!title;
+  const itemEls = timeline.querySelectorAll('.timeline-item');
+  const durationSec = parseFloat(speedInput.value) || 8;
+  const durationMs = durationSec * 1000;
 
-  function startScrollAnimation(){
-    if (mode==='scrollReveal'){
+  const title = videoTitleInput.value.trim();
+  const hasTitle = !!title;
+
+  function startScrollAnimationFrom(startScroll){
+    if (mode === 'scrollReveal'){
       itemEls.forEach(el=>{
         el.classList.remove('reveal-visible');
         el.classList.add('reveal-hidden');
@@ -1207,132 +1204,77 @@
       });
     }
 
-    const startTime=performance.now();
+    const startTime = performance.now();
+
     function frame(now){
-      const t=Math.min(1,(now-startTime)/durationMs);
-      const current=startScroll+(endScroll-startScroll)*t;
-      viewport.scrollTop=current;
+      const t = Math.min(1, (now - startTime) / durationMs);
+      const current = startScroll + (endScroll - startScroll) * t;
+
+      viewport.scrollTop = current;
       highlightHourByScroll(current);
 
-      if (mode==='scrollReveal'){
-        const triggerLine=current+viewportHeight*0.4;
+      if (mode === 'scrollReveal'){
+        const triggerLine = current + viewportHeight * 0.4;
         blocks.forEach(block=>{
-          const blockTop=parseFloat(block.element.style.top)||0;
-          const threshold=blockTop+block.element.offsetHeight*0.2;
-          if (triggerLine>=threshold){
-            const blockItems=items.filter(it=>it.blockId===block.id);
-            blockItems.forEach(it=>{
-              const el=timeline.querySelector(`.timeline-item[data-id="${it.id}"]`);
-              if (!el) return;
-              if (el.classList.contains('reveal-hidden')){
-                el.classList.remove('reveal-hidden');
-                el.classList.add('reveal-visible');
-              }
-            });
+          const blockTop = parseFloat(block.element.style.top) || 0;
+          const threshold = blockTop + block.element.offsetHeight * 0.2;
+          if (triggerLine >= threshold){
+            items
+              .filter(it => it.blockId === block.id)
+              .forEach(it=>{
+                const el = timeline.querySelector(
+                  `.timeline-item[data-id="${it.id}"]`
+                );
+                if (el && el.classList.contains('reveal-hidden')){
+                  el.classList.remove('reveal-hidden');
+                  el.classList.add('reveal-visible');
+                }
+              });
           }
         });
       }
 
-      if (t<1){
-        animFrameId=requestAnimationFrame(frame);
+      if (t < 1){
+        animFrameId = requestAnimationFrame(frame);
       } else {
-        animFrameId=null;
-        if (mode==='scrollReveal'){
-          itemEls.forEach(el=>{
-            el.classList.remove('reveal-hidden');
-            el.classList.add('reveal-visible');
-          });
-        }
+        animFrameId = null;
         clearHourHighlight();
       }
     }
-    viewport.scrollTop=startScroll;
-    highlightHourByScroll(startScroll);
-    animFrameId=requestAnimationFrame(frame);
+
+    animFrameId = requestAnimationFrame(frame);
   }
 
-if (hasTitle) {
-  titleOverlay.textContent = title;
-  titleOverlay.style.display = 'flex';
+  // 🎬 제목이 있는 경우
+  if (hasTitle){
+    titleOverlay.textContent = title;
+    titleOverlay.style.display = 'flex';
 
-  // ⭐ 첫 블록이 화면 하단 0.9 지점에 오도록 스크롤 고정
-  const firstBlockTop = minTop;
-  const targetScroll =
-    Math.max(firstBlockTop - viewportHeight * 0.9, 0);
+    // ⭐ 첫 블록을 화면 하단 0.9 위치에 고정
+    const initialScroll =
+      Math.max(minTop - viewportHeight * 0.9, 0);
 
-  viewport.scrollTop = targetScroll;
-  highlightHourByScroll(targetScroll);
+    viewport.scrollTop = initialScroll;
+    highlightHourByScroll(initialScroll);
 
-  // 제목 표시 시간 (5초)
-  setTimeout(() => {
-    titleOverlay.style.display = 'none';
+    // ⏱ 제목 표시 (5초)
+    setTimeout(()=>{
+      titleOverlay.style.display = 'none';
 
-    // 🔥 중요: 현재 위치를 애니메이션 시작점으로 사용
-    const animationStartScroll = viewport.scrollTop;
+      // 🔥 현재 위치에서 바로 애니메이션 시작
+      const currentScroll = viewport.scrollTop;
+      startScrollAnimationFrom(currentScroll);
 
-    function startScrollAnimationFromCurrent() {
-      if (mode === 'scrollReveal') {
-        itemEls.forEach(el => {
-          el.classList.remove('reveal-visible');
-          el.classList.add('reveal-hidden');
-        });
-      } else {
-        itemEls.forEach(el => {
-          el.classList.remove('reveal-hidden', 'reveal-visible');
-        });
-      }
+    }, 5000);
 
-      const startTime = performance.now();
-
-      function frame(now) {
-        const t = Math.min(1, (now - startTime) / durationMs);
-        const current =
-          animationStartScroll +
-          (endScroll - animationStartScroll) * t;
-
-        viewport.scrollTop = current;
-        highlightHourByScroll(current);
-
-        if (mode === 'scrollReveal') {
-          const triggerLine = current + viewportHeight * 0.4;
-          blocks.forEach(block => {
-            const blockTop = parseFloat(block.element.style.top) || 0;
-            const threshold =
-              blockTop + block.element.offsetHeight * 0.2;
-
-            if (triggerLine >= threshold) {
-              items
-                .filter(it => it.blockId === block.id)
-                .forEach(it => {
-                  const el = timeline.querySelector(
-                    `.timeline-item[data-id="${it.id}"]`
-                  );
-                  if (el && el.classList.contains('reveal-hidden')) {
-                    el.classList.remove('reveal-hidden');
-                    el.classList.add('reveal-visible');
-                  }
-                });
-            }
-          });
-        }
-
-        if (t < 1) {
-          animFrameId = requestAnimationFrame(frame);
-        } else {
-          animFrameId = null;
-          clearHourHighlight();
-        }
-      }
-
-      animFrameId = requestAnimationFrame(frame);
-    }
-
-    startScrollAnimationFromCurrent();
-  }, 5000);
-} else {
-  startScrollAnimation();
+  } else {
+    // 제목 없는 경우 기존처럼
+    const startScroll = Math.max(minTop - 40, 0);
+    viewport.scrollTop = startScroll;
+    highlightHourByScroll(startScroll);
+    startScrollAnimationFrom(startScroll);
+  }
 }
-
 
     playBtn.addEventListener('click',runAnimation);
 
@@ -1566,6 +1508,7 @@ playFullscreenBtn.addEventListener('click',async()=>{
   </script>
 </body>
 </html>
+
 
 
 
