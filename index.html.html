@@ -1251,25 +1251,88 @@
     animFrameId=requestAnimationFrame(frame);
   }
 
- if (hasTitle){
-  // 제목 표시 시에는 스크롤 이동 없이 현재 위치 유지
-  titleOverlay.textContent=title;
-  titleOverlay.style.display='flex';
-  
-  setTimeout(()=>{
-    titleOverlay.style.display='none';
-    // 제목이 사라진 후 첫 블록이 중간보다 약간 아래 보이도록 스크롤
-    const initialScroll = Math.max(minTop - viewportHeight * 0.6, 0);
-    viewport.scrollTop = initialScroll;
-    
-    // 약간의 딜레이 후 애니메이션 시작 (스크롤 이동이 보이도록)
-    setTimeout(() => {
-      startScrollAnimation();
-    }, 100);
-  },5000);
+if (hasTitle) {
+  titleOverlay.textContent = title;
+  titleOverlay.style.display = 'flex';
+
+  // ⭐ 첫 블록이 화면 하단 0.9 지점에 오도록 스크롤 고정
+  const firstBlockTop = minTop;
+  const targetScroll =
+    Math.max(firstBlockTop - viewportHeight * 0.9, 0);
+
+  viewport.scrollTop = targetScroll;
+  highlightHourByScroll(targetScroll);
+
+  // 제목 표시 시간 (5초)
+  setTimeout(() => {
+    titleOverlay.style.display = 'none';
+
+    // 🔥 중요: 현재 위치를 애니메이션 시작점으로 사용
+    const animationStartScroll = viewport.scrollTop;
+
+    function startScrollAnimationFromCurrent() {
+      if (mode === 'scrollReveal') {
+        itemEls.forEach(el => {
+          el.classList.remove('reveal-visible');
+          el.classList.add('reveal-hidden');
+        });
+      } else {
+        itemEls.forEach(el => {
+          el.classList.remove('reveal-hidden', 'reveal-visible');
+        });
+      }
+
+      const startTime = performance.now();
+
+      function frame(now) {
+        const t = Math.min(1, (now - startTime) / durationMs);
+        const current =
+          animationStartScroll +
+          (endScroll - animationStartScroll) * t;
+
+        viewport.scrollTop = current;
+        highlightHourByScroll(current);
+
+        if (mode === 'scrollReveal') {
+          const triggerLine = current + viewportHeight * 0.4;
+          blocks.forEach(block => {
+            const blockTop = parseFloat(block.element.style.top) || 0;
+            const threshold =
+              blockTop + block.element.offsetHeight * 0.2;
+
+            if (triggerLine >= threshold) {
+              items
+                .filter(it => it.blockId === block.id)
+                .forEach(it => {
+                  const el = timeline.querySelector(
+                    `.timeline-item[data-id="${it.id}"]`
+                  );
+                  if (el && el.classList.contains('reveal-hidden')) {
+                    el.classList.remove('reveal-hidden');
+                    el.classList.add('reveal-visible');
+                  }
+                });
+            }
+          });
+        }
+
+        if (t < 1) {
+          animFrameId = requestAnimationFrame(frame);
+        } else {
+          animFrameId = null;
+          clearHourHighlight();
+        }
+      }
+
+      animFrameId = requestAnimationFrame(frame);
+    }
+
+    startScrollAnimationFromCurrent();
+  }, 5000);
 } else {
   startScrollAnimation();
 }
+
 
     playBtn.addEventListener('click',runAnimation);
 
@@ -1503,6 +1566,7 @@ playFullscreenBtn.addEventListener('click',async()=>{
   </script>
 </body>
 </html>
+
 
 
 
