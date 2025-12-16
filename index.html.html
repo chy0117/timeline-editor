@@ -604,6 +604,59 @@ body.theme-light .fullscreen-mask {
   );
 }
 
+      /* ✅ (추가) "가짜 전체화면(녹화 모드)" */
+body.record-mode {
+  overflow: hidden; /* 뒤 스크롤 방지 */
+}
+
+/* 사이드바 숨기고, 화면을 타임라인만 보이게 */
+body.record-mode .sidebar {
+  display: none !important;
+}
+body.record-mode .main {
+  padding: 0 !important;
+}
+
+/* 핵심: Fullscreen API가 아니라 CSS로 화면 꽉 채우기 */
+body.record-mode .timeline-viewport {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important; /* ✅ 안드로이드 주소창 이슈에 dvh가 유리 */
+  max-width: 100vw !important;
+  max-height: 100dvh !important;
+  border-radius: 0 !important;
+  border: none !important;
+  margin: 0 !important;
+  z-index: 9999 !important;
+  box-shadow: none !important;
+}
+
+/* ✅ (추가) 종료 버튼: 녹화 모드에서만 보이기 */
+.record-exit {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,0.4);
+  background: rgba(2,6,23,0.6);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  display: none;
+  z-index: 10000;
+}
+body.theme-light .record-exit {
+  background: rgba(249,250,251,0.8);
+  color: #111827;
+}
+body.record-mode .record-exit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 
   </style>
 </head>
@@ -1565,64 +1618,13 @@ playFullscreenBtn.addEventListener('click', () => {
       }
     });
 
-    /* ✅ (추가) "가짜 전체화면(녹화 모드)" */
-body.record-mode {
-  overflow: hidden; /* 뒤 스크롤 방지 */
-}
-
-/* 사이드바 숨기고, 화면을 타임라인만 보이게 */
-body.record-mode .sidebar {
-  display: none !important;
-}
-body.record-mode .main {
-  padding: 0 !important;
-}
-
-/* 핵심: Fullscreen API가 아니라 CSS로 화면 꽉 채우기 */
-body.record-mode .timeline-viewport {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100dvh !important; /* ✅ 안드로이드 주소창 이슈에 dvh가 유리 */
-  max-width: 100vw !important;
-  max-height: 100dvh !important;
-  border-radius: 0 !important;
-  border: none !important;
-  margin: 0 !important;
-  z-index: 9999 !important;
-  box-shadow: none !important;
-}
-
-/* ✅ (추가) 종료 버튼: 녹화 모드에서만 보이기 */
-.record-exit {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
-  border: 1px solid rgba(148,163,184,0.4);
-  background: rgba(2,6,23,0.6);
-  color: #fff;
-  font-size: 20px;
-  line-height: 1;
-  display: none;
-  z-index: 10000;
-}
-body.theme-light .record-exit {
-  background: rgba(249,250,251,0.8);
-  color: #111827;
-}
-body.record-mode .record-exit {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
+  
 
 
   </script>
 </body>
 </html>
+
 
 
 
