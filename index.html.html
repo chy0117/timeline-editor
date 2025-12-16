@@ -569,6 +569,40 @@ body.theme-light .timeline-title-overlay {
       }
     }
 
+    /* 전체 화면 하단 시스템 안내 가림용 오버레이 */
+.timeline-viewport:fullscreen::after,
+.timeline-viewport:-webkit-full-screen::after {
+  content: '';
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 120px; /* ← 시스템 안내 영역 덮는 높이 */
+  pointer-events: none;
+  z-index: 9999;
+
+  /* 어두운 테마 기준 */
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.85),
+    rgba(0,0,0,0.45),
+    rgba(0,0,0,0)
+  );
+}
+
+/* 라이트 모드 대응 */
+body.theme-light
+.timeline-viewport:fullscreen::after,
+body.theme-light
+.timeline-viewport:-webkit-full-screen::after {
+  background: linear-gradient(
+    to top,
+    rgba(249,250,251,0.95),
+    rgba(249,250,251,0.6),
+    rgba(249,250,251,0)
+  );
+}
+
   </style>
 </head>
 <body class="theme-dark" data-step="1">
@@ -1517,43 +1551,10 @@ playFullscreenBtn.addEventListener('click', async () => {
       }
     });
 
-    /* 전체 화면 하단 시스템 안내 가림용 오버레이 */
-.timeline-viewport:fullscreen::after,
-.timeline-viewport:-webkit-full-screen::after {
-  content: '';
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 120px; /* ← 시스템 안내 영역 덮는 높이 */
-  pointer-events: none;
-  z-index: 9999;
-
-  /* 어두운 테마 기준 */
-  background: linear-gradient(
-    to top,
-    rgba(0,0,0,0.85),
-    rgba(0,0,0,0.45),
-    rgba(0,0,0,0)
-  );
-}
-
-/* 라이트 모드 대응 */
-body.theme-light
-.timeline-viewport:fullscreen::after,
-body.theme-light
-.timeline-viewport:-webkit-full-screen::after {
-  background: linear-gradient(
-    to top,
-    rgba(249,250,251,0.95),
-    rgba(249,250,251,0.6),
-    rgba(249,250,251,0)
-  );
-}
-
   </script>
 </body>
 </html>
+
 
 
 
