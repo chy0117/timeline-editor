@@ -569,19 +569,16 @@ body.theme-light .timeline-title-overlay {
       }
     }
 
-    /* 전체 화면 하단 시스템 안내 가림용 오버레이 */
-.timeline-viewport:fullscreen::after,
-.timeline-viewport:-webkit-full-screen::after {
-  content: '';
+   .fullscreen-mask {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 120px; /* ← 시스템 안내 영역 덮는 높이 */
+  height: 120px;
   pointer-events: none;
   z-index: 9999;
+  display: none;
 
-  /* 어두운 테마 기준 */
   background: linear-gradient(
     to top,
     rgba(0,0,0,0.85),
@@ -590,11 +587,7 @@ body.theme-light .timeline-title-overlay {
   );
 }
 
-/* 라이트 모드 대응 */
-body.theme-light
-.timeline-viewport:fullscreen::after,
-body.theme-light
-.timeline-viewport:-webkit-full-screen::after {
+body.theme-light .fullscreen-mask {
   background: linear-gradient(
     to top,
     rgba(249,250,251,0.95),
@@ -602,6 +595,7 @@ body.theme-light
     rgba(249,250,251,0)
   );
 }
+
 
   </style>
 </head>
@@ -725,14 +719,19 @@ body.theme-light
       먼저 1단계에서 아이템을 추가해주세요.
     </div>
 
-    <div class="timeline-viewport" id="viewport">
-      <div class="viewport-header" id="headerLabel">
-        날짜를 선택해주세요
-      </div>
-      <div class="timeline-title-overlay" id="titleOverlay"></div>
-      <div class="timeline-inner" id="timeline"></div>
-    </div>
+<div class="timeline-viewport" id="viewport">
+
+  <!-- ✅ 전체화면 하단 가림용 레이어 (제일 위에) -->
+  <div class="fullscreen-mask"></div>
+
+  <div class="viewport-header" id="headerLabel">
+    날짜를 선택해주세요
   </div>
+
+  <div class="timeline-title-overlay" id="titleOverlay"></div>
+
+  <div class="timeline-inner" id="timeline"></div>
+</div>
 
   <script>
     const HOUR_HEIGHT = 120;
@@ -1332,7 +1331,7 @@ playFullscreenBtn.addEventListener('click', async () => {
     } else {
       throw new Error('전체 화면 미지원');
     }
-
+     
     // 전체 화면 진입 후 화면 회전 잠금 시도
     setTimeout(async () => {
       if (screen.orientation && screen.orientation.lock) {
@@ -1348,7 +1347,7 @@ playFullscreenBtn.addEventListener('click', async () => {
     setTimeout(() => {
       runAnimation();
     }, 300);
-
+  
   } catch (e) {
     console.warn('전체 화면 진입 실패:', e);
     alert('전체 화면 모드를 지원하지 않는 브라우저입니다. 일반 재생을 시도합니다.');
@@ -1356,6 +1355,18 @@ playFullscreenBtn.addEventListener('click', async () => {
   }
 });
 
+    document.addEventListener('fullscreenchange', () => {
+  const mask = viewport.querySelector('.fullscreen-mask');
+  if (!mask) return;
+
+  if (document.fullscreenElement === viewport) {
+    mask.style.display = 'block';
+  } else {
+    mask.style.display = 'none';
+  }
+});
+
+    
     viewport.addEventListener('scroll',()=>{
       if (animFrameId===null){
         highlightHourByScroll(viewport.scrollTop);
@@ -1551,9 +1562,12 @@ playFullscreenBtn.addEventListener('click', async () => {
       }
     });
 
+
+
   </script>
 </body>
 </html>
+
 
 
 
