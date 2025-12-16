@@ -729,13 +729,15 @@ body.theme-light .fullscreen-mask {
 
 <div class="timeline-viewport" id="viewport">
 
-  <!-- ✅ 전체화면 하단 가림용 레이어 (제일 위에) -->
+  <!-- ✅ (추가) 녹화 모드(가짜 전체화면) 종료 버튼 -->
+  <button type="button" id="recordExitBtn" class="record-exit" aria-label="녹화 모드 종료">✕</button>
+
+  <!-- (선택) 하단 그라데이션. '시스템 안내문구'는 못 가리지만, UI 연출용으로만 사용 -->
   <div class="fullscreen-mask"></div>
 
   <div class="viewport-header" id="headerLabel">
     날짜를 선택해주세요
   </div>
-
   <div class="timeline-title-overlay" id="titleOverlay"></div>
 
   <div class="timeline-inner" id="timeline"></div>
@@ -1329,43 +1331,31 @@ startScrollAnimationFrom(startScroll);
 }
 
     playBtn.addEventListener('click',runAnimation);
+// ✅ (추가) 녹화 모드 진입/종료
+const recordExitBtn = document.getElementById('recordExitBtn');
 
-playFullscreenBtn.addEventListener('click', async () => {
-  try {
-    // 전체 화면 진입
-    if (viewport.requestFullscreen) {
-      await viewport.requestFullscreen();
-    } else if (viewport.webkitRequestFullscreen) {
-      await viewport.webkitRequestFullscreen();
-    } else if (viewport.mozRequestFullScreen) {
-      await viewport.mozRequestFullScreen();
-    } else if (viewport.msRequestFullscreen) {
-      await viewport.msRequestFullscreen();
-    } else {
-      throw new Error('전체 화면 미지원');
-    }
-     
-    // 전체 화면 진입 후 화면 회전 잠금 시도
-    setTimeout(async () => {
-      if (screen.orientation && screen.orientation.lock) {
-        try {
-          await screen.orientation.lock('portrait-primary');
-        } catch (e) {
-          console.log('화면 회전 잠금 미지원:', e);
-        }
-      }
-    }, 100);
+function enterRecordMode() {
+  document.body.classList.add('record-mode');
+}
 
-    // 전체 화면 진입 후 애니메이션 시작
-    setTimeout(() => {
-      runAnimation();
-    }, 300);
-  
-  } catch (e) {
-    console.warn('전체 화면 진입 실패:', e);
-    alert('전체 화면 모드를 지원하지 않는 브라우저입니다. 일반 재생을 시도합니다.');
+function exitRecordMode() {
+  document.body.classList.remove('record-mode');
+  stopAnimation();        // 원하면 유지, 싫으면 빼도 됨
+  clearHourHighlight();   // 선택
+}
+
+recordExitBtn.addEventListener('click', exitRecordMode);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') exitRecordMode();
+});
+    
+playFullscreenBtn.addEventListener('click', () => {
+  enterRecordMode();
+
+  // 레이아웃이 바뀐 뒤 viewport 높이가 확정되고 나서 애니메이션 시작
+  setTimeout(() => {
     runAnimation();
-  }
+  }, 80);
 });
 
     document.addEventListener('fullscreenchange', () => {
@@ -1575,11 +1565,65 @@ playFullscreenBtn.addEventListener('click', async () => {
       }
     });
 
+    /* ✅ (추가) "가짜 전체화면(녹화 모드)" */
+body.record-mode {
+  overflow: hidden; /* 뒤 스크롤 방지 */
+}
+
+/* 사이드바 숨기고, 화면을 타임라인만 보이게 */
+body.record-mode .sidebar {
+  display: none !important;
+}
+body.record-mode .main {
+  padding: 0 !important;
+}
+
+/* 핵심: Fullscreen API가 아니라 CSS로 화면 꽉 채우기 */
+body.record-mode .timeline-viewport {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important; /* ✅ 안드로이드 주소창 이슈에 dvh가 유리 */
+  max-width: 100vw !important;
+  max-height: 100dvh !important;
+  border-radius: 0 !important;
+  border: none !important;
+  margin: 0 !important;
+  z-index: 9999 !important;
+  box-shadow: none !important;
+}
+
+/* ✅ (추가) 종료 버튼: 녹화 모드에서만 보이기 */
+.record-exit {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,0.4);
+  background: rgba(2,6,23,0.6);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  display: none;
+  z-index: 10000;
+}
+body.theme-light .record-exit {
+  background: rgba(249,250,251,0.8);
+  color: #111827;
+}
+body.record-mode .record-exit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 
 
   </script>
 </body>
 </html>
+
 
 
 
