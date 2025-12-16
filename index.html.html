@@ -703,6 +703,7 @@
     const HOUR_HEIGHT = 120;
     const MINUTE_PX = HOUR_HEIGHT / 60;
     const TOTAL_HOURS = 48;
+    const MIN_ITEM_HEIGHT = 100; // ⭐ 최소 높이 (1시간 블록보다 약간 작게)
     const MAX_MINUTES = TOTAL_HOURS * 60;
 
     const timeline = document.getElementById('timeline');
@@ -1108,22 +1109,26 @@
       
       const existing=items.filter(it=>it.blockId===block.id);
 
-      if (!existing.length){
-        const padding=12;
-        const availableWidth = blockRect.width - 32;
-        const availableHeight = blockHeight - padding*2;
-        
-        itemData.x=70;
-        itemData.y=blockTop + padding;
-        itemData.w=availableWidth;
-        itemData.h=availableHeight;
-      } else {
-        const w=Math.max(80, blockRect.width*0.5);
-        const h=Math.max(80, blockRect.height*0.5);
-        itemData.w=w; itemData.h=h;
-        itemData.x=70 + (blockRect.width-w)/2;
-        itemData.y=blockTop + (blockRect.height-h)/2;
-      }
+     // 기존 블록에 첫 아이템 추가할 때
+if (!existing.length){
+  const padding=12;
+  const availableWidth = blockRect.width - 32;
+  // ⭐ 최소 높이 적용
+  const availableHeight = Math.max(MIN_ITEM_HEIGHT, blockHeight - padding*2);
+  
+  itemData.x=70;
+  itemData.y=blockTop + padding;
+  itemData.w=availableWidth;
+  itemData.h=availableHeight;
+} else {
+  // 기존 블록에 추가 아이템 추가할 때
+  const w=Math.max(80, blockRect.width*0.5);
+  // ⭐ 최소 높이 적용
+  const h=Math.max(MIN_ITEM_HEIGHT, Math.max(80, blockRect.height*0.5));
+  itemData.w=w; itemData.h=h;
+  itemData.x=70 + (blockRect.width-w)/2;
+  itemData.y=blockTop + (blockRect.height-h)/2;
+}
 
       items.push(itemData);
       const el=createItemElement(itemData);
@@ -1278,36 +1283,42 @@
 
     playBtn.addEventListener('click',runAnimation);
 
-playFullscreenBtn.addEventListener('click',async()=>{
-  try{
+playFullscreenBtn.addEventListener('click', async () => {
+  try {
     // 전체 화면 진입
-    if (viewport.requestFullscreen){
+    if (viewport.requestFullscreen) {
       await viewport.requestFullscreen();
-    } else if (viewport.webkitRequestFullscreen){
+    } else if (viewport.webkitRequestFullscreen) {
       await viewport.webkitRequestFullscreen();
-    } else if (viewport.mozRequestFullScreen){
+    } else if (viewport.mozRequestFullScreen) {
       await viewport.mozRequestFullScreen();
-    } else if (viewport.msRequestFullscreen){
+    } else if (viewport.msRequestFullscreen) {
       await viewport.msRequestFullscreen();
+    } else {
+      throw new Error('전체 화면 미지원');
     }
-    
-    // 전체 화면 진입 후 화면 회전 잠금
+
+    // 전체 화면 진입 후 화면 회전 잠금 시도
     setTimeout(async () => {
       if (screen.orientation && screen.orientation.lock) {
         try {
           await screen.orientation.lock('portrait-primary');
-        } catch(e) {
+        } catch (e) {
           console.log('화면 회전 잠금 미지원:', e);
         }
       }
     }, 100);
-  }catch(e){ 
-    console.warn('전체 화면 진입 실패:',e); 
-  }
-  
-  setTimeout(() => {
+
+    // 전체 화면 진입 후 애니메이션 시작
+    setTimeout(() => {
+      runAnimation();
+    }, 300);
+
+  } catch (e) {
+    console.warn('전체 화면 진입 실패:', e);
+    alert('전체 화면 모드를 지원하지 않는 브라우저입니다. 일반 재생을 시도합니다.');
     runAnimation();
-  }, 200);
+  }
 });
 
     viewport.addEventListener('scroll',()=>{
@@ -1508,6 +1519,7 @@ playFullscreenBtn.addEventListener('click',async()=>{
   </script>
 </body>
 </html>
+
 
 
 
