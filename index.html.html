@@ -1230,8 +1230,8 @@ if (!existing.length){
   const minTop = Math.min(...tops);
   const maxBottom = Math.max(...bottoms);
 
-  const endScroll = Math.max(maxBottom - viewportHeight + 40, 0);
-
+  let endScroll = Math.max(maxBottom - viewportHeight + 40, 0);
+   
   const itemEls = timeline.querySelectorAll('.timeline-item');
   const durationSec = parseFloat(speedInput.value) || 8;
   const durationMs = durationSec * 1000;
@@ -1239,6 +1239,10 @@ if (!existing.length){
   const title = videoTitleInput.value.trim();
   const hasTitle = !!title;
 
+  function clampEndToStart(start){
+  if (endScroll < start) endScroll = start;
+}
+   
   function startScrollAnimationFrom(startScroll){
     if (mode === 'scrollReveal'){
       itemEls.forEach(el=>{
@@ -1298,10 +1302,10 @@ if (!existing.length){
     titleOverlay.style.display = 'flex';
 
     // ⭐ 첫 블록을 화면 하단 0.9 위치에 고정
-    const initialScroll =
-      Math.max(minTop - viewportHeight * 0.9, 0);
-
-    viewport.scrollTop = initialScroll;
+const initialScroll = Math.max(minTop - viewportHeight * 0.9, 0);
+clampEndToStart(initialScroll); // ✅ 추가
+viewport.scrollTop = initialScroll;
+    
     highlightHourByScroll(initialScroll);
 
     // ⏱ 제목 표시 (5초)
@@ -1316,10 +1320,11 @@ if (!existing.length){
 
   } else {
     // 제목 없는 경우 기존처럼
-    const startScroll = Math.max(minTop - 40, 0);
-    viewport.scrollTop = startScroll;
-    highlightHourByScroll(startScroll);
-    startScrollAnimationFrom(startScroll);
+ const startScroll = Math.max(minTop - 40, 0);
+clampEndToStart(startScroll); // ✅ 추가
+viewport.scrollTop = startScroll;
+highlightHourByScroll(startScroll);
+startScrollAnimationFrom(startScroll);
   }
 }
 
@@ -1575,6 +1580,7 @@ playFullscreenBtn.addEventListener('click', async () => {
   </script>
 </body>
 </html>
+
 
 
 
