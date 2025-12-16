@@ -1274,6 +1274,7 @@ if (!existing.length){
   exitEditMode();
 
   const mode = currentAnimationMode;
+  const blocksSorted = blocks.slice().sort((a,b)=>a.startMinutes - b.startMinutes);
   const viewportHeight = viewport.clientHeight;
 
   const tops = blocks.map(b => parseFloat(b.element.style.top) || 0);
@@ -1321,7 +1322,7 @@ if (!existing.length){
 
       if (mode === 'scrollReveal'){
         const triggerLine = current + viewportHeight * 0.4;
-        blocks.forEach(block=>{
+        blocksSorted.forEach(block=>{
           const blockTop = parseFloat(block.element.style.top) || 0;
           const threshold = blockTop + block.element.offsetHeight * 0.2;
           if (triggerLine >= threshold){
@@ -1364,14 +1365,13 @@ viewport.scrollTop = initialScroll;
     highlightHourByScroll(initialScroll);
 
     // ⏱ 제목 표시 (5초)
-    setTimeout(()=>{
-      titleOverlay.style.display = 'none';
+setTimeout(()=>{
+  titleOverlay.style.display = 'none';
 
-      // 🔥 현재 위치에서 바로 애니메이션 시작
-      const currentScroll = viewport.scrollTop;
-      startScrollAnimationFrom(currentScroll);
+  // ✅ 시작점을 고정해서 역재생/튐 방지
+  startScrollAnimationFrom(initialScroll);
 
-    }, 5000);
+}, 5000);
 
   } else {
     // 제목 없는 경우 기존처럼
@@ -1389,12 +1389,16 @@ const recordExitBtn = document.getElementById('recordExitBtn');
 
 function enterRecordMode() {
   document.body.classList.add('record-mode');
+  const mask = viewport.querySelector('.fullscreen-mask');
+  if (mask) mask.style.display = 'block';   // ✅ 필요하면 켜기
 }
 
 function exitRecordMode() {
   document.body.classList.remove('record-mode');
-  stopAnimation();        // 원하면 유지, 싫으면 빼도 됨
-  clearHourHighlight();   // 선택
+  stopAnimation();
+  clearHourHighlight();
+  const mask = viewport.querySelector('.fullscreen-mask');
+  if (mask) mask.style.display = 'none';    // ✅ 끄기
 }
 
 recordExitBtn.addEventListener('click', exitRecordMode);
@@ -1404,24 +1408,12 @@ document.addEventListener('keydown', (e) => {
     
 playFullscreenBtn.addEventListener('click', () => {
   enterRecordMode();
-
-  // 레이아웃이 바뀐 뒤 viewport 높이가 확정되고 나서 애니메이션 시작
-  setTimeout(() => {
-    runAnimation();
-  }, 80);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      runAnimation();
+    });
+  });
 });
-
-    document.addEventListener('fullscreenchange', () => {
-  const mask = viewport.querySelector('.fullscreen-mask');
-  if (!mask) return;
-
-  if (document.fullscreenElement === viewport) {
-    mask.style.display = 'block';
-  } else {
-    mask.style.display = 'none';
-  }
-});
-
     
     viewport.addEventListener('scroll',()=>{
       if (animFrameId===null){
@@ -1624,6 +1616,7 @@ playFullscreenBtn.addEventListener('click', () => {
   </script>
 </body>
 </html>
+
 
 
 
