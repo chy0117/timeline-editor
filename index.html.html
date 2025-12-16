@@ -538,19 +538,27 @@ body.theme-light .timeline-title-overlay {
     }
 
     /* ⭐ 전체 화면에서도 세로 비율 유지 강제 (가로로 눕는 현상 방지) */
-    .timeline-viewport:fullscreen,
-    .timeline-viewport:-webkit-full-screen,
-    .timeline-viewport:-moz-full-screen,
-    .timeline-viewport:-ms-fullscreen {
-      width: 100vw !important;
-      height: 100vh !important;
-      max-width: 100vw !important;
-      max-height: 100vh !important;
-      border-radius: 0 !important;
-      border: none !important;
-      overflow-y: auto !important;
-      overflow-x: hidden !important;
-    }
+   .timeline-viewport:fullscreen,
+.timeline-viewport:-webkit-full-screen,
+.timeline-viewport:-moz-full-screen,
+.timeline-viewport:-ms-fullscreen {
+
+  /* ✅ 추가되는 핵심 */
+  position: fixed !important;
+  top: 0;
+  left: 0;
+
+  /* 기존 그대로 유지 */
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  border-radius: 0 !important;
+  border: none !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
     
     /* 전체화면 내부 컨텐츠도 세로 유지 */
     .timeline-viewport:fullscreen .timeline-inner,
@@ -569,14 +577,14 @@ body.theme-light .timeline-title-overlay {
       }
     }
 
-   .fullscreen-mask {
-  position: fixed;
+ .fullscreen-mask {
+  position: absolute;   /* ❗ fixed 아님 */
   left: 0;
   right: 0;
   bottom: 0;
   height: 120px;
-  pointer-events: none;
   z-index: 9999;
+  pointer-events: none;
   display: none;
 
   background: linear-gradient(
@@ -1567,6 +1575,7 @@ playFullscreenBtn.addEventListener('click', async () => {
   </script>
 </body>
 </html>
+
 
 
 
