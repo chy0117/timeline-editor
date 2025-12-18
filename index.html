@@ -658,6 +658,86 @@ body.record-mode .record-exit {
   justify-content: center;
 }
 
+    /* ✅ (추가) 폰트 로드 (index.html이 루트 /fonts/ 폴더 기준) */
+@font-face{
+  font-family: "BagelFatOneLocal";
+  src: url("./fonts/BagelFatOne-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face{
+  font-family: "NanumNaMuJeongWeonLocal";
+  src: url("./fonts/NanumNaMuJeongWeon.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face{
+  font-family: "PretendardSemiBoldLocal";
+  src: url("./fonts/Pretendard-SemiBold.woff") format("woff");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face{
+  font-family: "LaudrygoLocal";
+  src: url("./fonts/laudrygo Regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ✅ (추가) titleOverlay에 적용될 폰트 프리셋 (클래스로 스위칭) */
+.timeline-title-overlay{ --title-font: "PretendardSemiBoldLocal"; }
+.timeline-title-overlay.titlefont-bagel{ --title-font: "BagelFatOneLocal"; }
+.timeline-title-overlay.titlefont-nanum{ --title-font: "NanumNaMuJeongWeonLocal"; }
+.timeline-title-overlay.titlefont-pretendard{ --title-font: "PretendardSemiBoldLocal"; }
+.timeline-title-overlay.titlefont-laudrygo{ --title-font: "LaudrygoLocal"; }
+
+/* 기존 titleOverlay 스타일 유지하면서 폰트만 갈아끼우기 */
+.timeline-title-overlay{
+  font-family: var(--title-font), system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+/* ✅ (추가) 제목 폰트 버튼 UI */
+.title-font-toggle{
+  display:flex;
+  gap:6px;
+  margin-top:8px;
+}
+.title-font-toggle .toggle-btn{
+  flex:1;
+  padding:6px 8px;
+  font-size:12px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  margin-top:0;
+  white-space:nowrap;
+}
+.title-font-toggle .toggle-btn.active{
+  background: var(--accent);
+  border-color: var(--accent-strong);
+  color:#020617;
+}
+
+/* 버튼 자체가 폰트 미리보기(텍스트는 전부 "제목") */
+.title-font-toggle .toggle-btn[data-font="pretendard"]{
+  font-family:"PretendardSemiBoldLocal", system-ui, sans-serif;
+}
+.title-font-toggle .toggle-btn[data-font="laudrygo"]{
+  font-family:"LaudrygoLocal", system-ui, sans-serif;
+}
+.title-font-toggle .toggle-btn[data-font="nanum"]{
+  font-family:"NanumNaMuJeongWeonLocal", system-ui, sans-serif;
+}
+.title-font-toggle .toggle-btn[data-font="bagel"]{
+  font-family:"BagelFatOneLocal", system-ui, sans-serif;
+}
+
   </style>
 </head>
 <body class="theme-dark" data-step="1">
@@ -747,6 +827,16 @@ body.record-mode .record-exit {
         <input id="videoTitle" type="text" placeholder="영상 제목을 입력하세요" />
         <p class="hint">애니메이션 시작 전에 5초 동안 제목 카드로 보여줘요.</p>
       </div>
+      <div style="margin-top:8px;">
+  <label>제목 폰트</label>
+  <div class="title-font-toggle" id="titleFontToggle">
+    <button type="button" class="toggle-btn active" data-font="pretendard">제목</button>
+    <button type="button" class="toggle-btn" data-font="laudrygo">제목</button>
+    <button type="button" class="toggle-btn" data-font="nanum">제목</button>
+    <button type="button" class="toggle-btn" data-font="bagel">제목</button>
+  </div>
+  <p class="hint">선택한 폰트가 제목 카드에 적용돼요.</p>
+</div>
 
       <div style="margin-top:8px;">
         <label>애니메이션 모드</label>
@@ -828,6 +918,30 @@ body.record-mode .record-exit {
     const playBtn = document.getElementById('playBtn');
     const playFullscreenBtn = document.getElementById('playFullscreenBtn');
     const videoTitleInput = document.getElementById('videoTitle');
+    // ✅ (추가) 제목 폰트 선택 버튼
+const titleFontButtons = document.querySelectorAll('#titleFontToggle .toggle-btn');
+let currentTitleFont = localStorage.getItem('titleFont') || 'pretendard';
+
+function applyTitleFont(fontKey){
+  // 버튼 active 처리
+  titleFontButtons.forEach(b => b.classList.toggle('active', b.dataset.font === fontKey));
+  currentTitleFont = fontKey;
+  localStorage.setItem('titleFont', fontKey);
+
+  // overlay 클래스 스위칭
+  titleOverlay.classList.remove('titlefont-bagel','titlefont-nanum','titlefont-pretendard','titlefont-laudrygo');
+  titleOverlay.classList.add(`titlefont-${fontKey}`);
+}
+
+// 초기 적용
+applyTitleFont(currentTitleFont);
+
+// 클릭 이벤트
+titleFontButtons.forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    applyTitleFont(btn.dataset.font);
+  });
+});
 
     const itemTypeButtons = document.querySelectorAll('.item-type-toggle .toggle-btn');
     const stepButtons = document.querySelectorAll('.step-btn');
@@ -1616,6 +1730,7 @@ playFullscreenBtn.addEventListener('click', () => {
   </script>
 </body>
 </html>
+
 
 
 
