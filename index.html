@@ -369,22 +369,26 @@ body.theme-light .timeline-title-overlay {
     }
 
     .timeline-item {
-      position: absolute;
-      border-radius: 12px;
-      overflow: hidden;
-      cursor: pointer;
-      box-shadow: 0 0 0 1px rgba(148,163,184,0.4);
-      transform-origin: center center;
-      background: rgba(15,23,42,0.9);
-      opacity: 1;
-      transition: opacity .4s ease;
-      z-index: 1;
-      touch-action: none;
-      user-select: none;
-      -webkit-user-select: none;
-      -webkit-touch-callout: none;
-      will-change: transform;
-    }
+  position: absolute;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 0 0 1px rgba(148,163,184,0.4);
+  transform-origin: center center;
+
+  /* ✅ 변경: 투명 PNG/알파 비디오 뒤가 검게 보이는 원인 제거 */
+  background: transparent;
+
+  opacity: 1;
+  transition: opacity .4s ease;
+  z-index: 1;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  will-change: transform;
+}
+
     
     /* 편집 중일 때는 transition 제거 (즉각 반응) */
     .timeline-item.editing {
@@ -418,19 +422,26 @@ body.theme-light .timeline-title-overlay {
       transform: translateZ(0);
       -webkit-transform: translateZ(0);
     }
-    .timeline-item-text {
-      width: 100%;
-      height: 100%;
-      padding: 6px 8px;
-      font-size: 13px;
-      line-height: 1.3;
-      color: #f9fafb;
-      word-break: break-word;
-    }
-    body.theme-light .timeline-item-text {
-      color: #111827;
-      background: rgba(255,255,255,0.9);
-    }
+   .timeline-item-text {
+  width: 100%;
+  height: 100%;
+  padding: 6px 8px;
+  font-size: 13px;
+  line-height: 1.3;
+  color: #f9fafb;
+  word-break: break-word;
+
+  /* ✅ 추가: 텍스트 배경 투명 */
+  background: transparent;
+}
+
+body.theme-light .timeline-item-text {
+  color: #111827;
+
+  /* ✅ 추가: 라이트모드도 배경 투명 */
+  background: transparent;
+}
+
 
     .timeline-item.reveal-hidden { opacity: 0; }
     .timeline-item.reveal-visible { opacity: 1; }
@@ -1812,6 +1823,7 @@ playFullscreenBtn.addEventListener('click', () => {
   </script>
 </body>
 </html>
+
 
 
 
