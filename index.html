@@ -176,6 +176,43 @@
       color: #020617;
     }
 
+    /* ✅ (추가) Step1 텍스트 폰트 선택 버튼 */
+.text-font-toggle{
+  display:flex;
+  gap:6px;
+  margin-top:6px;
+}
+.text-font-toggle .toggle-btn{
+  flex:1;
+  padding:6px 8px;
+  font-size:12px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  margin-top:0;
+  white-space:nowrap;
+}
+.text-font-toggle .toggle-btn.active{
+  background: var(--accent);
+  border-color: var(--accent-strong);
+  color:#020617;
+}
+
+/* 버튼 글씨가 폰트 미리보기처럼 보이게 */
+.text-font-toggle .toggle-btn[data-font="pretendard"]{
+  font-family:"PretendardSemiBoldLocal", "Pretendard", system-ui, sans-serif;
+}
+.text-font-toggle .toggle-btn[data-font="laudrygo"]{
+  font-family:"LaudrygoLocal", system-ui, sans-serif;
+}
+.text-font-toggle .toggle-btn[data-font="nanum"]{
+  font-family:"NanumNaMuJeongWeonLocal", system-ui, sans-serif;
+}
+.text-font-toggle .toggle-btn[data-font="bagel"]{
+  font-family:"BagelFatOneLocal", system-ui, sans-serif;
+}
     .speed-row {
       display: flex;
       align-items: center;
@@ -783,10 +820,22 @@ body.record-mode .record-exit {
         </div>
       </div>
 
-      <div id="textInputGroup">
-        <label for="textContent">텍스트 내용</label>
-        <textarea id="textContent" placeholder="텍스트 아이템 내용을 적어주세요"></textarea>
-      </div>
+     <div id="textInputGroup">
+  <label for="textContent">텍스트 내용</label>
+  <textarea id="textContent" placeholder="텍스트 아이템 내용을 적어주세요"></textarea>
+
+  <!-- ✅ (추가) 텍스트 폰트 선택 -->
+  <div style="margin-top:8px;">
+    <label>텍스트 폰트</label>
+    <div class="text-font-toggle" id="textFontToggle">
+      <button type="button" class="toggle-btn active" data-font="pretendard">텍스트</button>
+      <button type="button" class="toggle-btn" data-font="laudrygo">텍스트</button>
+      <button type="button" class="toggle-btn" data-font="nanum">텍스트</button>
+      <button type="button" class="toggle-btn" data-font="bagel">텍스트</button>
+    </div>
+  </div>
+</div>
+
 
       <div id="imageInputGroup">
         <label for="imageFile">이미지 / 동영상 파일</label>
@@ -944,6 +993,25 @@ titleFontButtons.forEach(btn=>{
 });
 
     const itemTypeButtons = document.querySelectorAll('.item-type-toggle .toggle-btn');
+    // ✅ (추가) Step1 텍스트 폰트 선택
+const textFontButtons = document.querySelectorAll('#textFontToggle .toggle-btn');
+let currentTextFont = localStorage.getItem('textFont') || 'pretendard';
+
+function applyTextFont(fontKey){
+  textFontButtons.forEach(b => b.classList.toggle('active', b.dataset.font === fontKey));
+  currentTextFont = fontKey;
+  localStorage.setItem('textFont', fontKey);
+}
+
+// 초기 적용
+applyTextFont(currentTextFont);
+
+// 클릭 이벤트
+textFontButtons.forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    applyTextFont(btn.dataset.font);
+  });
+});
     const stepButtons = document.querySelectorAll('.step-btn');
     const animationModeButtons = document.querySelectorAll('.animation-mode-toggle .toggle-btn');
 
@@ -1251,11 +1319,22 @@ titleFontButtons.forEach(btn=>{
         v.style.objectFit = 'contain';
         el.appendChild(v);
       } else {
-        const t = document.createElement('div');
-        t.className = 'timeline-item-text';
-        t.textContent = item.text;
-        el.appendChild(t);
-      }
+  const t = document.createElement('div');
+  t.className = 'timeline-item-text';
+  t.textContent = item.text;
+
+  // ✅ (추가) 폰트만 적용 (색상은 테마 CSS가 처리: 다크=화이트 / 라이트=블랙 고정)
+  const fontMap = {
+    pretendard: '"PretendardSemiBoldLocal","Pretendard",system-ui,sans-serif',
+    laudrygo: '"LaudrygoLocal",system-ui,sans-serif',
+    nanum: '"NanumNaMuJeongWeonLocal",system-ui,sans-serif',
+    bagel: '"BagelFatOneLocal",system-ui,sans-serif'
+  };
+  const key = item.fontKey || 'pretendard';
+  t.style.fontFamily = fontMap[key] || fontMap.pretendard;
+
+  el.appendChild(t);
+}
 
       // 🟧 제스처 이벤트 연결
       el.addEventListener('pointerdown', onGesturePointerDown);
@@ -1296,12 +1375,15 @@ titleFontButtons.forEach(btn=>{
       };
       let itemType;
 
-      if (currentItemType==='text'){
-        const text=textContentInput.value.trim();
-        if (!text){ alert('텍스트를 입력해주세요.'); return; }
-        itemType='text';
-        itemData.text=text;
-      } else {
+     if (currentItemType==='text'){
+  const text=textContentInput.value.trim();
+  if (!text){ alert('텍스트를 입력해주세요.'); return; }
+  itemType='text';
+  itemData.text=text;
+
+  // ✅ (추가) 선택한 폰트 저장
+  itemData.fontKey = currentTextFont;
+}else {
         const file=imageFileInput.files[0];
         if (!file){ alert('파일을 선택해주세요.'); return; }
         const url=URL.createObjectURL(file);
@@ -1730,6 +1812,7 @@ playFullscreenBtn.addEventListener('click', () => {
   </script>
 </body>
 </html>
+
 
 
 
