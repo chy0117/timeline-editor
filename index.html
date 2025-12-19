@@ -67,15 +67,32 @@ body{
 .sidebar{
   width:360px;
   height:100vh;
-  overflow-y:auto;
-  padding:18px 20px;
   background:var(--sidebar-bg);
   border-right:1px solid var(--border);
   display:flex;
   flex-direction:column;
-  gap:var(--ui-gap);
+  overflow:hidden;          /* ✅ 중요: sidebar 자체 스크롤 제거 */
   z-index:2;
 }
+/* ✅ 고정 영역 (H1 + STEP NAV) */
+.sidebar-top{
+  flex:0 0 auto;
+  padding:18px 20px 10px;
+  background:var(--sidebar-bg);
+  border-bottom:1px solid rgba(148,163,184,0.10);
+}
+
+/* ✅ 스크롤 영역 (STEP 패널들 전부) */
+.sidebar-scroll{
+  flex:1 1 auto;
+  min-height:0;             /* ✅ 중요: flex 내부 overflow 작동 */
+  overflow-y:auto;
+  padding:12px 20px 18px;
+  display:flex;
+  flex-direction:column;
+  gap:var(--ui-gap);
+}
+
 
 .main{
   flex:1;
@@ -837,22 +854,20 @@ body.theme-light .s1-divider{
 
 </head>
 <body class="theme-dark" data-step="1">
- <div class="sidebar">
+<div class="sidebar">
+  <!-- ✅ 고정 영역 -->
   <div class="sidebar-top">
     <h1>
       타임라인 에디터
       <button id="themeToggle" class="btn-theme">라이트 모드</button>
     </h1>
 
-    <div class="step-sticky">
-      <div class="step-nav">
-        <button type="button" class="step-btn active" data-step="1">1. 아이템 추가</button>
-        <button type="button" class="step-btn" data-step="2">2. 타임라인 편집</button>
-        <button type="button" class="step-btn" data-step="3">3. 애니메이션</button>
-      </div>
+    <div class="step-nav">
+      <button type="button" class="step-btn active" data-step="1">1. 아이템 추가</button>
+      <button type="button" class="step-btn" data-step="2">2. 타임라인 편집</button>
+      <button type="button" class="step-btn" data-step="3">3. 애니메이션</button>
     </div>
   </div>
-
 
 <!-- STEP 1 -->
 <div id="step1Panel" class="step-panel active">
@@ -1839,6 +1854,7 @@ body.theme-light .s1-divider{
 
 </body>
 </html>
+
 
 
 
