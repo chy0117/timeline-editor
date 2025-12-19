@@ -810,13 +810,28 @@ body.theme-light .s1-divider{
   justify-content:center;
 }
 
-  /* ✅ STEP 탭 sticky */
-.step-sticky{
+  /* ✅ h1 + step-nav를 한 덩어리로 상단 고정 */
+.sidebar-top{
   position: sticky;
   top: 0;
-  z-index: 50;
-  padding-top: 10px;           /* h1이랑 살짝 띄움(원하면 0) */
+  z-index: 80;
   background: var(--sidebar-bg);
+  padding: 12px 0 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ✅ h1 높이 줄이기 */
+.sidebar-top h1{
+  font-size: 18px;       /* 20 → 18 */
+  margin: 0 0 10px;      /* 위쪽 여백 제거 */
+  line-height: 1.1;
+}
+
+/* ✅ step-sticky는 더 이상 sticky 필요 없음(한 덩어리로 같이 붙음) */
+.step-sticky{
+  position: static;
+  padding-top: 0;
+  background: transparent;
 }
 </style>
 
@@ -1824,6 +1839,7 @@ body.theme-light .s1-divider{
 
 </body>
 </html>
+
 
 
 
