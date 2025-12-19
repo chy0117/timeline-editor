@@ -884,7 +884,8 @@ body.theme-light .s1-divider{
 </head>
 <body class="theme-dark" data-step="1">
 <div class="sidebar">
-  <!-- ✅ 고정 영역 -->
+
+  <!-- ✅ 상단 고정 영역 (H1 + STEP NAV) -->
   <div class="sidebar-top">
     <h1>
       타임라인 에디터
@@ -898,95 +899,104 @@ body.theme-light .s1-divider{
     </div>
   </div>
 
-<!-- STEP 1 -->
-<div id="step1Panel" class="step-panel active">
+  <!-- ✅ 스크롤 영역 (STEP 패널들 전부 여기로) -->
+  <div class="sidebar-scroll">
 
-  <div class="step1-sections">
+    <!-- STEP 1 -->
+    <div id="step1Panel" class="step-panel active">
+      <div class="step1-sections">
 
-    <!-- 1) 날짜 -->
-    <section class="s1-section">
-      <div class="s1-head">
-        <div class="s1-title">날짜</div>
+        <!-- 1) 날짜 -->
+        <section class="s1-section">
+          <div class="s1-head">
+            <div class="s1-title">날짜</div>
+          </div>
+
+          <label class="sr-only" for="date">날짜 선택</label>
+          <div class="row">
+            <input type="date" id="date" />
+            <button type="button" id="datePickerBtn" class="btn-secondary btn-date">📅</button>
+          </div>
+        </section>
+
+        <!-- 2) 영상 제목 -->
+        <section class="s1-section">
+          <div class="s1-head">
+            <div class="s1-title">영상 제목</div>
+          </div>
+
+          <label class="sr-only" for="videoTitle">영상 제목</label>
+          <input id="videoTitle" type="text" placeholder="영상 제목을 입력하세요" />
+
+          <div class="title-font-toggle" id="titleFontToggle" aria-label="제목 폰트 선택" style="margin-top:10px;">
+            <button type="button" class="toggle-btn active" data-font="pretendard">제목</button>
+            <button type="button" class="toggle-btn" data-font="laudrygo">제목</button>
+            <button type="button" class="toggle-btn" data-font="nanum">제목</button>
+            <button type="button" class="toggle-btn" data-font="bagel">제목</button>
+          </div>
+        </section>
+
+        <!-- 3) 아이템 추가 -->
+        <section class="s1-section">
+          <div class="s1-head">
+            <div class="s1-title">아이템 추가</div>
+          </div>
+
+          <div class="s1-subtitle">시간 구간(시작 ~ 끝)</div>
+          <div class="row">
+            <select id="startTime"></select>
+            <select id="endTime"></select>
+          </div>
+
+          <div class="s1-divider"></div>
+
+          <div class="s1-subtitle">아이템 타입</div>
+          <div class="item-type-toggle">
+            <button type="button" class="toggle-btn active" data-type="file">이미지/동영상</button>
+            <button type="button" class="toggle-btn" data-type="text">텍스트</button>
+          </div>
+
+          <div id="textInputGroup" style="margin-top:10px;">
+            <textarea id="textContent" placeholder="텍스트 아이템 내용을 적어주세요"></textarea>
+
+            <div class="text-font-toggle" id="textFontToggle" aria-label="텍스트 폰트 선택" style="margin-top:10px;">
+              <button type="button" class="toggle-btn active" data-font="pretendard">텍스트</button>
+              <button type="button" class="toggle-btn" data-font="laudrygo">텍스트</button>
+              <button type="button" class="toggle-btn" data-font="nanum">텍스트</button>
+              <button type="button" class="toggle-btn" data-font="bagel">텍스트</button>
+            </div>
+          </div>
+
+          <div id="imageInputGroup" style="margin-top:10px;">
+            <input type="file" id="imageFile" accept="image/*,video/*" />
+          </div>
+
+          <div class="s1-divider"></div>
+
+          <button id="addItemBtn" class="btn-primary">아이템 추가</button>
+          <p id="timeSummary" class="hint" style="margin-top:10px;">아직 추가된 시간이 없습니다.</p>
+          <ul id="blockList" class="block-list"></ul>
+        </section>
+
       </div>
+    </div>
 
-      <label class="sr-only" for="date">날짜 선택</label>
-      <div class="row">
-        <input type="date" id="date" />
-        <button type="button" id="datePickerBtn" class="btn-secondary btn-date">📅</button>
-      </div>
-    </section>
-
-    <!-- 2) 영상 제목 -->
-    <section class="s1-section">
-      <div class="s1-head">
-        <div class="s1-title">영상 제목</div>
-      </div>
-
-      <!-- ✅ 중복 느낌 방지: 라벨은 숨기고 input만 깔끔하게 -->
-      <label class="sr-only" for="videoTitle">영상 제목</label>
-      <input id="videoTitle" type="text" placeholder="영상 제목을 입력하세요" />
-
-      <!-- ✅ “제목 폰트” 텍스트는 제거하고 버튼만 -->
-      <div class="title-font-toggle" id="titleFontToggle" aria-label="제목 폰트 선택" style="margin-top:10px;">
-        <button type="button" class="toggle-btn active" data-font="pretendard">제목</button>
-        <button type="button" class="toggle-btn" data-font="laudrygo">제목</button>
-        <button type="button" class="toggle-btn" data-font="nanum">제목</button>
-        <button type="button" class="toggle-btn" data-font="bagel">제목</button>
-      </div>
-    </section>
-
-    <!-- 3) 아이템 추가 -->
-    <section class="s1-section">
-      <div class="s1-head">
-        <div class="s1-title">아이템 추가</div>
-      </div>
-
-      <!-- 3-1 시간 구간 -->
-      <div class="s1-subtitle">시간 구간(시작 ~ 끝)</div>
-      <div class="row">
-        <select id="startTime"></select>
-        <select id="endTime"></select>
-      </div>
-
-      <div class="s1-divider"></div>
-
-      <!-- 3-2 타입/내용 -->
-      <div class="s1-subtitle">아이템 타입</div>
-      <div class="item-type-toggle">
-        <button type="button" class="toggle-btn active" data-type="file">이미지/동영상</button>
-        <button type="button" class="toggle-btn" data-type="text">텍스트</button>
-      </div>
-
-      <!-- 텍스트 -->
-      <div id="textInputGroup" style="margin-top:10px;">
-        <textarea id="textContent" placeholder="텍스트 아이템 내용을 적어주세요"></textarea>
-
-        <!-- 텍스트 폰트 -->
-        <div class="text-font-toggle" id="textFontToggle" aria-label="텍스트 폰트 선택" style="margin-top:10px;">
-          <button type="button" class="toggle-btn active" data-font="pretendard">텍스트</button>
-          <button type="button" class="toggle-btn" data-font="laudrygo">텍스트</button>
-          <button type="button" class="toggle-btn" data-font="nanum">텍스트</button>
-          <button type="button" class="toggle-btn" data-font="bagel">텍스트</button>
-        </div>
-      </div>
-
-      <!-- 파일 -->
-      <div id="imageInputGroup" style="margin-top:10px;">
-        <input type="file" id="imageFile" accept="image/*,video/*" />
-      </div>
-
-      <div class="s1-divider"></div>
-
-      <!-- 3-3 추가 -->
-      <button id="addItemBtn" class="btn-primary">아이템 추가</button>
-      <p id="timeSummary" class="hint" style="margin-top:10px;">아직 추가된 시간이 없습니다.</p>
-      <ul id="blockList" class="block-list"></ul>
-    </section>
-
-  </div>
-</div>
-
-    <!-- STEP 2 --> <div id="step2Panel" class="step-panel"> <p class="hint"> 타임라인에서 아이템을 <b>길게 누르면</b> 편집 모드로 들어갑니다.<br/> 편집 모드에서는: </p> <ul class="hint" style="margin: 8px 0; padding-left: 20px;"> <li>한 손가락 드래그로 자유롭게 위치 이동</li> <li>두 손가락 핀치로 크기 조절</li> <li>두 손가락 회전으로 각도 조절</li> </ul> <p class="hint"> 빈 공간을 탭하면 편집 모드가 해제됩니다.<br/> 아이템들이 겹칠 수 있으며, 편집하는 아이템이 가장 위에 표시됩니다. </p> </div>
+    <!-- STEP 2 -->
+    <div id="step2Panel" class="step-panel">
+      <p class="hint">
+        타임라인에서 아이템을 <b>길게 누르면</b> 편집 모드로 들어갑니다.<br/>
+        편집 모드에서는:
+      </p>
+      <ul class="hint" style="margin: 8px 0; padding-left: 20px;">
+        <li>한 손가락 드래그로 자유롭게 위치 이동</li>
+        <li>두 손가락 핀치로 크기 조절</li>
+        <li>두 손가락 회전으로 각도 조절</li>
+      </ul>
+      <p class="hint">
+        빈 공간을 탭하면 편집 모드가 해제됩니다.<br/>
+        아이템들이 겹칠 수 있으며, 편집하는 아이템이 가장 위에 표시됩니다.
+      </p>
+    </div>
 
     <!-- STEP 3 -->
     <div id="step3Panel" class="step-panel">
@@ -1015,7 +1025,10 @@ body.theme-light .s1-divider{
         타임라인 영상으로 바로 저장할 수 있어요.
       </p>
     </div>
+
   </div>
+</div>
+
 
   <div class="main">
     <div class="step1-placeholder">
@@ -1883,6 +1896,7 @@ body.theme-light .s1-divider{
 
 </body>
 </html>
+
 
 
 
