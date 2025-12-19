@@ -920,8 +920,7 @@ body.theme-light .s1-section{
       </div>
 
       <!-- 3-1 시간 구간 -->
-      <div class="s1-subtitle">시간 구간</div>
-      <label class="sr-only">시간 구간 (시작 ~ 끝)</label>
+      <div class="s1-subtitle">시간 구간(시작 ~ 끝)</div>
       <div class="row">
         <select id="startTime"></select>
         <select id="endTime"></select>
@@ -930,7 +929,7 @@ body.theme-light .s1-section{
       <div class="s1-divider"></div>
 
       <!-- 3-2 타입/내용 -->
-      <div class="s1-subtitle">아이템 타입 및 내용</div>
+      <div class="s1-subtitle">아이템 타입</div>
       <div class="item-type-toggle">
         <button type="button" class="toggle-btn active" data-type="file">이미지/동영상</button>
         <button type="button" class="toggle-btn" data-type="text">텍스트</button>
@@ -951,14 +950,12 @@ body.theme-light .s1-section{
 
       <!-- 파일 -->
       <div id="imageInputGroup" style="margin-top:10px;">
-        <label for="imageFile">이미지 / 동영상 파일</label>
         <input type="file" id="imageFile" accept="image/*,video/*" />
       </div>
 
       <div class="s1-divider"></div>
 
       <!-- 3-3 추가 -->
-      <div class="s1-subtitle"> 아이템 추가</div>
       <button id="addItemBtn" class="btn-primary">아이템 추가</button>
       <p id="timeSummary" class="hint" style="margin-top:10px;">아직 추가된 시간이 없습니다.</p>
       <ul id="blockList" class="block-list"></ul>
@@ -967,6 +964,7 @@ body.theme-light .s1-section{
   </div>
 </div>
 
+    <!-- STEP 2 --> <div id="step2Panel" class="step-panel"> <p class="hint"> 타임라인에서 아이템을 <b>길게 누르면</b> 편집 모드로 들어갑니다.<br/> 편집 모드에서는: </p> <ul class="hint" style="margin: 8px 0; padding-left: 20px;"> <li>한 손가락 드래그로 자유롭게 위치 이동</li> <li>두 손가락 핀치로 크기 조절</li> <li>두 손가락 회전으로 각도 조절</li> </ul> <p class="hint"> 빈 공간을 탭하면 편집 모드가 해제됩니다.<br/> 아이템들이 겹칠 수 있으며, 편집하는 아이템이 가장 위에 표시됩니다. </p> </div>
 
     <!-- STEP 3 -->
     <div id="step3Panel" class="step-panel">
@@ -1863,6 +1861,7 @@ body.theme-light .s1-section{
 
 </body>
 </html>
+
 
 
 
