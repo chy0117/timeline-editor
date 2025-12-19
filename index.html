@@ -775,6 +775,91 @@ body.theme-light .step-panel .panel-section{
   margin: 0 0 8px;
 }
 
+    /* =========================
+   ✅ Step1 섹션 UI (깔끔 버전)
+   ========================= */
+.step1-sections{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.s1-section{
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:14px;
+  background: rgba(255,255,255,0.02);
+}
+body.theme-light .s1-section{
+  background: rgba(2,6,23,0.03);
+}
+
+.s1-head{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.s1-num{
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:13px;
+  color: var(--muted);
+  flex:0 0 auto;
+}
+
+.s1-title{
+  font-size:16px;
+  font-weight:800;
+  color: var(--fg);
+}
+
+.s1-subtitle{
+  margin-top:12px;
+  margin-bottom:6px;
+  font-size:13px;
+  font-weight:800;
+  color: var(--muted);
+}
+
+.s1-divider{
+  height:1px;
+  background: var(--border);
+  opacity:0.9;
+  margin:12px 0;
+}
+
+/* 라벨 텍스트는 중복 느낌 나면 "시각적으로만" 숨김 (접근성은 유지) */
+.sr-only{
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip:rect(0,0,0,0);
+  white-space:nowrap;
+  border:0;
+}
+
+/* ✅ 폰트 버튼: 터치 높이 유지 + 시각 패딩 줄이기(폰트 차이 더 티나게) */
+.title-font-toggle .toggle-btn,
+.text-font-toggle .toggle-btn{
+  min-height: 44px;
+  padding: 0 8px;   /* 시각적으로 꽉 차게 */
+  font-size: 20px;  /* 폰트 차이 보이게 */
+  line-height: 1;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
 </style>
 
 </head>
@@ -794,131 +879,94 @@ body.theme-light .step-panel .panel-section{
 <!-- STEP 1 -->
 <div id="step1Panel" class="step-panel active">
 
-  <!-- 1. 날짜 -->
-  <div class="panel-section">
-    <div class="section-title">
-      <span class="badge">1</span>
-      날짜
-    </div>
+  <div class="step1-sections">
 
-    <label for="date">날짜 선택 (날짜 바꾸면 새 타임라인 시작)</label>
-    <div class="row">
-      <input type="date" id="date" />
-      <button type="button" id="datePickerBtn" class="btn-secondary btn-date">📅</button>
-    </div>
-  </div>
+    <!-- 1) 날짜 -->
+    <section class="s1-section">
+      <div class="s1-head">
+        <div class="s1-title">날짜</div>
+      </div>
 
-  <!-- 2. 영상 제목 -->
-  <div class="panel-section">
-    <div class="section-title">
-      <span class="badge">2</span>
-      영상 제목
-    </div>
+      <label class="sr-only" for="date">날짜 선택</label>
+      <div class="row">
+        <input type="date" id="date" />
+        <button type="button" id="datePickerBtn" class="btn-secondary btn-date">📅</button>
+      </div>
+    </section>
 
-    <label for="videoTitle">영상 제목</label>
-    <input id="videoTitle" type="text" placeholder="영상 제목을 입력하세요" />
+    <!-- 2) 영상 제목 -->
+    <section class="s1-section">
+      <div class="s1-head">
+        <div class="s1-title">영상 제목</div>
+      </div>
 
-    <!-- ✅ “제목 폰트 텍스트” 따로 안 쓰고, 바로 버튼만 -->
-    <div class="section-sub">
-      <p class="step1-mini-label">제목 폰트</p>
-      <div class="title-font-toggle" id="titleFontToggle" aria-label="제목 폰트 선택">
+      <!-- ✅ 중복 느낌 방지: 라벨은 숨기고 input만 깔끔하게 -->
+      <label class="sr-only" for="videoTitle">영상 제목</label>
+      <input id="videoTitle" type="text" placeholder="영상 제목을 입력하세요" />
+
+      <!-- ✅ “제목 폰트” 텍스트는 제거하고 버튼만 -->
+      <div class="title-font-toggle" id="titleFontToggle" aria-label="제목 폰트 선택" style="margin-top:10px;">
         <button type="button" class="toggle-btn active" data-font="pretendard">제목</button>
         <button type="button" class="toggle-btn" data-font="laudrygo">제목</button>
         <button type="button" class="toggle-btn" data-font="nanum">제목</button>
         <button type="button" class="toggle-btn" data-font="bagel">제목</button>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <!-- 3. 아이템 추가 -->
-  <div class="panel-section">
-    <div class="section-title">
-      <span class="badge">3</span>
-      아이템 추가
-    </div>
+    <!-- 3) 아이템 추가 -->
+    <section class="s1-section">
+      <div class="s1-head">
+        <div class="s1-title">아이템 추가</div>
+      </div>
 
-    <!-- 3-1. 시간구간 -->
-    <div class="section-sub">
-      <div class="sub-title">3-1. 시간 구간</div>
-
-      <label>시간 구간 (시작 ~ 끝)</label>
+      <!-- 3-1 시간 구간 -->
+      <div class="s1-subtitle">시간 구간</div>
+      <label class="sr-only">시간 구간 (시작 ~ 끝)</label>
       <div class="row">
         <select id="startTime"></select>
         <select id="endTime"></select>
       </div>
 
-      <p class="hint">
-        시작 시간과 끝 시간을 선택해서 해당 구간 블록 안에 아이템을 추가해요.<br/>
-        다음날 새벽까지 필요하면 <b>다음날 01:00</b> 이런 식으로 선택할 수 있어요.
-      </p>
-    </div>
+      <div class="s1-divider"></div>
 
-    <!-- 3-2. 아이템 타입 + 입력 -->
-    <div class="section-sub">
-      <div class="sub-title">3-2. 아이템 타입 선택 및 파일/내용 작성</div>
-
-      <label>아이템 타입</label>
+      <!-- 3-2 타입/내용 -->
+      <div class="s1-subtitle">아이템 타입 및 내용</div>
       <div class="item-type-toggle">
         <button type="button" class="toggle-btn active" data-type="file">이미지/동영상</button>
         <button type="button" class="toggle-btn" data-type="text">텍스트</button>
       </div>
 
-      <!-- 텍스트 입력 -->
-      <div id="textInputGroup">
-        <label for="textContent">텍스트 내용</label>
+      <!-- 텍스트 -->
+      <div id="textInputGroup" style="margin-top:10px;">
         <textarea id="textContent" placeholder="텍스트 아이템 내용을 적어주세요"></textarea>
 
-        <div class="section-sub">
-          <p class="step1-mini-label">텍스트 폰트</p>
-          <div class="text-font-toggle" id="textFontToggle">
-            <button type="button" class="toggle-btn active" data-font="pretendard">텍스트</button>
-            <button type="button" class="toggle-btn" data-font="laudrygo">텍스트</button>
-            <button type="button" class="toggle-btn" data-font="nanum">텍스트</button>
-            <button type="button" class="toggle-btn" data-font="bagel">텍스트</button>
-          </div>
+        <!-- 텍스트 폰트 -->
+        <div class="text-font-toggle" id="textFontToggle" aria-label="텍스트 폰트 선택" style="margin-top:10px;">
+          <button type="button" class="toggle-btn active" data-font="pretendard">텍스트</button>
+          <button type="button" class="toggle-btn" data-font="laudrygo">텍스트</button>
+          <button type="button" class="toggle-btn" data-font="nanum">텍스트</button>
+          <button type="button" class="toggle-btn" data-font="bagel">텍스트</button>
         </div>
       </div>
 
-      <!-- 파일 입력 -->
-      <div id="imageInputGroup">
+      <!-- 파일 -->
+      <div id="imageInputGroup" style="margin-top:10px;">
         <label for="imageFile">이미지 / 동영상 파일</label>
         <input type="file" id="imageFile" accept="image/*,video/*" />
-        <p class="hint">
-          스티커 PNG, 사진, 짧은 타임랩스 영상 등 파일을 추가할 수 있어요.<br/>
-          한 번에 한 개씩 추가 (여러 개면 여러 번 추가).
-        </p>
       </div>
-    </div>
 
-    <!-- 3-3. 아이템 추가 버튼 -->
-    <div class="section-sub">
-      <div class="sub-title">3-3. 아이템 추가</div>
+      <div class="s1-divider"></div>
+
+      <!-- 3-3 추가 -->
+      <div class="s1-subtitle"> 아이템 추가</div>
       <button id="addItemBtn" class="btn-primary">아이템 추가</button>
-
-      <p id="timeSummary" class="hint">아직 추가된 시간이 없습니다.</p>
+      <p id="timeSummary" class="hint" style="margin-top:10px;">아직 추가된 시간이 없습니다.</p>
       <ul id="blockList" class="block-list"></ul>
-    </div>
+    </section>
 
   </div>
 </div>
 
-
-    <!-- STEP 2 -->
-    <div id="step2Panel" class="step-panel">
-      <p class="hint">
-        타임라인에서 아이템을 <b>길게 누르면</b> 편집 모드로 들어갑니다.<br/>
-        편집 모드에서는:
-      </p>
-      <ul class="hint" style="margin: 8px 0; padding-left: 20px;">
-        <li>한 손가락 드래그로 자유롭게 위치 이동</li>
-        <li>두 손가락 핀치로 크기 조절</li>
-        <li>두 손가락 회전으로 각도 조절</li>
-      </ul>
-      <p class="hint">
-        빈 공간을 탭하면 편집 모드가 해제됩니다.<br/>
-        아이템들이 겹칠 수 있으며, 편집하는 아이템이 가장 위에 표시됩니다.
-      </p>
-    </div>
 
     <!-- STEP 3 -->
     <div id="step3Panel" class="step-panel">
@@ -1815,6 +1863,7 @@ body.theme-light .step-panel .panel-section{
 
 </body>
 </html>
+
 
 
 
