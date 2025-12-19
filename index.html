@@ -1116,6 +1116,7 @@ body.theme-light .s1-divider{
 
     titleOverlay.classList.remove('titlefont-bagel','titlefont-nanum','titlefont-pretendard','titlefont-laudrygo');
     titleOverlay.classList.add(`titlefont-${fontKey}`);
+    markDirtyAndSave('titleFont');
   }
 
   titleFontButtons.forEach(btn => {
@@ -1130,6 +1131,7 @@ body.theme-light .s1-divider{
     textFontButtons.forEach(b => b.classList.toggle('active', b.dataset.font === fontKey));
     currentTextFont = fontKey;
     localStorage.setItem('textFont', fontKey);
+    markDirtyAndSave('textFont');
   }
 
   textFontButtons.forEach(btn => {
@@ -1171,7 +1173,53 @@ body.theme-light .s1-divider{
   }
 
   function clamp(n, min, max){ return Math.max(min, Math.min(n, max)); }
+    /* ---------- Save: 즉시 저장 + 3분 백업 저장 ---------- */
+  const STORAGE_KEY = 'tse_v21_state';
+  const BACKUP_SAVE_MS = 180000; // 3분 (유지)
 
+  let backupSaveTimer = null;
+
+  function getStateSnapshot() {
+    return {
+      v: '2.1',
+      savedAt: Date.now(),
+      date: dateInput.value || '',
+      title: videoTitleInput.value || '',
+      currentTitleFont,
+      currentTextFont,
+      currentItemType,
+      currentAnimationMode,
+      blocks,
+      items
+      // ⚠️ 참고: image/video의 src(ObjectURL)는 새로고침 후 복원 불가할 수 있음
+    };
+  }
+
+  function saveStateNow(reason = '') {
+    try {
+      const snap = getStateSnapshot();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(snap));
+      // 필요하면 디버그용:
+      // console.log('[SAVE NOW]', reason, new Date().toLocaleTimeString());
+    } catch (err) {
+      console.warn('saveStateNow failed:', err);
+    }
+  }
+
+  // 액션이 발생하면: 1) 즉시 저장  2) 3분 뒤 백업 저장 예약(리셋)
+  function markDirtyAndSave(reason = '') {
+    // 1) 즉시 저장
+    saveStateNow(reason);
+
+    // 2) 3분 백업 저장 예약 (기존 3분 유지)
+    if (backupSaveTimer) clearTimeout(backupSaveTimer);
+    backupSaveTimer = setTimeout(() => {
+      saveStateNow('backup(3min)');
+      backupSaveTimer = null;
+    }, BACKUP_SAVE_MS);
+  }
+
+  
   /* ---------- Block / List ---------- */
   function updateBlockList() {
     blockListEl.innerHTML = '';
@@ -1261,6 +1309,7 @@ body.theme-light .s1-divider{
 
     editingItemEl = null;
     updateTimeSummary();
+     markDirtyAndSave('deleteBlock');
   }
 
   /* ---------- Time Options ---------- */
@@ -1708,7 +1757,12 @@ body.theme-light .s1-divider{
     longPressStartPos = null;
 
     activeTouches = activeTouches.filter(t => t.id !== e.pointerId);
-    if (activeTouches.length === 0) gestureState = null;
+
+    if (activeTouches.length === 0) {
+      gestureState = null;
+      // ✅ 드래그/핀치/회전 조작이 끝나는 순간 즉시 저장 + 3분 백업 예약
+      markDirtyAndSave('gestureEnd');
+    }
   }
 
   /* ---------- Events ---------- */
@@ -1726,6 +1780,7 @@ body.theme-light .s1-divider{
   dateInput.addEventListener('change', () => {
     headerLabel.textContent = dateInput.value + ' 타임라인';
     resetTimelineDataAndDom();
+    markDirtyAndSave('dateChange');
   });
 
   datePickerBtn.addEventListener('click', () => {
@@ -1840,6 +1895,7 @@ body.theme-light .s1-divider{
 
     if (itemType==='image'||itemType==='video') imageFileInput.value='';
     updateBlockList();
+    markDirtyAndSave('addItem');
   });
 
   playBtn.addEventListener('click', runAnimation);
@@ -1896,6 +1952,7 @@ body.theme-light .s1-divider{
 
 </body>
 </html>
+
 
 
 
