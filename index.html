@@ -710,6 +710,71 @@
     font-style:normal;
     font-display:swap;
   }
+    /* ================================
+   ✅ Step1 Section Layout
+   - Step1을 1/2/3 섹션으로 명확히 분리
+   ================================ */
+
+.step-panel .panel-section{
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255,255,255,0.02);
+}
+
+body.theme-light .step-panel .panel-section{
+  background: rgba(2,6,23,0.02);
+}
+
+.section-title{
+  font-size: 15px;
+  font-weight: 800;
+  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-title .badge{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.section-sub{
+  padding-top: 12px;
+  margin-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+
+.section-sub:first-of-type{
+  padding-top: 0;
+  margin-top: 0;
+  border-top: none;
+}
+
+.sub-title{
+  font-size: 14px;
+  font-weight: 750;
+  margin: 0 0 10px;
+  color: var(--fg);
+}
+
+/* Step1 안에서 폰트 토글 라벨(“텍스트 폰트” 같은) 너무 튀면 살짝 줄이기 */
+.step1-mini-label{
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+
 </style>
 
 </head>
@@ -726,69 +791,95 @@
       <button type="button" class="step-btn" data-step="3">3. 애니메이션</button>
     </div>
 
-    <!-- STEP 1 -->
-    <div id="step1Panel" class="step-panel active">
-      <div>
-        <label for="date">날짜 선택 (날짜 바꾸면 새 타임라인 시작)</label>
-        <div class="row">
-          <input type="date" id="date" />
-          <button type="button" id="datePickerBtn" class="btn-secondary btn-date">📅</button>
-        </div>
-      </div>
-      <!-- ✅ (이동) 영상 제목 + 제목 폰트 -->
-<div style="margin-top:10px;">
-  <label for="videoTitle">영상 제목</label>
-  <input id="videoTitle" type="text" placeholder="영상 제목을 입력하세요" />
-</div>
+<!-- STEP 1 -->
+<div id="step1Panel" class="step-panel active">
 
-<div style="margin-top:8px;">
-  <div class="title-font-toggle" id="titleFontToggle" aria-label="제목 폰트 선택">
-    <button type="button" class="toggle-btn active" data-font="pretendard">제목</button>
-    <button type="button" class="toggle-btn" data-font="laudrygo">제목</button>
-    <button type="button" class="toggle-btn" data-font="nanum">제목</button>
-    <button type="button" class="toggle-btn" data-font="bagel">제목</button>
-  </div>
-</div>
+  <!-- 1. 날짜 -->
+  <div class="panel-section">
+    <div class="section-title">
+      <span class="badge">1</span>
+      날짜
+    </div>
 
-      
-
-      <div>
-        <label>시간 구간 (시작 ~ 끝)</label>
-        <div class="row">
-          <select id="startTime"></select>
-          <select id="endTime"></select>
-        </div>
-        <p class="hint">
-          시작 시간과 끝 시간을 선택해서 해당 구간 블록 안에 아이템을 추가해요.<br/>
-          다음날 새벽까지 필요하면 <b>다음날 01:00</b> 이런 식으로 선택할 수 있어요.
-        </p>
-      </div>
-
-      <div>
-        <label>아이템 타입</label>
-        <div class="item-type-toggle">
-          <button type="button" class="toggle-btn active" data-type="file">이미지/동영상</button>
-          <button type="button" class="toggle-btn" data-type="text">텍스트</button>
-        </div>
-      </div>
-
-     <div id="textInputGroup">
-  <label for="textContent">텍스트 내용</label>
-  <textarea id="textContent" placeholder="텍스트 아이템 내용을 적어주세요"></textarea>
-
-  <!-- ✅ (추가) 텍스트 폰트 선택 -->
-  <div style="margin-top:8px;">
-    <label>텍스트 폰트</label>
-    <div class="text-font-toggle" id="textFontToggle">
-      <button type="button" class="toggle-btn active" data-font="pretendard">텍스트</button>
-      <button type="button" class="toggle-btn" data-font="laudrygo">텍스트</button>
-      <button type="button" class="toggle-btn" data-font="nanum">텍스트</button>
-      <button type="button" class="toggle-btn" data-font="bagel">텍스트</button>
+    <label for="date">날짜 선택 (날짜 바꾸면 새 타임라인 시작)</label>
+    <div class="row">
+      <input type="date" id="date" />
+      <button type="button" id="datePickerBtn" class="btn-secondary btn-date">📅</button>
     </div>
   </div>
-</div>
 
+  <!-- 2. 영상 제목 -->
+  <div class="panel-section">
+    <div class="section-title">
+      <span class="badge">2</span>
+      영상 제목
+    </div>
 
+    <label for="videoTitle">영상 제목</label>
+    <input id="videoTitle" type="text" placeholder="영상 제목을 입력하세요" />
+
+    <!-- ✅ “제목 폰트 텍스트” 따로 안 쓰고, 바로 버튼만 -->
+    <div class="section-sub">
+      <p class="step1-mini-label">제목 폰트</p>
+      <div class="title-font-toggle" id="titleFontToggle" aria-label="제목 폰트 선택">
+        <button type="button" class="toggle-btn active" data-font="pretendard">제목</button>
+        <button type="button" class="toggle-btn" data-font="laudrygo">제목</button>
+        <button type="button" class="toggle-btn" data-font="nanum">제목</button>
+        <button type="button" class="toggle-btn" data-font="bagel">제목</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 아이템 추가 -->
+  <div class="panel-section">
+    <div class="section-title">
+      <span class="badge">3</span>
+      아이템 추가
+    </div>
+
+    <!-- 3-1. 시간구간 -->
+    <div class="section-sub">
+      <div class="sub-title">3-1. 시간 구간</div>
+
+      <label>시간 구간 (시작 ~ 끝)</label>
+      <div class="row">
+        <select id="startTime"></select>
+        <select id="endTime"></select>
+      </div>
+
+      <p class="hint">
+        시작 시간과 끝 시간을 선택해서 해당 구간 블록 안에 아이템을 추가해요.<br/>
+        다음날 새벽까지 필요하면 <b>다음날 01:00</b> 이런 식으로 선택할 수 있어요.
+      </p>
+    </div>
+
+    <!-- 3-2. 아이템 타입 + 입력 -->
+    <div class="section-sub">
+      <div class="sub-title">3-2. 아이템 타입 선택 및 파일/내용 작성</div>
+
+      <label>아이템 타입</label>
+      <div class="item-type-toggle">
+        <button type="button" class="toggle-btn active" data-type="file">이미지/동영상</button>
+        <button type="button" class="toggle-btn" data-type="text">텍스트</button>
+      </div>
+
+      <!-- 텍스트 입력 -->
+      <div id="textInputGroup">
+        <label for="textContent">텍스트 내용</label>
+        <textarea id="textContent" placeholder="텍스트 아이템 내용을 적어주세요"></textarea>
+
+        <div class="section-sub">
+          <p class="step1-mini-label">텍스트 폰트</p>
+          <div class="text-font-toggle" id="textFontToggle">
+            <button type="button" class="toggle-btn active" data-font="pretendard">텍스트</button>
+            <button type="button" class="toggle-btn" data-font="laudrygo">텍스트</button>
+            <button type="button" class="toggle-btn" data-font="nanum">텍스트</button>
+            <button type="button" class="toggle-btn" data-font="bagel">텍스트</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 파일 입력 -->
       <div id="imageInputGroup">
         <label for="imageFile">이미지 / 동영상 파일</label>
         <input type="file" id="imageFile" accept="image/*,video/*" />
@@ -797,12 +888,20 @@
           한 번에 한 개씩 추가 (여러 개면 여러 번 추가).
         </p>
       </div>
+    </div>
 
+    <!-- 3-3. 아이템 추가 버튼 -->
+    <div class="section-sub">
+      <div class="sub-title">3-3. 아이템 추가</div>
       <button id="addItemBtn" class="btn-primary">아이템 추가</button>
 
       <p id="timeSummary" class="hint">아직 추가된 시간이 없습니다.</p>
       <ul id="blockList" class="block-list"></ul>
     </div>
+
+  </div>
+</div>
+
 
     <!-- STEP 2 -->
     <div id="step2Panel" class="step-panel">
@@ -1716,6 +1815,7 @@
 
 </body>
 </html>
+
 
 
 
