@@ -6,981 +6,712 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>타임라인 스토리 에디터</title>
   <style>
-    :root {
-      --bg: #020617;
-      --fg: #e5e7eb;
-      --sidebar-bg: #020617;
-      --border: #111827;
-      --viewport-bg: #020617;
-      --block-bg: #020617;
-      --hour-label: #6b7280;
-      --hour-line: rgba(31,41,55,0.8);
-      --accent: #22c55e;
-      --accent-strong: #16a34a;
-      --muted: #6b7280;
-    }
-
-    body.theme-light {
-      --bg: #f9fafb;
-      --fg: #020617;
-      --sidebar-bg: #ffffff;
-      --border: #e5e7eb;
-      --viewport-bg: #f3f4f6;
-      --block-bg: #ffffff;
-      --hour-label: #9ca3af;
-      --hour-line: #e5e7eb;
-      --accent: #22c55e;
-      --accent-strong: #15803d;
-      --muted: #9ca3af;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      background: var(--bg);
-      color: var(--fg);
-      display: flex;
-      height: 100vh;
-    }
-
-    .sidebar {
-      width: 360px;
-      padding: 16px 20px;
-      background: var(--sidebar-bg);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      z-index: 2;
-    }
-
-    h1 {
-      font-size: 18px;
-      margin: 0 0 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .btn-theme {
-      padding: 2px 8px;
-      font-size: 10px;
-      border-radius: 12px;
-      white-space: nowrap;
-      flex-shrink: 0;
-      max-width: 80px;
-      text-align: center;
-    }
-
-    label {
-      display: block;
-      font-size: 12px;
-      margin-bottom: 4px;
-      color: var(--muted);
-    }
-    input,select,textarea,button {
-      padding: 6px 8px;
-      font-size: 13px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--bg);
-      color: var(--fg);
-    }
-    input,select,textarea { width: 100%; }
-button { width: auto; }
-.btn-primary, .btn-secondary { width: 100%; } /* 큰 액션 버튼만 풀폭 */
-
-    input[type="file"] { padding: 4px; background: transparent; }
-    textarea { resize: vertical; min-height: 60px; }
-    button {
-      cursor: pointer;
-      font-weight: 600;
-      margin-top: 4px;
-    }
-    .btn-primary {
-      background: var(--accent);
-      border-color: var(--accent-strong);
-      color: #020617;
-    }
-    .btn-primary:hover { background: var(--accent-strong); }
-    .btn-secondary {
-      background: transparent;
-      border-color: var(--border);
-      color: var(--fg);
-    }
-    .btn-secondary:hover { background: rgba(148,163,184,0.12); }
-
-    .hint {
-      font-size: 11px;
-      color: var(--muted);
-      line-height: 1.4;
-    }
-
-    .row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-    .row > * { flex: 1; }
-
-    .btn-date {
-      flex: 0 0 auto;
-      width: auto;
-      padding: 6px 10px;
-      margin-top: 0;
-      font-size: 12px;
-    }
-
-    .item-type-toggle {
-      display: flex;
-      gap: 6px;
-    }
-    .item-type-toggle .toggle-btn {
-      flex: 1;
-      padding: 6px 8px;
-      font-size: 12px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--muted);
-      cursor: pointer;
-      margin-top: 0;
-      white-space: nowrap;
-    }
-    .item-type-toggle .toggle-btn.active {
-      background: var(--accent);
-      border-color: var(--accent-strong);
-      color: #020617;
-    }
-
-    .animation-mode-toggle {
-      display: flex;
-      gap: 6px;
-      margin-top: 4px;
-    }
-    .animation-mode-toggle .toggle-btn {
-      flex: 1;
-      padding: 6px 8px;
-      font-size: 12px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--muted);
-      cursor: pointer;
-      margin-top: 0;
-      white-space: nowrap;
-    }
-    .animation-mode-toggle .toggle-btn.active {
-      background: var(--accent);
-      border-color: var(--accent-strong);
-      color: #020617;
-    }
-
-    /* ✅ (추가) Step1 텍스트 폰트 선택 버튼 */
-.text-font-toggle{
-  display:flex;
-  gap:6px;
-  margin-top:6px;
-}
-.text-font-toggle .toggle-btn{
-  flex:1;
-  padding:6px 8px;
-  font-size:12px;
-  border-radius:999px;
-  border:1px solid var(--border);
-  background:transparent;
-  color:var(--muted);
-  cursor:pointer;
-  margin-top:0;
-  white-space:nowrap;
-}
-.text-font-toggle .toggle-btn.active{
-  background: var(--accent);
-  border-color: var(--accent-strong);
-  color:#020617;
-}
-
-/* 버튼 글씨가 폰트 미리보기처럼 보이게 */
-.text-font-toggle .toggle-btn[data-font="pretendard"]{
-  font-family:"PretendardSemiBoldLocal", "Pretendard", system-ui, sans-serif;
-}
-.text-font-toggle .toggle-btn[data-font="laudrygo"]{
-  font-family:"LaudrygoLocal", system-ui, sans-serif;
-}
-.text-font-toggle .toggle-btn[data-font="nanum"]{
-  font-family:"NanumNaMuJeongWeonLocal", system-ui, sans-serif;
-}
-.text-font-toggle .toggle-btn[data-font="bagel"]{
-  font-family:"BagelFatOneLocal", system-ui, sans-serif;
-}
-    .speed-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .speed-row input[type="range"] { flex: 1; }
-    .speed-row span {
-      font-size: 12px;
-      color: var(--muted);
-      min-width: 40px;
-      text-align: right;
-    }
-
-    .main {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-
-    .timeline-viewport {
-      width: 360px;
-      height: 640px;
-      max-width: 100%;
-      border-radius: 24px;
-      background: var(--viewport-bg);
-      border: 2px solid var(--border);
-      overflow-y: auto;
-      overflow-x: hidden;
-      position: relative;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-    }
-
-    /* 편집 모드 배경 오버레이 */
-    .timeline-viewport::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s;
-      z-index: 5;
-    }
-    body.theme-light .timeline-viewport::before {
-      background: rgba(0,0,0,0.2);
-    }
-    .timeline-viewport.edit-mode::before {
-      opacity: 1;
-    }
-
-    .viewport-header {
-      position: sticky;
-      top: 0;
-      left: 0;
-      right: 0;
-      text-align: center;
-      font-size: 12px;
-      color: var(--muted);
-      padding: 6px 0;
-      background: linear-gradient(to bottom,rgba(2,6,23,0.9),rgba(2,6,23,0));
-      z-index: 6;
-    }
-    body.theme-light .viewport-header {
-      background: linear-gradient(to bottom,rgba(249,250,251,0.95),rgba(249,250,251,0));
-    }
-
-    /* 기존 코드 (약 200번째 줄 근처) */
-.timeline-title-overlay {
-  position: absolute;  /* ❌ 이걸 fixed로 */
-  inset: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  text-align: center;
-  font-size: 32px;
-  font-weight: 700;
-  line-height: 1.4;
-  background: rgba(0,0,0,0.6);  /* ❌ 이걸 #1f2937로 */
-  color: #f9fafb;
-  z-index: 7;
-}
-body.theme-light .timeline-title-overlay {
-  background: rgba(15,23,42,0.25);  /* ❌ 이걸 #e5e7eb로 */
-  color: #020617;  /* ❌ 이걸 #111827로 */
-}
-
-    .timeline-inner {
-      position: relative;
-      width: 100%;
-      height: 5760px;
-      background: repeating-linear-gradient(
-        to bottom,
-        var(--viewport-bg),
-        var(--viewport-bg) 60px,
-        rgba(15,23,42,0.03) 60px,
-        rgba(15,23,42,0.03) 120px
-      );
-    }
-    body.theme-light .timeline-inner {
-      background: repeating-linear-gradient(
-        #f3f4f6,
-        #f3f4f6 60px,
-        #e5e7eb 60px,
-        #e5e7eb 120px
-      );
-    }
-
-    .hour-label {
-      position: absolute;
-      left: 8px;
-      font-size: 10px;
-      color: var(--hour-label);
-      transition: color .2s,font-weight .2s;
-    }
-    .hour-label.active {
-      color: var(--accent);
-      font-weight: 600;
-    }
-
-    .hour-line {
-      position: absolute;
-      left: 52px;
-      right: 8px;
-      height: 1px;
-      background: var(--hour-line);
-    }
-
-       .time-block {
-      position: absolute;
-      left: 60px;
-      right: 12px;
-      border-radius: 18px;
-      background: transparent;
-      border: none;
-      padding: 4px;
-      box-shadow: none;
-      overflow: hidden;
-      transition: box-shadow .2s;
-      pointer-events: none;
-    }
-    .time-block.highlight {
-      box-shadow: none;
-    }
-
-    .time-block-inner {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      border-radius: 14px;
-      background: transparent;
-    }
-
-    .timeline-item {
-  position: absolute;
-  border-radius: 12px;
-  overflow: hidden;
-  cursor: pointer;
-  box-shadow: 0 0 0 1px rgba(148,163,184,0.4);
-  transform-origin: center center;
-
-  /* ✅ 변경: 투명 PNG/알파 비디오 뒤가 검게 보이는 원인 제거 */
-  background: transparent;
-
-  opacity: 1;
-  transition: opacity .4s ease;
-  z-index: 1;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-  will-change: transform;
-}
-
-    
-    /* 편집 중일 때는 transition 제거 (즉각 반응) */
-    .timeline-item.editing {
-      transition: none;
-    }
-    
-    /* 편집 모드 강조 */
-    .timeline-item.edit-mode {
-      box-shadow: 0 0 0 3px var(--accent), 0 8px 20px rgba(34,197,94,0.3);
-      z-index: 10 !important;
-    }
-    
-    /* 드래그 중 효과 */
-    .timeline-item.dragging {
-      transform: scale(1.05);
-      box-shadow: 0 0 0 3px var(--accent), 0 12px 24px rgba(0,0,0,0.4);
-    }
-
-    .timeline-item img,
-    .timeline-item video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      display: block;
-      pointer-events: none;
-      user-select: none;
-      -webkit-user-select: none;
-      -webkit-touch-callout: none;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-      transform: translateZ(0);
-      -webkit-transform: translateZ(0);
-    }
-   .timeline-item-text {
-  width: 100%;
-  height: 100%;
-  padding: 6px 8px;
-  font-size: 24px;
-  line-height: 1.35;
-  color: #f9fafb;
-  word-break: break-word;
-
-  /* ✅ 추가: 텍스트 배경 투명 */
-  background: transparent;
-}
-
-body.theme-light .timeline-item-text {
-  color: #111827;
-
-  /* ✅ 추가: 라이트모드도 배경 투명 */
-  background: transparent;
-}
-
-
-    .timeline-item.reveal-hidden { opacity: 0; }
-    .timeline-item.reveal-visible { opacity: 1; }
-
-    .step-nav {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 8px;
-      margin-top: 4px;
-    }
-    .step-btn {
-      flex: 1;
-      padding: 6px 4px;
-      font-size: 11px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--muted);
-      cursor: pointer;
-      margin-top: 0;
-      white-space: nowrap;
-    }
-    .step-btn.active {
-      background: var(--accent);
-      border-color: var(--accent-strong);
-      color: #020617;
-    }
-    .step-panel { display:none; }
-    .step-panel.active { display:block; }
-
-    .block-list {
-      list-style: none;
-      padding-left: 0;
-      margin: 4px 0 0;
-      max-height: 120px;
-      overflow-y: auto;
-      font-size: 11px;
-    }
-
-    .block-list li {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      padding: 4px 8px;
-      margin-bottom: 4px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      cursor: pointer;
-      min-width: 0;
-      overflow: hidden;
-    }
-
-    .block-list span.time {
-      flex: 1 1 auto;
-      min-width: 120px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-weight: 500;
-      color: var(--fg);
-    }
-
-    .block-right-group {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-
-    .block-list span.count {
-      font-size: 10px;
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .block-delete-btn {
-      width: 16px;
-      height: 16px;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      color: var(--muted);
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 50%;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-
-    .step1-placeholder {
-      display:none;
-      align-items:center;
-      justify-content:center;
-      font-size:13px;
-      color:var(--muted);
-      text-align:center;
-      padding:16px;
-      height:100%;
-      box-sizing:border-box;
-    }
-
-    body[data-step="1"] .timeline-viewport { display:none; }
-    body[data-step="1"] .step1-placeholder { display:flex; }
-
-    body[data-step="1"] .main {
-      display:none !important;
-    }
-    body[data-step="1"] .sidebar {
-      width:100% !important;
-      max-width:480px;
-      margin:0 auto;
-      border-right:none;
-      height:100vh;
-      overflow-y:auto;
-    }
-
-    body[data-step="2"] .timeline-viewport,
-    body[data-step="3"] .timeline-viewport { display:block; }
-    body[data-step="2"] .step1-placeholder,
-    body[data-step="3"] .step1-placeholder { display:none; }
-
-    @media (max-width:768px){
-      body { flex-direction:column; height:auto; }
-      .sidebar {
-        width:100%;
-        border-right:none;
-        border-bottom:1px solid var(--border);
-      }
-      .main { padding:8px; }
-      .timeline-viewport {
-        width:100%;
-        height:70vh;
-        border-radius:16px;
-      }
-      body[data-step="1"] .sidebar {
-        max-width:100%;
-        border-bottom:none;
-      }
-    }
-
-    /* ⭐ 전체 화면에서도 세로 비율 유지 강제 (가로로 눕는 현상 방지) */
-   .timeline-viewport:fullscreen,
-.timeline-viewport:-webkit-full-screen,
-.timeline-viewport:-moz-full-screen,
-.timeline-viewport:-ms-fullscreen {
-
-  /* ✅ 추가되는 핵심 */
-  position: fixed !important;
-  top: 0;
-  left: 0;
-
-  /* 기존 그대로 유지 */
-  width: 100vw !important;
-  height: 100vh !important;
-  max-width: 100vw !important;
-  max-height: 100vh !important;
-  border-radius: 0 !important;
-  border: none !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-}
-
-    
-    /* 전체화면 내부 컨텐츠도 세로 유지 */
-    .timeline-viewport:fullscreen .timeline-inner,
-    .timeline-viewport:-webkit-full-screen .timeline-inner {
-      width: 100% !important;
-    }
-    
-    /* 가로 모드에서도 세로 비율 강제 */
-    @media screen and (orientation: landscape) {
-      .timeline-viewport:fullscreen,
-      .timeline-viewport:-webkit-full-screen {
-        width: 56.25vh !important; /* 9:16 비율 유지 */
-        max-width: 56.25vh !important;
-        margin: 0 auto !important;
-        background: #000 !important;
-      }
-    }
-
- .fullscreen-mask {
-  position: absolute;   /* ❗ fixed 아님 */
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 120px;
-  z-index: 9999;
-  pointer-events: none;
-  display: none;
-
-  background: linear-gradient(
-    to top,
-    rgba(0,0,0,0.85),
-    rgba(0,0,0,0.45),
-    rgba(0,0,0,0)
-  );
-}
-
-body.theme-light .fullscreen-mask {
-  background: linear-gradient(
-    to top,
-    rgba(249,250,251,0.95),
-    rgba(249,250,251,0.6),
-    rgba(249,250,251,0)
-  );
-}
-
-      /* ✅ (추가) "가짜 전체화면(녹화 모드)" */
-body.record-mode {
-  overflow: hidden; /* 뒤 스크롤 방지 */
-}
-
-/* 사이드바 숨기고, 화면을 타임라인만 보이게 */
-body.record-mode .sidebar {
-  display: none !important;
-}
-body.record-mode .main {
-  padding: 0 !important;
-}
-
-/* 핵심: Fullscreen API가 아니라 CSS로 화면 꽉 채우기 */
-body.record-mode .timeline-viewport {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100dvh !important; /* ✅ 안드로이드 주소창 이슈에 dvh가 유리 */
-  max-width: 100vw !important;
-  max-height: 100dvh !important;
-  border-radius: 0 !important;
-  border: none !important;
-  margin: 0 !important;
-  z-index: 9999 !important;
-  box-shadow: none !important;
-}
-
-/* ✅ (추가) 종료 버튼: 녹화 모드에서만 보이기 */
-.record-exit {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
-  border: 1px solid rgba(148,163,184,0.4);
-  background: rgba(2,6,23,0.6);
-  color: #fff;
-  font-size: 20px;
-  line-height: 1;
-  display: none;
-  z-index: 10000;
-}
-body.theme-light .record-exit {
-  background: rgba(249,250,251,0.8);
-  color: #111827;
-}
-body.record-mode .record-exit {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-    /* ✅ (추가) 폰트 로드 (index.html이 루트 /fonts/ 폴더 기준) */
-@font-face{
-  font-family: "BagelFatOneLocal";
-  src: url("./fonts/BagelFatOne-Regular.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face{
-  font-family: "NanumNaMuJeongWeonLocal";
-  src: url("./fonts/NanumNaMuJeongWeon.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face{
-  font-family: "PretendardSemiBoldLocal";
-  src: url("./fonts/Pretendard-SemiBold.woff") format("woff");
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face{
-  font-family: "LaudrygoLocal";
-  src: url("./fonts/laudrygo Regular.woff") format("woff");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* ✅ (추가) titleOverlay에 적용될 폰트 프리셋 (클래스로 스위칭) */
-.timeline-title-overlay{ --title-font: "PretendardSemiBoldLocal"; }
-.timeline-title-overlay.titlefont-bagel{ --title-font: "BagelFatOneLocal"; }
-.timeline-title-overlay.titlefont-nanum{ --title-font: "NanumNaMuJeongWeonLocal"; }
-.timeline-title-overlay.titlefont-pretendard{ --title-font: "PretendardSemiBoldLocal"; }
-.timeline-title-overlay.titlefont-laudrygo{ --title-font: "LaudrygoLocal"; }
-
-/* 기존 titleOverlay 스타일 유지하면서 폰트만 갈아끼우기 */
-.timeline-title-overlay{
-  font-family: var(--title-font), system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-}
-
-/* ✅ (추가) 제목 폰트 버튼 UI */
-.title-font-toggle{
-  display:flex;
-  gap:6px;
-  margin-top:8px;
-}
-.title-font-toggle .toggle-btn{
-  flex:1;
-  padding:6px 8px;
-  font-size:12px;
-  border-radius:999px;
-  border:1px solid var(--border);
-  background:transparent;
-  color:var(--muted);
-  cursor:pointer;
-  margin-top:0;
-  white-space:nowrap;
-}
-.title-font-toggle .toggle-btn.active{
-  background: var(--accent);
-  border-color: var(--accent-strong);
-  color:#020617;
-}
-
-/* 버튼 자체가 폰트 미리보기(텍스트는 전부 "제목") */
-.title-font-toggle .toggle-btn[data-font="pretendard"]{
-  font-family:"PretendardSemiBoldLocal", system-ui, sans-serif;
-}
-.title-font-toggle .toggle-btn[data-font="laudrygo"]{
-  font-family:"LaudrygoLocal", system-ui, sans-serif;
-}
-.title-font-toggle .toggle-btn[data-font="nanum"]{
-  font-family:"NanumNaMuJeongWeonLocal", system-ui, sans-serif;
-}
-.title-font-toggle .toggle-btn[data-font="bagel"]{
-  font-family:"BagelFatOneLocal", system-ui, sans-serif;
-}
-
-  /* ✅ Step1에서는 설명 텍스트 숨김(온보딩/설명서로 분리) */
-body[data-step="1"] .hint { display: none !important; }
-
-/* ================================
-   ✅ Global UI Scale (전체 페이지 공통)
-   - 모바일 기준 가독성/터치 타깃 업
-   - 섹션 간 간격 업
-   ================================ */
-
-:root{
-  --ui-label: 16px;
-  --ui-input: 16px;
-  --ui-small: 14px;
-  --ui-radius: 16px;
-  --ui-pad-y: 12px;
-  --ui-pad-x: 14px;
-  --ui-gap: 16px;
-  --ui-row-gap: 10px;
-  --ui-min-hit: 44px; /* 터치 최소 권장 */
-}
-
-/* 전체 기본 폰트 스케일 */
-body{
-  font-size: var(--ui-input);
-}
-
-/* 사이드바 전체 간격 */
-.sidebar{
-  gap: var(--ui-gap);
-  padding: 18px 20px;
-}
-
-/* 제목 줄 */
-h1{
-  font-size: 20px;
-  margin: 0 0 10px;
-}
-
-/* 테마 버튼도 안 보일 정도로 작아서 키움 */
-.btn-theme{
-  padding: 6px 10px;
-  font-size: 12px;
-  border-radius: 999px;
-  max-width: none;
-}
-
-/* 라벨: 최소 16px */
-label{
-  font-size: var(--ui-label);
-  margin-bottom: 8px;
-  line-height: 1.2;
-  color: rgba(229,231,235,0.90);
-}
-body.theme-light label{
-  color: rgba(2,6,23,0.70);
-}
-
-/* 입력/셀렉트/텍스트에리어/버튼: 16px + 터치 높이 확보 */
-input, select, textarea, button{
-  font-size: var(--ui-input);
-  padding: var(--ui-pad-y) var(--ui-pad-x);
-  border-radius: var(--ui-radius);
-  min-height: var(--ui-min-hit);
-}
-
-/* 파일 인풋은 높이만 과하게 커질 수 있어서 예외 처리 */
-input[type="file"]{
-  min-height: auto;
-  padding: 8px 8px;
-  border-radius: 12px;
-}
-
-/* textarea 높이 좀 더 */
-textarea{
-  min-height: 96px;
-}
-
-/* 기본 버튼 상단 마진 제거(섹션 간 간격으로 컨트롤) */
-button{
-  margin-top: 0;
-}
-
-/* 행(Row) 간격 */
-.row{
-  gap: var(--ui-row-gap);
-}
-
-/* 날짜 버튼도 입력과 동일 높이 */
-.btn-date{
-  min-height: var(--ui-min-hit);
-  padding: var(--ui-pad-y) 12px;
-  font-size: var(--ui-input);
-}
-
-/* Step 네비 버튼(1/2/3) */
-.step-nav{
-  gap: 10px;
-  margin: 6px 0 10px;
-}
-.step-btn{
-  padding: 10px 10px;
-  font-size: 14px;
-  min-height: 42px;
-}
-
-/* 토글 버튼들(아이템 타입/폰트/애니메이션) */
-.item-type-toggle .toggle-btn,
-.animation-mode-toggle .toggle-btn,
-.title-font-toggle .toggle-btn,
-.text-font-toggle .toggle-btn{
-  font-size: 15px;
-  padding: 10px 12px;
-  min-height: 42px;
-}
-
-/* 섹션(블록) 간격: Step1/2/3 공통 */
-.step-panel > div{
-  margin-top: 14px;
-}
-.step-panel > div:first-child{
-  margin-top: 0;
-}
-
-/* 힌트(설명) 글씨는 작더라도 읽히게 */
-.hint{
-  font-size: var(--ui-small);
-  line-height: 1.45;
-}
-
-/* 블록 리스트도 작아서 키움 */
-.block-list{
-  font-size: 13px;
-  max-height: 180px; /* 조금 더 보여주기 */
-}
-.block-list span.count{
-  font-size: 12px;
-}
-.block-delete-btn{
-  width: 22px;
-  height: 22px;
-  font-size: 12px;
-}
-
-/* 모바일에서 9:16 미리보기 영역 아래로 내려오니,
-   사이드바 요소가 더 꽉 차 보이게 살짝 조정 */
-@media (max-width:768px){
-  .sidebar{
-    padding: 16px 16px;
-    gap: 14px;
+  /* ================================
+     Timeline Story Editor v2.1 (CLEAN)
+     - 기능 그대로 / CSS 정리
+     ================================ */
+
+  /* ---------- Theme Variables ---------- */
+  :root{
+    --bg:#020617;
+    --fg:#e5e7eb;
+    --sidebar-bg:#020617;
+    --border:#111827;
+    --viewport-bg:#020617;
+    --block-bg:#020617;
+    --hour-label:#6b7280;
+    --hour-line:rgba(31,41,55,0.8);
+    --accent:#22c55e;
+    --accent-strong:#16a34a;
+    --muted:#6b7280;
+
+    /* ---------- Global UI Scale ---------- */
+    --ui-label:16px;
+    --ui-input:16px;
+    --ui-small:14px;
+    --ui-radius:16px;
+    --ui-pad-y:12px;
+    --ui-pad-x:14px;
+    --ui-gap:16px;
+    --ui-row-gap:10px;
+    --ui-min-hit:44px;
   }
-  h1{ font-size: 19px; }
-  .step-btn{ font-size: 14px; }
-}
 
-/* ✅ FIX: 상단 테마 버튼이 width:100% 먹어서 제목이 세로로 깨지는 문제 */
-.sidebar h1 { flex-wrap: nowrap; }
-#themeToggle.btn-theme{
-  width: auto !important;
-  min-height: 40px;
-  padding: 8px 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
+  body.theme-light{
+    --bg:#f9fafb;
+    --fg:#020617;
+    --sidebar-bg:#ffffff;
+    --border:#e5e7eb;
+    --viewport-bg:#f3f4f6;
+    --block-bg:#ffffff;
+    --hour-label:#9ca3af;
+    --hour-line:#e5e7eb;
+    --accent:#22c55e;
+    --accent-strong:#15803d;
+    --muted:#9ca3af;
+  }
 
-/* ✅ 캘린더 버튼도 full width 방지 */
-#datePickerBtn.btn-date{
-  width: 48px !important;
-  min-width: 48px !important;
-  padding: 0 !important;
-}
+  *{ box-sizing:border-box; }
 
-/* ✅ 작은 동그라미 삭제 버튼도 full width 방지 */
-.block-delete-btn{
-  width: 22px !important;
-  min-width: 22px !important;
-  height: 22px !important;
-}
+  /* ---------- Base Layout ---------- */
+  body{
+    margin:0;
+    height:100vh;
+    display:flex;
+    background:var(--bg);
+    color:var(--fg);
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-size:var(--ui-input);
+  }
 
-/* 폰트 선택 버튼: 터치 영역은 유지, 글씨는 크게 */
-.title-font-toggle .toggle-btn,
-.text-font-toggle .toggle-btn{
-  padding: 0 10px;      /* ✅ 위아래 패딩 제거(높이로 관리) */
-  min-height: 44px;     /* ✅ 모바일 터치 타겟 */
-  font-size: 18px;      /* ✅ 폰트 차이 보이게 */
-  line-height: 1;       /* ✅ 글리프가 또렷하게 */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
+  .sidebar{
+    width:360px;
+    height:100vh;
+    overflow-y:auto;
+    padding:18px 20px;
+    background:var(--sidebar-bg);
+    border-right:1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    gap:var(--ui-gap);
+    z-index:2;
+  }
 
-  </style>
+  .main{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+  }
+
+  h1{
+    font-size:20px;
+    margin:0 0 10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    flex-wrap:nowrap; /* 제목 세로 깨짐 방지 */
+  }
+
+  /* ---------- Typography ---------- */
+  label{
+    display:block;
+    font-size:var(--ui-label);
+    margin-bottom:8px;
+    line-height:1.2;
+    color:rgba(229,231,235,0.90);
+  }
+  body.theme-light label{ color:rgba(2,6,23,0.70); }
+
+  .hint{
+    font-size:var(--ui-small);
+    color:var(--muted);
+    line-height:1.45;
+    margin:6px 0 0;
+  }
+
+  /* Step1에서는 설명 텍스트 숨김(온보딩/설명서로 분리) */
+  body[data-step="1"] .hint{ display:none !important; }
+
+  /* ---------- Form Controls ---------- */
+  input,select,textarea,button{
+    font-size:var(--ui-input);
+    padding:var(--ui-pad-y) var(--ui-pad-x);
+    border-radius:var(--ui-radius);
+    border:1px solid var(--border);
+    background:var(--bg);
+    color:var(--fg);
+    min-height:var(--ui-min-hit);
+  }
+  input,select,textarea{ width:100%; }
+  button{ width:auto; cursor:pointer; font-weight:600; margin-top:0; }
+  textarea{ resize:vertical; min-height:96px; }
+  input[type="file"]{
+    min-height:auto;
+    padding:8px 8px;
+    border-radius:12px;
+    background:transparent;
+  }
+
+  .row{
+    display:flex;
+    gap:var(--ui-row-gap);
+    align-items:center;
+  }
+  .row > *{ flex:1; }
+
+  /* ---------- Buttons ---------- */
+  .btn-primary, .btn-secondary{ width:100%; } /* 큰 액션 버튼만 풀폭 */
+
+  .btn-primary{
+    background:var(--accent);
+    border-color:var(--accent-strong);
+    color:#020617;
+  }
+  .btn-primary:hover{ background:var(--accent-strong); }
+
+  .btn-secondary{
+    background:transparent;
+    border-color:var(--border);
+    color:var(--fg);
+  }
+  .btn-secondary:hover{ background:rgba(148,163,184,0.12); }
+
+  .btn-theme{
+    width:auto !important;
+    min-height:40px;
+    padding:8px 12px;
+    font-size:12px;
+    border-radius:999px;
+    white-space:nowrap;
+    flex-shrink:0;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .btn-date{
+    flex:0 0 auto;
+    width:auto;
+    min-height:var(--ui-min-hit);
+    padding:var(--ui-pad-y) 12px;
+    font-size:var(--ui-input);
+    margin-top:0;
+  }
+  /* 캘린더 버튼 full width 방지 */
+  #datePickerBtn.btn-date{
+    width:48px !important;
+    min-width:48px !important;
+    padding:0 !important;
+  }
+
+  /* ---------- Step Navigation ---------- */
+  .step-nav{
+    display:flex;
+    gap:10px;
+    margin:6px 0 10px;
+  }
+  .step-btn{
+    flex:1;
+    padding:10px 10px;
+    font-size:14px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--muted);
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .step-btn.active{
+    background:var(--accent);
+    border-color:var(--accent-strong);
+    color:#020617;
+  }
+  .step-panel{ display:none; }
+  .step-panel.active{ display:block; }
+
+  /* ---------- Toggle Buttons (공통) ---------- */
+  .item-type-toggle,
+  .animation-mode-toggle,
+  .title-font-toggle,
+  .text-font-toggle{
+    display:flex;
+    gap:6px;
+    margin-top:8px;
+  }
+
+  .item-type-toggle .toggle-btn,
+  .animation-mode-toggle .toggle-btn,
+  .title-font-toggle .toggle-btn,
+  .text-font-toggle .toggle-btn{
+    flex:1;
+    padding:0 10px;      /* 위아래 패딩 제거 (높이로 관리) */
+    min-height:44px;     /* 모바일 터치 타겟 */
+    font-size:18px;      /* 폰트 차이 보이게 */
+    line-height:1;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--muted);
+    cursor:pointer;
+    margin-top:0;
+    white-space:nowrap;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .item-type-toggle .toggle-btn.active,
+  .animation-mode-toggle .toggle-btn.active,
+  .title-font-toggle .toggle-btn.active,
+  .text-font-toggle .toggle-btn.active{
+    background:var(--accent);
+    border-color:var(--accent-strong);
+    color:#020617;
+  }
+
+  /* 버튼 글씨가 폰트 미리보기처럼 보이게 */
+  .title-font-toggle .toggle-btn[data-font="pretendard"],
+  .text-font-toggle  .toggle-btn[data-font="pretendard"]{
+    font-family:"PretendardSemiBoldLocal","Pretendard",system-ui,sans-serif;
+  }
+  .title-font-toggle .toggle-btn[data-font="laudrygo"],
+  .text-font-toggle  .toggle-btn[data-font="laudrygo"]{
+    font-family:"LaudrygoLocal",system-ui,sans-serif;
+  }
+  .title-font-toggle .toggle-btn[data-font="nanum"],
+  .text-font-toggle  .toggle-btn[data-font="nanum"]{
+    font-family:"NanumNaMuJeongWeonLocal",system-ui,sans-serif;
+  }
+  .title-font-toggle .toggle-btn[data-font="bagel"],
+  .text-font-toggle  .toggle-btn[data-font="bagel"]{
+    font-family:"BagelFatOneLocal",system-ui,sans-serif;
+  }
+
+  /* ---------- Speed Row ---------- */
+  .speed-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .speed-row input[type="range"]{ flex:1; min-height:auto; }
+  .speed-row span{
+    font-size:12px;
+    color:var(--muted);
+    min-width:40px;
+    text-align:right;
+  }
+
+  /* ---------- Block List ---------- */
+  .block-list{
+    list-style:none;
+    padding-left:0;
+    margin:4px 0 0;
+    max-height:180px;
+    overflow-y:auto;
+    font-size:13px;
+  }
+  .block-list li{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    padding:6px 10px;
+    margin-bottom:6px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    cursor:pointer;
+    min-width:0;
+    overflow:hidden;
+  }
+  .block-list span.time{
+    flex:1 1 auto;
+    min-width:120px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-weight:500;
+    color:var(--fg);
+  }
+  .block-right-group{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-shrink:0;
+  }
+  .block-list span.count{
+    font-size:12px;
+    color:var(--muted);
+    white-space:nowrap;
+  }
+  .block-delete-btn{
+    width:22px !important;
+    min-width:22px !important;
+    height:22px !important;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    color:var(--muted);
+    background:transparent;
+    border:1px solid var(--border);
+    border-radius:50%;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+
+  /* ---------- Step1 Placeholder ---------- */
+  .step1-placeholder{
+    display:none;
+    align-items:center;
+    justify-content:center;
+    font-size:13px;
+    color:var(--muted);
+    text-align:center;
+    padding:16px;
+    height:100%;
+  }
+
+  body[data-step="1"] .timeline-viewport{ display:none; }
+  body[data-step="1"] .step1-placeholder{ display:flex; }
+  body[data-step="1"] .main{ display:none !important; }
+  body[data-step="1"] .sidebar{
+    width:100% !important;
+    max-width:480px;
+    margin:0 auto;
+    border-right:none;
+  }
+  body[data-step="2"] .timeline-viewport,
+  body[data-step="3"] .timeline-viewport{ display:block; }
+  body[data-step="2"] .step1-placeholder,
+  body[data-step="3"] .step1-placeholder{ display:none; }
+
+  /* ---------- Timeline Viewport ---------- */
+  .timeline-viewport{
+    width:360px;
+    height:640px;
+    max-width:100%;
+    border-radius:24px;
+    background:var(--viewport-bg);
+    border:2px solid var(--border);
+    overflow-y:auto;
+    overflow-x:hidden;
+    position:relative;
+    box-shadow:0 20px 40px rgba(0,0,0,0.3);
+  }
+
+  /* 편집 모드 배경 오버레이 */
+  .timeline-viewport::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,0.4);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.3s;
+    z-index:5;
+  }
+  body.theme-light .timeline-viewport::before{ background:rgba(0,0,0,0.2); }
+  .timeline-viewport.edit-mode::before{ opacity:1; }
+
+  .viewport-header{
+    position:sticky;
+    top:0;
+    left:0;
+    right:0;
+    text-align:center;
+    font-size:12px;
+    color:var(--muted);
+    padding:6px 0;
+    background:linear-gradient(to bottom,rgba(2,6,23,0.9),rgba(2,6,23,0));
+    z-index:6;
+  }
+  body.theme-light .viewport-header{
+    background:linear-gradient(to bottom,rgba(249,250,251,0.95),rgba(249,250,251,0));
+  }
+
+  /* ---------- Title Overlay (중앙) ---------- */
+  .timeline-title-overlay{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    text-align:center;
+    font-size:32px;
+    font-weight:700;
+    line-height:1.4;
+    background:rgba(0,0,0,0.6);
+    color:#f9fafb;
+    z-index:7;
+    /* 폰트 프리셋 */
+    --title-font:"PretendardSemiBoldLocal";
+    font-family:var(--title-font),system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  }
+  body.theme-light .timeline-title-overlay{
+    background:rgba(15,23,42,0.25);
+    color:#020617;
+  }
+  .timeline-title-overlay.titlefont-bagel{ --title-font:"BagelFatOneLocal"; }
+  .timeline-title-overlay.titlefont-nanum{ --title-font:"NanumNaMuJeongWeonLocal"; }
+  .timeline-title-overlay.titlefont-pretendard{ --title-font:"PretendardSemiBoldLocal"; }
+  .timeline-title-overlay.titlefont-laudrygo{ --title-font:"LaudrygoLocal"; }
+
+  /* ---------- Timeline Inner / Grid ---------- */
+  .timeline-inner{
+    position:relative;
+    width:100%;
+    height:5760px;
+    background:repeating-linear-gradient(
+      to bottom,
+      var(--viewport-bg),
+      var(--viewport-bg) 60px,
+      rgba(15,23,42,0.03) 60px,
+      rgba(15,23,42,0.03) 120px
+    );
+  }
+  body.theme-light .timeline-inner{
+    background:repeating-linear-gradient(
+      #f3f4f6,
+      #f3f4f6 60px,
+      #e5e7eb 60px,
+      #e5e7eb 120px
+    );
+  }
+
+  .hour-label{
+    position:absolute;
+    left:8px;
+    font-size:10px;
+    color:var(--hour-label);
+    transition:color .2s,font-weight .2s;
+  }
+  .hour-label.active{ color:var(--accent); font-weight:600; }
+
+  .hour-line{
+    position:absolute;
+    left:52px;
+    right:8px;
+    height:1px;
+    background:var(--hour-line);
+  }
+
+  /* ---------- Time Block ---------- */
+  .time-block{
+    position:absolute;
+    left:60px;
+    right:12px;
+    border-radius:18px;
+    background:transparent;
+    border:none;
+    padding:4px;
+    box-shadow:none;
+    overflow:hidden;
+    pointer-events:none;
+  }
+  .time-block-inner{
+    position:relative;
+    width:100%;
+    height:100%;
+    border-radius:14px;
+    background:transparent;
+  }
+
+  /* ---------- Timeline Item ---------- */
+  .timeline-item{
+    position:absolute;
+    border-radius:12px;
+    overflow:hidden;
+    cursor:pointer;
+    box-shadow:0 0 0 1px rgba(148,163,184,0.4);
+    transform-origin:center center;
+
+    /* 투명 PNG/알파 비디오 뒤가 검게 보이는 원인 제거 */
+    background:transparent;
+
+    opacity:1;
+    transition:opacity .4s ease;
+    z-index:1;
+    touch-action:none;
+    user-select:none;
+    -webkit-user-select:none;
+    -webkit-touch-callout:none;
+    will-change:transform;
+  }
+
+  .timeline-item.editing{ transition:none; }
+  .timeline-item.edit-mode{
+    box-shadow:0 0 0 3px var(--accent), 0 8px 20px rgba(34,197,94,0.3);
+    z-index:10 !important;
+  }
+  .timeline-item.dragging{
+    transform:scale(1.05);
+    box-shadow:0 0 0 3px var(--accent), 0 12px 24px rgba(0,0,0,0.4);
+  }
+
+  .timeline-item img,
+  .timeline-item video{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    display:block;
+    pointer-events:none;
+    user-select:none;
+    -webkit-user-select:none;
+    -webkit-touch-callout:none;
+    backface-visibility:hidden;
+    -webkit-backface-visibility:hidden;
+    transform:translateZ(0);
+    -webkit-transform:translateZ(0);
+  }
+
+  .timeline-item-text{
+    width:100%;
+    height:100%;
+    padding:6px 8px;
+    font-size:24px;
+    line-height:1.35;
+    color:#f9fafb;
+    word-break:break-word;
+    background:transparent;
+  }
+  body.theme-light .timeline-item-text{
+    color:#111827;
+    background:transparent;
+  }
+
+  .timeline-item.reveal-hidden{ opacity:0; }
+  .timeline-item.reveal-visible{ opacity:1; }
+
+  /* ---------- Fullscreen (API) ---------- */
+  .timeline-viewport:fullscreen,
+  .timeline-viewport:-webkit-full-screen,
+  .timeline-viewport:-moz-full-screen,
+  .timeline-viewport:-ms-fullscreen{
+    position:fixed !important;
+    top:0;
+    left:0;
+    width:100vw !important;
+    height:100vh !important;
+    max-width:100vw !important;
+    max-height:100vh !important;
+    border-radius:0 !important;
+    border:none !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+  }
+  .timeline-viewport:fullscreen .timeline-inner,
+  .timeline-viewport:-webkit-full-screen .timeline-inner{
+    width:100% !important;
+  }
+  @media screen and (orientation:landscape){
+    .timeline-viewport:fullscreen,
+    .timeline-viewport:-webkit-full-screen{
+      width:56.25vh !important; /* 9:16 비율 유지 */
+      max-width:56.25vh !important;
+      margin:0 auto !important;
+      background:#000 !important;
+    }
+  }
+
+  /* ---------- Fullscreen Mask (UI 연출용) ---------- */
+  .fullscreen-mask{
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
+    height:120px;
+    z-index:9999;
+    pointer-events:none;
+    display:none;
+    background:linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.45), rgba(0,0,0,0));
+  }
+  body.theme-light .fullscreen-mask{
+    background:linear-gradient(to top, rgba(249,250,251,0.95), rgba(249,250,251,0.6), rgba(249,250,251,0));
+  }
+
+  /* ---------- Record Mode (가짜 전체화면) ---------- */
+  body.record-mode{ overflow:hidden; }
+  body.record-mode .sidebar{ display:none !important; }
+  body.record-mode .main{ padding:0 !important; }
+
+  body.record-mode .timeline-viewport{
+    position:fixed !important;
+    inset:0 !important;
+    width:100vw !important;
+    height:100dvh !important; /* 안드로이드 주소창 이슈 대응 */
+    max-width:100vw !important;
+    max-height:100dvh !important;
+    border-radius:0 !important;
+    border:none !important;
+    margin:0 !important;
+    z-index:9999 !important;
+    box-shadow:none !important;
+  }
+
+  .record-exit{
+    position:fixed;
+    top:12px;
+    right:12px;
+    width:40px;
+    height:40px;
+    border-radius:999px;
+    border:1px solid rgba(148,163,184,0.4);
+    background:rgba(2,6,23,0.6);
+    color:#fff;
+    font-size:20px;
+    line-height:1;
+    display:none;
+    z-index:10000;
+  }
+  body.theme-light .record-exit{
+    background:rgba(249,250,251,0.8);
+    color:#111827;
+  }
+  body.record-mode .record-exit{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:768px){
+    body{ flex-direction:column; height:auto; }
+    .sidebar{
+      width:100%;
+      border-right:none;
+      border-bottom:1px solid var(--border);
+      padding:16px 16px;
+      gap:14px;
+    }
+    .main{ padding:8px; }
+    .timeline-viewport{
+      width:100%;
+      height:70vh;
+      border-radius:16px;
+    }
+    body[data-step="1"] .sidebar{
+      max-width:100%;
+      border-bottom:none;
+    }
+    h1{ font-size:19px; }
+  }
+
+  /* ---------- Local Fonts ---------- */
+  @font-face{
+    font-family:"BagelFatOneLocal";
+    src:url("./fonts/BagelFatOne-Regular.ttf") format("truetype");
+    font-weight:400;
+    font-style:normal;
+    font-display:swap;
+  }
+  @font-face{
+    font-family:"NanumNaMuJeongWeonLocal";
+    src:url("./fonts/NanumNaMuJeongWeon.ttf") format("truetype");
+    font-weight:400;
+    font-style:normal;
+    font-display:swap;
+  }
+  @font-face{
+    font-family:"PretendardSemiBoldLocal";
+    src:url("./fonts/Pretendard-SemiBold.woff") format("woff");
+    font-weight:600;
+    font-style:normal;
+    font-display:swap;
+  }
+  @font-face{
+    font-family:"LaudrygoLocal";
+    src:url("./fonts/laudrygo Regular.woff") format("woff");
+    font-weight:400;
+    font-style:normal;
+    font-display:swap;
+  }
+</style>
+
 </head>
 <body class="theme-dark" data-step="1">
   <div class="sidebar">
@@ -2019,6 +1750,7 @@ playFullscreenBtn.addEventListener('click', () => {
   </script>
 </body>
 </html>
+
 
 
 
