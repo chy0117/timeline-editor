@@ -82,7 +82,6 @@
       color: var(--muted);
     }
     input,select,textarea,button {
-      width: 100%;
       padding: 6px 8px;
       font-size: 13px;
       border-radius: 8px;
@@ -90,6 +89,10 @@
       background: var(--bg);
       color: var(--fg);
     }
+    input,select,textarea { width: 100%; }
+button { width: auto; }
+.btn-primary, .btn-secondary { width: 100%; } /* 큰 액션 버튼만 풀폭 */
+
     input[type="file"] { padding: 4px; background: transparent; }
     textarea { resize: vertical; min-height: 60px; }
     button {
@@ -940,6 +943,30 @@ button{
   .step-btn{ font-size: 14px; }
 }
 
+/* ✅ FIX: 상단 테마 버튼이 width:100% 먹어서 제목이 세로로 깨지는 문제 */
+.sidebar h1 { flex-wrap: nowrap; }
+#themeToggle.btn-theme{
+  width: auto !important;
+  min-height: 40px;
+  padding: 8px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ✅ 캘린더 버튼도 full width 방지 */
+#datePickerBtn.btn-date{
+  width: 48px !important;
+  min-width: 48px !important;
+  padding: 0 !important;
+}
+
+/* ✅ 작은 동그라미 삭제 버튼도 full width 방지 */
+.block-delete-btn{
+  width: 22px !important;
+  min-width: 22px !important;
+  height: 22px !important;
+}
 
   </style>
 </head>
@@ -1981,6 +2008,7 @@ playFullscreenBtn.addEventListener('click', () => {
   </script>
 </body>
 </html>
+
 
 
 
