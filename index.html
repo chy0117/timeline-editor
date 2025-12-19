@@ -786,6 +786,161 @@ body.record-mode .record-exit {
   font-family:"BagelFatOneLocal", system-ui, sans-serif;
 }
 
+  /* ✅ Step1에서는 설명 텍스트 숨김(온보딩/설명서로 분리) */
+body[data-step="1"] .hint { display: none !important; }
+
+/* ================================
+   ✅ Global UI Scale (전체 페이지 공통)
+   - 모바일 기준 가독성/터치 타깃 업
+   - 섹션 간 간격 업
+   ================================ */
+
+:root{
+  --ui-label: 16px;
+  --ui-input: 16px;
+  --ui-small: 14px;
+  --ui-radius: 16px;
+  --ui-pad-y: 12px;
+  --ui-pad-x: 14px;
+  --ui-gap: 16px;
+  --ui-row-gap: 10px;
+  --ui-min-hit: 44px; /* 터치 최소 권장 */
+}
+
+/* 전체 기본 폰트 스케일 */
+body{
+  font-size: var(--ui-input);
+}
+
+/* 사이드바 전체 간격 */
+.sidebar{
+  gap: var(--ui-gap);
+  padding: 18px 20px;
+}
+
+/* 제목 줄 */
+h1{
+  font-size: 20px;
+  margin: 0 0 10px;
+}
+
+/* 테마 버튼도 안 보일 정도로 작아서 키움 */
+.btn-theme{
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 999px;
+  max-width: none;
+}
+
+/* 라벨: 최소 16px */
+label{
+  font-size: var(--ui-label);
+  margin-bottom: 8px;
+  line-height: 1.2;
+  color: rgba(229,231,235,0.90);
+}
+body.theme-light label{
+  color: rgba(2,6,23,0.70);
+}
+
+/* 입력/셀렉트/텍스트에리어/버튼: 16px + 터치 높이 확보 */
+input, select, textarea, button{
+  font-size: var(--ui-input);
+  padding: var(--ui-pad-y) var(--ui-pad-x);
+  border-radius: var(--ui-radius);
+  min-height: var(--ui-min-hit);
+}
+
+/* 파일 인풋은 높이만 과하게 커질 수 있어서 예외 처리 */
+input[type="file"]{
+  min-height: auto;
+  padding: 8px 8px;
+  border-radius: 12px;
+}
+
+/* textarea 높이 좀 더 */
+textarea{
+  min-height: 96px;
+}
+
+/* 기본 버튼 상단 마진 제거(섹션 간 간격으로 컨트롤) */
+button{
+  margin-top: 0;
+}
+
+/* 행(Row) 간격 */
+.row{
+  gap: var(--ui-row-gap);
+}
+
+/* 날짜 버튼도 입력과 동일 높이 */
+.btn-date{
+  min-height: var(--ui-min-hit);
+  padding: var(--ui-pad-y) 12px;
+  font-size: var(--ui-input);
+}
+
+/* Step 네비 버튼(1/2/3) */
+.step-nav{
+  gap: 10px;
+  margin: 6px 0 10px;
+}
+.step-btn{
+  padding: 10px 10px;
+  font-size: 14px;
+  min-height: 42px;
+}
+
+/* 토글 버튼들(아이템 타입/폰트/애니메이션) */
+.item-type-toggle .toggle-btn,
+.animation-mode-toggle .toggle-btn,
+.title-font-toggle .toggle-btn,
+.text-font-toggle .toggle-btn{
+  font-size: 15px;
+  padding: 10px 12px;
+  min-height: 42px;
+}
+
+/* 섹션(블록) 간격: Step1/2/3 공통 */
+.step-panel > div{
+  margin-top: 14px;
+}
+.step-panel > div:first-child{
+  margin-top: 0;
+}
+
+/* 힌트(설명) 글씨는 작더라도 읽히게 */
+.hint{
+  font-size: var(--ui-small);
+  line-height: 1.45;
+}
+
+/* 블록 리스트도 작아서 키움 */
+.block-list{
+  font-size: 13px;
+  max-height: 180px; /* 조금 더 보여주기 */
+}
+.block-list span.count{
+  font-size: 12px;
+}
+.block-delete-btn{
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+}
+
+/* 모바일에서 9:16 미리보기 영역 아래로 내려오니,
+   사이드바 요소가 더 꽉 차 보이게 살짝 조정 */
+@media (max-width:768px){
+  .sidebar{
+    padding: 16px 16px;
+    gap: 14px;
+  }
+  h1{ font-size: 19px; }
+  .step-btn{ font-size: 14px; }
+}
+
+
   </style>
 </head>
 <body class="theme-dark" data-step="1">
@@ -1826,5 +1981,6 @@ playFullscreenBtn.addEventListener('click', () => {
   </script>
 </body>
 </html>
+
 
 
