@@ -801,8 +801,23 @@ body.theme-light .s1-divider{
 /* 폰트 버튼: 폰트 차이 잘 보이게 */
 .title-font-toggle .toggle-btn,
 .text-font-toggle .toggle-btn{
-  min-he
+  min-height:44px;
+  padding:0 8px;
+  font-size:18px;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 
+  /* ✅ STEP 탭 sticky */
+.step-sticky{
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  padding-top: 10px;           /* h1이랑 살짝 띄움(원하면 0) */
+  background: var(--sidebar-bg);
+}
 </style>
 
 </head>
@@ -813,11 +828,14 @@ body.theme-light .s1-divider{
       <button id="themeToggle" class="btn-theme">라이트 모드</button>
     </h1>
 
-    <div class="step-nav">
-      <button type="button" class="step-btn active" data-step="1">1. 아이템 추가</button>
-      <button type="button" class="step-btn" data-step="2">2. 타임라인 편집</button>
-      <button type="button" class="step-btn" data-step="3">3. 애니메이션</button>
-    </div>
+<div class="step-sticky">
+  <div class="step-nav">
+    <button type="button" class="step-btn active" data-step="1">1. 아이템 추가</button>
+    <button type="button" class="step-btn" data-step="2">2. 타임라인 편집</button>
+    <button type="button" class="step-btn" data-step="3">3. 애니메이션</button>
+  </div>
+</div>
+
 
 <!-- STEP 1 -->
 <div id="step1Panel" class="step-panel active">
@@ -1804,6 +1822,7 @@ body.theme-light .s1-divider{
 
 </body>
 </html>
+
 
 
 
