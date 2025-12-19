@@ -873,883 +873,850 @@
 </div>
 
   <script>
-    const HOUR_HEIGHT = 120;
-    const MINUTE_PX = HOUR_HEIGHT / 60;
-    const TOTAL_HOURS = 48;
-    const MIN_ITEM_HEIGHT = 100; // ⭐ 최소 높이 (1시간 블록보다 약간 작게)
-    const MAX_MINUTES = TOTAL_HOURS * 60;
+(() => {
+  /* ================================
+     Timeline Story Editor v2.1 (CLEAN)
+     - 기능 그대로 / JS 정리
+     ================================ */
 
-    const timeline = document.getElementById('timeline');
-    const viewport = document.getElementById('viewport');
-    const headerLabel = document.getElementById('headerLabel');
-    const titleOverlay = document.getElementById('titleOverlay');
+  /* ---------- Constants ---------- */
+  const HOUR_HEIGHT = 120;
+  const MINUTE_PX = HOUR_HEIGHT / 60;
+  const TOTAL_HOURS = 48;
+  const MAX_MINUTES = TOTAL_HOURS * 60;
+  const MIN_ITEM_HEIGHT = 100;
 
-    const dateInput = document.getElementById('date');
-    const datePickerBtn = document.getElementById('datePickerBtn');
+  /* ---------- DOM ---------- */
+  const timeline = document.getElementById('timeline');
+  const viewport = document.getElementById('viewport');
+  const headerLabel = document.getElementById('headerLabel');
+  const titleOverlay = document.getElementById('titleOverlay');
 
-    const startTimeSelect = document.getElementById('startTime');
-    const endTimeSelect = document.getElementById('endTime');
+  const dateInput = document.getElementById('date');
+  const datePickerBtn = document.getElementById('datePickerBtn');
 
-    const textContentInput = document.getElementById('textContent');
-    const imageFileInput = document.getElementById('imageFile');
-    const textInputGroup = document.getElementById('textInputGroup');
-    const imageInputGroup = document.getElementById('imageInputGroup');
-    const addItemBtn = document.getElementById('addItemBtn');
-    const timeSummaryEl = document.getElementById('timeSummary');
-    const blockListEl = document.getElementById('blockList');
-    const themeToggleBtn = document.getElementById('themeToggle');
+  const startTimeSelect = document.getElementById('startTime');
+  const endTimeSelect = document.getElementById('endTime');
 
-    const speedInput = document.getElementById('speed');
-    const speedLabel = document.getElementById('speedLabel');
-    const playBtn = document.getElementById('playBtn');
-    const playFullscreenBtn = document.getElementById('playFullscreenBtn');
-    const videoTitleInput = document.getElementById('videoTitle');
-    // ✅ (추가) 제목 폰트 선택 버튼
-const titleFontButtons = document.querySelectorAll('#titleFontToggle .toggle-btn');
-let currentTitleFont = localStorage.getItem('titleFont') || 'pretendard';
+  const textContentInput = document.getElementById('textContent');
+  const imageFileInput = document.getElementById('imageFile');
+  const textInputGroup = document.getElementById('textInputGroup');
+  const imageInputGroup = document.getElementById('imageInputGroup');
 
-function applyTitleFont(fontKey){
-  // 버튼 active 처리
-  titleFontButtons.forEach(b => b.classList.toggle('active', b.dataset.font === fontKey));
-  currentTitleFont = fontKey;
-  localStorage.setItem('titleFont', fontKey);
+  const addItemBtn = document.getElementById('addItemBtn');
+  const timeSummaryEl = document.getElementById('timeSummary');
+  const blockListEl = document.getElementById('blockList');
 
-  // overlay 클래스 스위칭
-  titleOverlay.classList.remove('titlefont-bagel','titlefont-nanum','titlefont-pretendard','titlefont-laudrygo');
-  titleOverlay.classList.add(`titlefont-${fontKey}`);
-}
+  const themeToggleBtn = document.getElementById('themeToggle');
 
-// 초기 적용
-applyTitleFont(currentTitleFont);
+  const speedInput = document.getElementById('speed');
+  const speedLabel = document.getElementById('speedLabel');
+  const playBtn = document.getElementById('playBtn');
+  const playFullscreenBtn = document.getElementById('playFullscreenBtn');
+  const videoTitleInput = document.getElementById('videoTitle');
 
-// 클릭 이벤트
-titleFontButtons.forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    applyTitleFont(btn.dataset.font);
-  });
-});
+  const stepButtons = document.querySelectorAll('.step-btn');
+  const itemTypeButtons = document.querySelectorAll('.item-type-toggle .toggle-btn');
+  const animationModeButtons = document.querySelectorAll('.animation-mode-toggle .toggle-btn');
 
-    const itemTypeButtons = document.querySelectorAll('.item-type-toggle .toggle-btn');
-    // ✅ (추가) Step1 텍스트 폰트 선택
-const textFontButtons = document.querySelectorAll('#textFontToggle .toggle-btn');
-let currentTextFont = localStorage.getItem('textFont') || 'pretendard';
-
-function applyTextFont(fontKey){
-  textFontButtons.forEach(b => b.classList.toggle('active', b.dataset.font === fontKey));
-  currentTextFont = fontKey;
-  localStorage.setItem('textFont', fontKey);
-}
-
-// 초기 적용
-applyTextFont(currentTextFont);
-
-// 클릭 이벤트
-textFontButtons.forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    applyTextFont(btn.dataset.font);
-  });
-});
-    const stepButtons = document.querySelectorAll('.step-btn');
-    const animationModeButtons = document.querySelectorAll('.animation-mode-toggle .toggle-btn');
-
-    const stepPanels = {
-      1: document.getElementById('step1Panel'),
-      2: document.getElementById('step2Panel'),
-      3: document.getElementById('step3Panel')
-    };
-
-    let currentItemType = 'file';
-    let currentAnimationMode = 'scroll';
-
-    let blocks = [];
-    let items = [];
-    let editingItemEl = null;
-    let dragState = null;
-
-    let activeTouches = [];  
-    let gestureState = null;
-
-    let animFrameId = null;
-
-    let longPressTimer = null;
-    let longPressStartPos = null;
-    let zCounter = 1;
-
-    function minutesToTimeLabel(totalMinutes) {
-      const isNext = totalMinutes >= 1440;
-      let m = totalMinutes;
-      if (isNext) m -= 1440;
-      const h = Math.floor(m / 60);
-      const mm = m % 60;
-      const hh = String(h).padStart(2,'0');
-      const mmStr = String(mm).padStart(2,'0');
-      const base = `${hh}:${mmStr}`;
-      return isNext ? `다음날 ${base}` : base;
-    }
-
-    function scrollToBlock(blockId) {
-      const block = blocks.find(b => b.id === blockId);
-      if (!block || !block.element) return;
-      const blockTop = parseFloat(block.element.style.top) || 0;
-      const blockHeight = block.element.offsetHeight || 0;
-      const viewportHeight = viewport.clientHeight;
-      const maxScroll = Math.max(0, timeline.scrollHeight - viewportHeight);
-      let target = blockTop - (viewportHeight - blockHeight) / 2;
-      target = Math.max(0, Math.min(target, maxScroll));
-
-      viewport.scrollTo({ top: target, behavior: 'smooth' });
-
-      block.element.classList.add('highlight');
-      setTimeout(()=>block.element.classList.remove('highlight'),800);
-    }
-
-    function deleteBlockById(blockId) {
-      const block = blocks.find(b => b.id === blockId);
-      if (!block) return;
-
-      const blockItems = items.filter(it => it.blockId === blockId);
-      blockItems.forEach(it => {
-        const el = timeline.querySelector(`.timeline-item[data-id="${it.id}"]`);
-        if (el && el.parentElement) el.parentElement.removeChild(el);
-      });
-
-      items = items.filter(it => it.blockId !== blockId);
-
-      if (block.element && block.element.parentElement) {
-        block.element.parentElement.removeChild(block.element);
-      }
-      blocks = blocks.filter(b => b.id !== blockId);
-      editingItemEl = null;
-      updateTimeSummary();
-    }
-
-    function updateBlockList() {
-      blockListEl.innerHTML = '';
-      if (!blocks.length) return;
-
-      const sorted = blocks.slice().sort((a,b)=>a.startMinutes - b.startMinutes);
-
-      sorted.forEach(b => {
-        const li = document.createElement('li');
-        li.dataset.blockId = b.id;
-
-        const timeSpan = document.createElement('span');
-        timeSpan.className = 'time';
-        timeSpan.textContent =
-          minutesToTimeLabel(b.startMinutes) +
-          ' ~ ' +
-          minutesToTimeLabel(b.endMinutes);
-
-        const countSpan = document.createElement('span');
-        countSpan.className = 'count';
-        countSpan.textContent = `아이템 ${items.filter(it => it.blockId === b.id).length}개`;
-
-        const delBtn = document.createElement('button');
-        delBtn.className = 'block-delete-btn';
-        delBtn.textContent = '✕';
-        delBtn.addEventListener('click', ev => {
-          ev.stopPropagation();
-          if (confirm('이 시간 블록 전체를 삭제할까요?'))
-            deleteBlockById(b.id);
-        });
-
-        const rightGroup = document.createElement('div');
-        rightGroup.className = 'block-right-group';
-        rightGroup.appendChild(countSpan);
-        rightGroup.appendChild(delBtn);
-
-        li.appendChild(timeSpan);
-        li.appendChild(rightGroup);
-
-        li.addEventListener('click', () => scrollToBlock(b.id));
-        blockListEl.appendChild(li);
-      });
-    }
-
-    function updateTimeSummary() {
-      if (!blocks.length) {
-        timeSummaryEl.textContent = '아직 추가된 시간이 없습니다.';
-        blockListEl.innerHTML = '';
-        return;
-      }
-      timeSummaryEl.textContent = `추가된 시간 블록: ${blocks.length}개`;
-      updateBlockList();
-    }
-
-    function buildTimeOptions() {
-      startTimeSelect.innerHTML = '';
-      for (let m=0; m<=MAX_MINUTES-30; m+=30) {
-        const opt = document.createElement('option');
-        opt.value = m;
-        opt.textContent = minutesToTimeLabel(m);
-        if (m===7*60) opt.selected = true;
-        startTimeSelect.appendChild(opt);
-      }
-      updateEndTimeOptions(parseInt(startTimeSelect.value,10));
-    }
-
-    function updateEndTimeOptions(startMinutes) {
-      endTimeSelect.innerHTML = '';
-      const minEnd = startMinutes + 30;
-      for (let m=minEnd; m<=MAX_MINUTES; m+=30) {
-        const opt = document.createElement('option');
-        opt.value = m;
-        opt.textContent = minutesToTimeLabel(m);
-        endTimeSelect.appendChild(opt);
-      }
-    }
-
-    function buildHourGrid() {
-      for (let h=0; h<TOTAL_HOURS; h++) {
-        const top = h * HOUR_HEIGHT;
-        const label = document.createElement('div');
-        label.className='hour-label';
-        label.style.top = (top+4)+'px';
-        label.textContent = minutesToTimeLabel(h*60);
-
-        const line = document.createElement('div');
-        line.className='hour-line';
-        line.style.top = (top+20)+'px';
-
-        timeline.appendChild(label);
-        timeline.appendChild(line);
-      }
-    }
-
-    function clearHourHighlight() {
-      document.querySelectorAll('.hour-label')
-        .forEach(l => l.classList.remove('active'));
-    }
-
-    function highlightHourByScroll(scrollTop) {
-      const viewportHeight = viewport.clientHeight;
-      const centerY = scrollTop + viewportHeight/2;
-      const minutes = centerY / MINUTE_PX;
-      const hourIndex = Math.floor(minutes/60);
-      clearHourHighlight();
-      const labels = document.querySelectorAll('.hour-label');
-      if (hourIndex>=0 && hourIndex<labels.length) {
-        labels[hourIndex].classList.add('active');
-      }
-    }
-
-    function resetTimelineDataAndDom() {
-      blocks = [];
-      items = [];
-      editingItemEl = null;
-      dragState = null;
-      stopAnimation();
-      clearHourHighlight();
-      exitEditMode();
-      while (timeline.firstChild) timeline.removeChild(timeline.firstChild);
-      timeline.style.height = (TOTAL_HOURS*HOUR_HEIGHT)+'px';
-      buildHourGrid();
-      updateTimeSummary();
-    }
-
-    buildTimeOptions();
-    resetTimelineDataAndDom();
-
-    const today = new Date().toISOString().slice(0,10);
-    dateInput.value = today;
-    headerLabel.textContent = today + ' 타임라인';
-
-    dateInput.addEventListener('change', () => {
-      headerLabel.textContent = dateInput.value + ' 타임라인';
-      resetTimelineDataAndDom();
-    });
-
-    datePickerBtn.addEventListener('click', () => {
-      if (typeof dateInput.showPicker === 'function') {
-        dateInput.showPicker();
-      } else {
-        dateInput.focus();
-        dateInput.click();
-      }
-    });
-
-    startTimeSelect.addEventListener('change', () => {
-      updateEndTimeOptions(parseInt(startTimeSelect.value,10));
-    });
-
-    itemTypeButtons.forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        itemTypeButtons.forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        currentItemType = btn.dataset.type;
-        if (currentItemType==='text') {
-          textInputGroup.style.display='block';
-          imageInputGroup.style.display='none';
-        } else {
-          textInputGroup.style.display='none';
-          imageInputGroup.style.display='block';
-        }
-      });
-    });
-
-    animationModeButtons.forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        animationModeButtons.forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        currentAnimationMode = btn.dataset.mode;
-      });
-    });
-
-    textInputGroup.style.display='none';
-    imageInputGroup.style.display='block';
-
-    speedInput.addEventListener('input',()=>{
-      speedLabel.textContent = speedInput.value + '초';
-    });
-
-    function getOrCreateBlock(startMinutes,endMinutes){
-      const blockId = `block-${startMinutes}-${endMinutes}`;
-      let block = blocks.find(b=>b.id===blockId);
-      if (block) return block;
-
-      const top = startMinutes * MINUTE_PX;
-      const height = (endMinutes-startMinutes) * MINUTE_PX;
-
-      const blockEl = document.createElement('div');
-      blockEl.className='time-block';
-      blockEl.style.top = top+'px';
-      blockEl.style.height = height+'px';
-      blockEl.dataset.id = blockId;
-
-      const inner = document.createElement('div');
-      inner.className='time-block-inner';
-      blockEl.appendChild(inner);
-      timeline.appendChild(blockEl);
-
-      block = {id:blockId,startMinutes,endMinutes,duration:endMinutes-startMinutes,element:blockEl};
-      blocks.push(block);
-      updateTimeSummary();
-      return block;
-    }
-
-    function createItemElement(item) {
-      const el = document.createElement('div');
-      el.className = 'timeline-item';
-      el.dataset.id = item.id;
-      el.style.left = item.x + 'px';
-      el.style.top = item.y + 'px';
-      el.style.width = item.w + 'px';
-      el.style.height = item.h + 'px';
-      el.style.transform = `rotate(${item.rotation || 0}rad)`;
-      el.dataset.rotation = item.rotation || 0;
-      el.style.zIndex = (++zCounter).toString();
-
-      if (item.type === 'image') {
-        const img = document.createElement('img');
-        img.src = item.src;
-        // 🎯 contain으로 변경: 가로세로 비율 유지, 잘림 없음
-        img.style.objectFit = 'contain';
-        el.appendChild(img);
-      } else if (item.type === 'video') {
-        const v = document.createElement('video');
-        v.src = item.src;
-        v.muted = true;
-        v.loop = true;
-        v.autoplay = true;
-        v.playsInline = true;
-        // 🎯 contain으로 변경: 가로세로 비율 유지, 잘림 없음
-        v.style.objectFit = 'contain';
-        el.appendChild(v);
-      } else {
-  const t = document.createElement('div');
-  t.className = 'timeline-item-text';
-  t.textContent = item.text;
-
-  // ✅ (추가) 폰트만 적용 (색상은 테마 CSS가 처리: 다크=화이트 / 라이트=블랙 고정)
-  const fontMap = {
-    pretendard: '"PretendardSemiBoldLocal","Pretendard",system-ui,sans-serif',
-    laudrygo: '"LaudrygoLocal",system-ui,sans-serif',
-    nanum: '"NanumNaMuJeongWeonLocal",system-ui,sans-serif',
-    bagel: '"BagelFatOneLocal",system-ui,sans-serif'
+  const stepPanels = {
+    1: document.getElementById('step1Panel'),
+    2: document.getElementById('step2Panel'),
+    3: document.getElementById('step3Panel')
   };
-  const key = item.fontKey || 'pretendard';
-  t.style.fontFamily = fontMap[key] || fontMap.pretendard;
-   // ✅ 최소 24px 보장
-  t.style.fontSize = (item.fontSize || 24) + 'px';
-  el.appendChild(t);
-}
 
-      // 🟧 제스처 이벤트 연결
-      el.addEventListener('pointerdown', onGesturePointerDown);
-      el.addEventListener('pointermove', onGesturePointerMove);
-      el.addEventListener('pointerup', onGesturePointerUp);
-      el.addEventListener('pointercancel', onGesturePointerUp);
-      
-      // 컨텍스트 메뉴(길게 누르기) 방지
-      el.addEventListener('contextmenu', e => e.preventDefault());
-      
-      // 이미지/비디오 드래그 방지
-      el.addEventListener('dragstart', e => e.preventDefault());
-      
-      // 터치 기본 동작 방지 (확대, 스크롤 등)
-      el.style.touchAction = 'none';
-      el.style.userSelect = 'none';
-      el.style.webkitUserSelect = 'none';
+  /* ---------- Title Font Toggle ---------- */
+  const titleFontButtons = document.querySelectorAll('#titleFontToggle .toggle-btn');
+  let currentTitleFont = localStorage.getItem('titleFont') || 'pretendard';
 
-      timeline.appendChild(el);
-      return el;
-    }
+  function applyTitleFont(fontKey){
+    titleFontButtons.forEach(b => b.classList.toggle('active', b.dataset.font === fontKey));
+    currentTitleFont = fontKey;
+    localStorage.setItem('titleFont', fontKey);
 
-    addItemBtn.addEventListener('click',()=>{
-      if (!dateInput.value){
-        alert('날짜를 먼저 선택해주세요.');
-        return;
-      }
-      const startMinutes=parseInt(startTimeSelect.value,10);
-      const endMinutes=parseInt(endTimeSelect.value,10);
-      if (isNaN(startMinutes)||isNaN(endMinutes)||endMinutes<=startMinutes){
-        alert('시작/끝 시간을 올바르게 선택해주세요.');
-        return;
-      }
-
-      const itemData={
-        id:'item-'+Date.now()+'-'+Math.random().toString(16).slice(2),
-        blockId:null,type:'',x:0,y:0,w:0,h:0,rotation:0
-      };
-      let itemType;
-
-     if (currentItemType==='text'){
-  const text=textContentInput.value.trim();
-  if (!text){ alert('텍스트를 입력해주세요.'); return; }
-  itemType='text';
-  itemData.text=text;
-
-  // ✅ (추가) 선택한 폰트 저장
-  itemData.fontKey = currentTextFont;
-}else {
-        const file=imageFileInput.files[0];
-        if (!file){ alert('파일을 선택해주세요.'); return; }
-        const url=URL.createObjectURL(file);
-        itemData.src=url;
-        itemType=file.type && file.type.startsWith('video/') ? 'video' : 'image';
-      }
-      itemData.type=itemType;
-
-      const block=getOrCreateBlock(startMinutes,endMinutes);
-      itemData.blockId=block.id;
-
-      const blockRect = block.element.getBoundingClientRect();
-      const timelineRect = timeline.getBoundingClientRect();
-      const blockTop = parseFloat(block.element.style.top) || 0;
-      const blockHeight = parseFloat(block.element.style.height) || 0;
-      
-      const existing=items.filter(it=>it.blockId===block.id);
-
-     // 기존 블록에 첫 아이템 추가할 때
-if (!existing.length){
-  const padding=12;
-  const availableWidth = blockRect.width - 32;
-  // ⭐ 최소 높이 적용
-  const availableHeight = Math.max(MIN_ITEM_HEIGHT, blockHeight - padding*2);
-  
-  itemData.x=70;
-  itemData.y=blockTop + padding;
-  itemData.w=availableWidth;
-  itemData.h=availableHeight;
-} else {
-  // 기존 블록에 추가 아이템 추가할 때
-  const w=Math.max(80, blockRect.width*0.5);
-  // ⭐ 최소 높이 적용
-  const h=Math.max(MIN_ITEM_HEIGHT, Math.max(80, blockRect.height*0.5));
-  itemData.w=w; itemData.h=h;
-  itemData.x=70 + (blockRect.width-w)/2;
-  itemData.y=blockTop + (blockRect.height-h)/2;
-}
-
-      items.push(itemData);
-      const el=createItemElement(itemData);
-      scrollToBlock(block.id);
-
-      if (itemType==='image'||itemType==='video') imageFileInput.value='';
-      updateBlockList();
-    });
-
-    function enterEditMode(el) {
-      exitEditMode();
-      editingItemEl = el;
-      el.classList.add('edit-mode');
-      el.classList.add('editing');
-      viewport.classList.add('edit-mode');
-      el.style.zIndex = (++zCounter).toString();
-    }
-
-    function exitEditMode() {
-      if (editingItemEl) {
-        editingItemEl.classList.remove('edit-mode');
-        editingItemEl.classList.remove('editing');
-        editingItemEl = null;
-      }
-      viewport.classList.remove('edit-mode');
-    }
-
-    function getItemByElement(el){
-      const id=el.dataset.id;
-      return items.find(it=>it.id===id);
-    }
-
-    function stopAnimation(){
-      if (animFrameId!==null){
-        cancelAnimationFrame(animFrameId);
-        animFrameId=null;
-      }
-    }
-
- function runAnimation(){
-  if (!blocks.length){
-    alert('먼저 시간 블록에 아이템을 추가해 주세요.');
-    return;
+    titleOverlay.classList.remove('titlefont-bagel','titlefont-nanum','titlefont-pretendard','titlefont-laudrygo');
+    titleOverlay.classList.add(`titlefont-${fontKey}`);
   }
-  stopAnimation();
-  exitEditMode();
 
-  const mode = currentAnimationMode;
-  const blocksSorted = blocks.slice().sort((a,b)=>a.startMinutes - b.startMinutes);
-  const viewportHeight = viewport.clientHeight;
-
-  const tops = blocks.map(b => parseFloat(b.element.style.top) || 0);
-  const bottoms = blocks.map(b => {
-    const top = parseFloat(b.element.style.top) || 0;
-    return top + b.element.offsetHeight;
+  titleFontButtons.forEach(btn => {
+    btn.addEventListener('click', () => applyTitleFont(btn.dataset.font));
   });
 
-  const minTop = Math.min(...tops);
-  const maxBottom = Math.max(...bottoms);
+  /* ---------- Text Font Toggle ---------- */
+  const textFontButtons = document.querySelectorAll('#textFontToggle .toggle-btn');
+  let currentTextFont = localStorage.getItem('textFont') || 'pretendard';
 
-  let endScroll = Math.max(maxBottom - viewportHeight + 40, 0);
-   
-  const itemEls = timeline.querySelectorAll('.timeline-item');
-  const durationSec = parseFloat(speedInput.value) || 8;
-  const durationMs = durationSec * 1000;
+  function applyTextFont(fontKey){
+    textFontButtons.forEach(b => b.classList.toggle('active', b.dataset.font === fontKey));
+    currentTextFont = fontKey;
+    localStorage.setItem('textFont', fontKey);
+  }
 
-  const title = videoTitleInput.value.trim();
-  const hasTitle = !!title;
+  textFontButtons.forEach(btn => {
+    btn.addEventListener('click', () => applyTextFont(btn.dataset.font));
+  });
 
-  function clampEndToStart(start){
-  if (endScroll < start) endScroll = start;
-}
-   
-  function startScrollAnimationFrom(startScroll){
-    if (mode === 'scrollReveal'){
-      itemEls.forEach(el=>{
-        el.classList.remove('reveal-visible');
-        el.classList.add('reveal-hidden');
+  /* ---------- State ---------- */
+  let currentItemType = 'file';
+  let currentAnimationMode = 'scroll';
+
+  let blocks = [];
+  let items = [];
+
+  let editingItemEl = null;
+  let animFrameId = null;
+
+  // gesture
+  let activeTouches = [];
+  let gestureState = null;
+
+  let longPressTimer = null;
+  let longPressStartPos = null;
+  let zCounter = 1;
+
+  /* ---------- Utils ---------- */
+  function minutesToTimeLabel(totalMinutes) {
+    const isNext = totalMinutes >= 1440;
+    let m = totalMinutes;
+    if (isNext) m -= 1440;
+
+    const h = Math.floor(m / 60);
+    const mm = m % 60;
+
+    const hh = String(h).padStart(2,'0');
+    const mmStr = String(mm).padStart(2,'0');
+    const base = `${hh}:${mmStr}`;
+
+    return isNext ? `다음날 ${base}` : base;
+  }
+
+  function clamp(n, min, max){ return Math.max(min, Math.min(n, max)); }
+
+  /* ---------- Block / List ---------- */
+  function updateBlockList() {
+    blockListEl.innerHTML = '';
+    if (!blocks.length) return;
+
+    const sorted = blocks.slice().sort((a,b)=>a.startMinutes - b.startMinutes);
+
+    sorted.forEach(b => {
+      const li = document.createElement('li');
+      li.dataset.blockId = b.id;
+
+      const timeSpan = document.createElement('span');
+      timeSpan.className = 'time';
+      timeSpan.textContent =
+        minutesToTimeLabel(b.startMinutes) + ' ~ ' + minutesToTimeLabel(b.endMinutes);
+
+      const countSpan = document.createElement('span');
+      countSpan.className = 'count';
+      countSpan.textContent = `아이템 ${items.filter(it => it.blockId === b.id).length}개`;
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'block-delete-btn';
+      delBtn.textContent = '✕';
+      delBtn.addEventListener('click', ev => {
+        ev.stopPropagation();
+        if (confirm('이 시간 블록 전체를 삭제할까요?')) deleteBlockById(b.id);
       });
+
+      const rightGroup = document.createElement('div');
+      rightGroup.className = 'block-right-group';
+      rightGroup.appendChild(countSpan);
+      rightGroup.appendChild(delBtn);
+
+      li.appendChild(timeSpan);
+      li.appendChild(rightGroup);
+
+      li.addEventListener('click', () => scrollToBlock(b.id));
+      blockListEl.appendChild(li);
+    });
+  }
+
+  function updateTimeSummary() {
+    if (!blocks.length) {
+      timeSummaryEl.textContent = '아직 추가된 시간이 없습니다.';
+      blockListEl.innerHTML = '';
+      return;
+    }
+    timeSummaryEl.textContent = `추가된 시간 블록: ${blocks.length}개`;
+    updateBlockList();
+  }
+
+  function scrollToBlock(blockId) {
+    const block = blocks.find(b => b.id === blockId);
+    if (!block || !block.element) return;
+
+    const blockTop = parseFloat(block.element.style.top) || 0;
+    const blockHeight = block.element.offsetHeight || 0;
+
+    const viewportHeight = viewport.clientHeight;
+    const maxScroll = Math.max(0, timeline.scrollHeight - viewportHeight);
+
+    let target = blockTop - (viewportHeight - blockHeight) / 2;
+    target = clamp(target, 0, maxScroll);
+
+    viewport.scrollTo({ top: target, behavior: 'smooth' });
+
+    block.element.classList.add('highlight');
+    setTimeout(()=>block.element.classList.remove('highlight'), 800);
+  }
+
+  function deleteBlockById(blockId) {
+    const block = blocks.find(b => b.id === blockId);
+    if (!block) return;
+
+    const blockItems = items.filter(it => it.blockId === blockId);
+    blockItems.forEach(it => {
+      const el = timeline.querySelector(`.timeline-item[data-id="${it.id}"]`);
+      if (el && el.parentElement) el.parentElement.removeChild(el);
+    });
+
+    items = items.filter(it => it.blockId !== blockId);
+
+    if (block.element && block.element.parentElement) {
+      block.element.parentElement.removeChild(block.element);
+    }
+    blocks = blocks.filter(b => b.id !== blockId);
+
+    editingItemEl = null;
+    updateTimeSummary();
+  }
+
+  /* ---------- Time Options ---------- */
+  function updateEndTimeOptions(startMinutes) {
+    endTimeSelect.innerHTML = '';
+    const minEnd = startMinutes + 30;
+    for (let m=minEnd; m<=MAX_MINUTES; m+=30) {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = minutesToTimeLabel(m);
+      endTimeSelect.appendChild(opt);
+    }
+  }
+
+  function buildTimeOptions() {
+    startTimeSelect.innerHTML = '';
+    for (let m=0; m<=MAX_MINUTES-30; m+=30) {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = minutesToTimeLabel(m);
+      if (m===7*60) opt.selected = true;
+      startTimeSelect.appendChild(opt);
+    }
+    updateEndTimeOptions(parseInt(startTimeSelect.value,10));
+  }
+
+  /* ---------- Grid ---------- */
+  function buildHourGrid() {
+    for (let h=0; h<TOTAL_HOURS; h++) {
+      const top = h * HOUR_HEIGHT;
+
+      const label = document.createElement('div');
+      label.className='hour-label';
+      label.style.top = (top+4)+'px';
+      label.textContent = minutesToTimeLabel(h*60);
+
+      const line = document.createElement('div');
+      line.className='hour-line';
+      line.style.top = (top+20)+'px';
+
+      timeline.appendChild(label);
+      timeline.appendChild(line);
+    }
+  }
+
+  function clearHourHighlight() {
+    document.querySelectorAll('.hour-label').forEach(l => l.classList.remove('active'));
+  }
+
+  function highlightHourByScroll(scrollTop) {
+    const viewportHeight = viewport.clientHeight;
+    const centerY = scrollTop + viewportHeight/2;
+    const minutes = centerY / MINUTE_PX;
+    const hourIndex = Math.floor(minutes/60);
+
+    clearHourHighlight();
+
+    const labels = document.querySelectorAll('.hour-label');
+    if (hourIndex>=0 && hourIndex<labels.length) labels[hourIndex].classList.add('active');
+  }
+
+  function resetTimelineDataAndDom() {
+    blocks = [];
+    items = [];
+    editingItemEl = null;
+    stopAnimation();
+    clearHourHighlight();
+    exitEditMode();
+
+    while (timeline.firstChild) timeline.removeChild(timeline.firstChild);
+    timeline.style.height = (TOTAL_HOURS*HOUR_HEIGHT)+'px';
+
+    buildHourGrid();
+    updateTimeSummary();
+  }
+
+  /* ---------- Blocks ---------- */
+  function getOrCreateBlock(startMinutes,endMinutes){
+    const blockId = `block-${startMinutes}-${endMinutes}`;
+    let block = blocks.find(b=>b.id===blockId);
+    if (block) return block;
+
+    const top = startMinutes * MINUTE_PX;
+    const height = (endMinutes-startMinutes) * MINUTE_PX;
+
+    const blockEl = document.createElement('div');
+    blockEl.className='time-block';
+    blockEl.style.top = top+'px';
+    blockEl.style.height = height+'px';
+    blockEl.dataset.id = blockId;
+
+    const inner = document.createElement('div');
+    inner.className='time-block-inner';
+    blockEl.appendChild(inner);
+    timeline.appendChild(blockEl);
+
+    block = {id:blockId,startMinutes,endMinutes,duration:endMinutes-startMinutes,element:blockEl};
+    blocks.push(block);
+    updateTimeSummary();
+    return block;
+  }
+
+  /* ---------- Items ---------- */
+  function getItemByElement(el){
+    const id=el.dataset.id;
+    return items.find(it=>it.id===id);
+  }
+
+  function createItemElement(item) {
+    const el = document.createElement('div');
+    el.className = 'timeline-item';
+    el.dataset.id = item.id;
+    el.style.left = item.x + 'px';
+    el.style.top = item.y + 'px';
+    el.style.width = item.w + 'px';
+    el.style.height = item.h + 'px';
+    el.style.transform = `rotate(${item.rotation || 0}rad)`;
+    el.dataset.rotation = item.rotation || 0;
+    el.style.zIndex = (++zCounter).toString();
+
+    if (item.type === 'image') {
+      const img = document.createElement('img');
+      img.src = item.src;
+      img.style.objectFit = 'contain';
+      el.appendChild(img);
+    } else if (item.type === 'video') {
+      const v = document.createElement('video');
+      v.src = item.src;
+      v.muted = true;
+      v.loop = true;
+      v.autoplay = true;
+      v.playsInline = true;
+      v.style.objectFit = 'contain';
+      el.appendChild(v);
     } else {
-      itemEls.forEach(el=>{
-        el.classList.remove('reveal-hidden','reveal-visible');
-      });
+      const t = document.createElement('div');
+      t.className = 'timeline-item-text';
+      t.textContent = item.text;
+
+      const fontMap = {
+        pretendard: '"PretendardSemiBoldLocal","Pretendard",system-ui,sans-serif',
+        laudrygo: '"LaudrygoLocal",system-ui,sans-serif',
+        nanum: '"NanumNaMuJeongWeonLocal",system-ui,sans-serif',
+        bagel: '"BagelFatOneLocal",system-ui,sans-serif'
+      };
+
+      const key = item.fontKey || 'pretendard';
+      t.style.fontFamily = fontMap[key] || fontMap.pretendard;
+      t.style.fontSize = (item.fontSize || 24) + 'px'; // 최소 24px 보장
+      el.appendChild(t);
     }
 
-    const startTime = performance.now();
+    // 제스처 이벤트
+    el.addEventListener('pointerdown', onGesturePointerDown);
+    el.addEventListener('pointermove', onGesturePointerMove);
+    el.addEventListener('pointerup', onGesturePointerUp);
+    el.addEventListener('pointercancel', onGesturePointerUp);
 
-    function frame(now){
-      const t = Math.min(1, (now - startTime) / durationMs);
-      const current = startScroll + (endScroll - startScroll) * t;
+    el.addEventListener('contextmenu', e => e.preventDefault());
+    el.addEventListener('dragstart', e => e.preventDefault());
 
-      viewport.scrollTop = current;
-      highlightHourByScroll(current);
+    el.style.touchAction = 'none';
+    el.style.userSelect = 'none';
+    el.style.webkitUserSelect = 'none';
 
+    timeline.appendChild(el);
+    return el;
+  }
+
+  /* ---------- Edit Mode ---------- */
+  function enterEditMode(el) {
+    exitEditMode();
+    editingItemEl = el;
+    el.classList.add('edit-mode','editing');
+    viewport.classList.add('edit-mode');
+    el.style.zIndex = (++zCounter).toString();
+  }
+
+  function exitEditMode() {
+    if (editingItemEl) {
+      editingItemEl.classList.remove('edit-mode','editing');
+      editingItemEl = null;
+    }
+    viewport.classList.remove('edit-mode');
+  }
+
+  /* ---------- Animation ---------- */
+  function stopAnimation(){
+    if (animFrameId!==null){
+      cancelAnimationFrame(animFrameId);
+      animFrameId=null;
+    }
+  }
+
+  function runAnimation(){
+    if (!blocks.length){
+      alert('먼저 시간 블록에 아이템을 추가해 주세요.');
+      return;
+    }
+
+    stopAnimation();
+    exitEditMode();
+
+    const mode = currentAnimationMode;
+    const blocksSorted = blocks.slice().sort((a,b)=>a.startMinutes - b.startMinutes);
+    const viewportHeight = viewport.clientHeight;
+
+    const tops = blocks.map(b => parseFloat(b.element.style.top) || 0);
+    const bottoms = blocks.map(b => {
+      const top = parseFloat(b.element.style.top) || 0;
+      return top + b.element.offsetHeight;
+    });
+
+    const minTop = Math.min(...tops);
+    const maxBottom = Math.max(...bottoms);
+
+    let endScroll = Math.max(maxBottom - viewportHeight + 40, 0);
+
+    const itemEls = timeline.querySelectorAll('.timeline-item');
+    const durationSec = parseFloat(speedInput.value) || 8;
+    const durationMs = durationSec * 1000;
+
+    const title = videoTitleInput.value.trim();
+    const hasTitle = !!title;
+
+    function clampEndToStart(start){
+      if (endScroll < start) endScroll = start;
+    }
+
+    function startScrollAnimationFrom(startScroll){
       if (mode === 'scrollReveal'){
-        const triggerLine = current + viewportHeight * 0.4;
-        blocksSorted.forEach(block=>{
-          const blockTop = parseFloat(block.element.style.top) || 0;
-          const threshold = blockTop + block.element.offsetHeight * 0.2;
-          if (triggerLine >= threshold){
-            items
-              .filter(it => it.blockId === block.id)
-              .forEach(it=>{
-                const el = timeline.querySelector(
-                  `.timeline-item[data-id="${it.id}"]`
-                );
+        itemEls.forEach(el=>{
+          el.classList.remove('reveal-visible');
+          el.classList.add('reveal-hidden');
+        });
+      } else {
+        itemEls.forEach(el=>{
+          el.classList.remove('reveal-hidden','reveal-visible');
+        });
+      }
+
+      const startTime = performance.now();
+
+      function frame(now){
+        const t = Math.min(1, (now - startTime) / durationMs);
+        const current = startScroll + (endScroll - startScroll) * t;
+
+        viewport.scrollTop = current;
+        highlightHourByScroll(current);
+
+        if (mode === 'scrollReveal'){
+          const triggerLine = current + viewportHeight * 0.4;
+
+          blocksSorted.forEach(block=>{
+            const blockTop = parseFloat(block.element.style.top) || 0;
+            const threshold = blockTop + block.element.offsetHeight * 0.2;
+
+            if (triggerLine >= threshold){
+              items.filter(it => it.blockId === block.id).forEach(it=>{
+                const el = timeline.querySelector(`.timeline-item[data-id="${it.id}"]`);
                 if (el && el.classList.contains('reveal-hidden')){
                   el.classList.remove('reveal-hidden');
                   el.classList.add('reveal-visible');
                 }
               });
-          }
-        });
+            }
+          });
+        }
+
+        if (t < 1){
+          animFrameId = requestAnimationFrame(frame);
+        } else {
+          animFrameId = null;
+          clearHourHighlight();
+        }
       }
 
-      if (t < 1){
-        animFrameId = requestAnimationFrame(frame);
-      } else {
-        animFrameId = null;
-        clearHourHighlight();
-      }
+      animFrameId = requestAnimationFrame(frame);
     }
 
-    animFrameId = requestAnimationFrame(frame);
+    if (hasTitle){
+      titleOverlay.textContent = title;
+      titleOverlay.style.display = 'flex';
+
+      const initialScroll = Math.max(minTop - viewportHeight * 0.9, 0);
+      clampEndToStart(initialScroll);
+
+      viewport.scrollTop = initialScroll;
+      highlightHourByScroll(initialScroll);
+
+      setTimeout(()=>{
+        titleOverlay.style.display = 'none';
+        startScrollAnimationFrom(initialScroll);
+      }, 5000);
+
+    } else {
+      const startScroll = Math.max(minTop - 40, 0);
+      clampEndToStart(startScroll);
+
+      viewport.scrollTop = startScroll;
+      highlightHourByScroll(startScroll);
+      startScrollAnimationFrom(startScroll);
+    }
   }
 
-  // 🎬 제목이 있는 경우
-  if (hasTitle){
-    titleOverlay.textContent = title;
-    titleOverlay.style.display = 'flex';
+  /* ---------- Record Mode (Fake Fullscreen) ---------- */
+  const recordExitBtn = document.getElementById('recordExitBtn');
 
-    // ⭐ 첫 블록을 화면 하단 0.9 위치에 고정
-const initialScroll = Math.max(minTop - viewportHeight * 0.9, 0);
-clampEndToStart(initialScroll); // ✅ 추가
-viewport.scrollTop = initialScroll;
-    
-    highlightHourByScroll(initialScroll);
-
-    // ⏱ 제목 표시 (5초)
-setTimeout(()=>{
-  titleOverlay.style.display = 'none';
-
-  // ✅ 시작점을 고정해서 역재생/튐 방지
-  startScrollAnimationFrom(initialScroll);
-
-}, 5000);
-
-  } else {
-    // 제목 없는 경우 기존처럼
- const startScroll = Math.max(minTop - 40, 0);
-clampEndToStart(startScroll); // ✅ 추가
-viewport.scrollTop = startScroll;
-highlightHourByScroll(startScroll);
-startScrollAnimationFrom(startScroll);
+  function enterRecordMode() {
+    document.body.classList.add('record-mode');
+    const mask = viewport.querySelector('.fullscreen-mask');
+    if (mask) mask.style.display = 'block';
   }
-}
 
-    playBtn.addEventListener('click',runAnimation);
-// ✅ (추가) 녹화 모드 진입/종료
-const recordExitBtn = document.getElementById('recordExitBtn');
+  function exitRecordMode() {
+    document.body.classList.remove('record-mode');
+    stopAnimation();
+    clearHourHighlight();
+    const mask = viewport.querySelector('.fullscreen-mask');
+    if (mask) mask.style.display = 'none';
+  }
 
-function enterRecordMode() {
-  document.body.classList.add('record-mode');
-  const mask = viewport.querySelector('.fullscreen-mask');
-  if (mask) mask.style.display = 'block';   // ✅ 필요하면 켜기
-}
+  /* ---------- Gestures ---------- */
+  function onGesturePointerDown(e) {
+    e.preventDefault();
 
-function exitRecordMode() {
-  document.body.classList.remove('record-mode');
-  stopAnimation();
-  clearHourHighlight();
-  const mask = viewport.querySelector('.fullscreen-mask');
-  if (mask) mask.style.display = 'none';    // ✅ 끄기
-}
+    const el = e.currentTarget;
+    el.setPointerCapture(e.pointerId);
 
-recordExitBtn.addEventListener('click', exitRecordMode);
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') exitRecordMode();
-});
-    
-playFullscreenBtn.addEventListener('click', () => {
-  enterRecordMode();
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      runAnimation();
-    });
-  });
-});
-    
-    viewport.addEventListener('scroll',()=>{
-      if (animFrameId===null){
-        highlightHourByScroll(viewport.scrollTop);
-      }
-    });
+    activeTouches.push({ id:e.pointerId, x:e.clientX, y:e.clientY });
 
-    stepButtons.forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        const step=btn.dataset.step;
-        stepButtons.forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        Object.entries(stepPanels).forEach(([key,p])=>{
-          if (key===step) p.classList.add('active'); else p.classList.remove('active');
-        });
-        document.body.dataset.step=step;
-      });
-    });
+    const item = getItemByElement(el);
 
-    themeToggleBtn.addEventListener('click', () => {
-      const body = document.body;
-      if (body.classList.contains('theme-dark')) {
-        body.classList.remove('theme-dark');
-        body.classList.add('theme-light');
-        themeToggleBtn.textContent = '다크 모드';
-      } else {
-        body.classList.remove('theme-light');
-        body.classList.add('theme-dark');
-        themeToggleBtn.textContent = '라이트 모드';
-      }
-    });
-   
-    function onGesturePointerDown(e) {
-      // 컨텍스트 메뉴 방지
-      e.preventDefault();
-      
-      const el = e.currentTarget;
-      el.setPointerCapture(e.pointerId);
+    // 1 finger: long press to enter edit mode
+    if (activeTouches.length === 1) {
+      longPressStartPos = { x:e.clientX, y:e.clientY };
 
-      activeTouches.push({
-        id: e.pointerId,
-        x: e.clientX,
-        y: e.clientY
-      });
-
-      const item = getItemByElement(el);
-
-      // 한 손가락 → 길게 누르기 시작
-      if (activeTouches.length === 1) {
-        longPressStartPos = { x: e.clientX, y: e.clientY };
-        
-        // 500ms 후 편집 모드 활성화
-        longPressTimer = setTimeout(() => {
-          enterEditMode(el);
-          
-          // 편집 모드 진입 후 이동 준비
-          gestureState = {
-            mode: 'move',
-            startX: e.clientX,
-            startY: e.clientY,
-            origX: item.x,
-            origY: item.y
-          };
-        }, 500);
-      }
-
-      // 두 손가락 → 확대 + 회전 (편집 모드일 때만)
-      if (activeTouches.length === 2 && editingItemEl === el) {
-        // 길게 누르기 타이머 취소
-        if (longPressTimer) {
-          clearTimeout(longPressTimer);
-          longPressTimer = null;
-        }
-        
-        const [t1, t2] = activeTouches;
-
-        const dx = t2.x - t1.x;
-        const dy = t2.y - t1.y;
-
+      longPressTimer = setTimeout(() => {
+        enterEditMode(el);
         gestureState = {
-          mode: 'transform',
-
-          // 스케일 계산용
-          startDist: Math.hypot(dx, dy),
-
-          // 회전 계산용 (민감도 감소: 0.3배만 적용)
-          startAngle: Math.atan2(dy, dx),
-          startRotation: item.rotation || 0,
-          rotationSensitivity: 0.3,
-
-          // 사이즈 원본값
-          startWidth: item.w,
-          startHeight: item.h
+          mode:'move',
+          startX:e.clientX,
+          startY:e.clientY,
+          origX:item.x,
+          origY:item.y
         };
-      }
+      }, 500);
     }
 
-    function onGesturePointerMove(e) {
-      const el = e.currentTarget;
-      const item = getItemByElement(el);
-
-      // 길게 누르기 중 움직임 감지 → 타이머 취소
-      if (longPressTimer && longPressStartPos) {
-        const dx = Math.abs(e.clientX - longPressStartPos.x);
-        const dy = Math.abs(e.clientY - longPressStartPos.y);
-        
-        if (dx > 10 || dy > 10) {
-          clearTimeout(longPressTimer);
-          longPressTimer = null;
-          longPressStartPos = null;
-        }
-      }
-
-      // activeTouches 업데이트
-      activeTouches = activeTouches.map(t =>
-        t.id === e.pointerId ? { ...t, x: e.clientX, y: e.clientY } : t
-      );
-
-      if (!gestureState) return;
-
-      // ⭐ 이동 (편집 모드일 때만)
-      if (gestureState.mode === 'move' && activeTouches.length === 1 && editingItemEl === el) {
-        e.preventDefault();
-        
-        const dx = e.clientX - gestureState.startX;
-        const dy = e.clientY - gestureState.startY;
-
-        const newX = gestureState.origX + dx;
-        const newY = gestureState.origY + dy;
-
-        // 강제 리플로우로 잔상 제거
-        el.style.left = `${newX}px`;
-        el.style.top = `${newY}px`;
-        void el.offsetHeight; // 강제 리플로우
-
-        item.x = newX;
-        item.y = newY;
-      }
-
-      // ⭐ 확대/회전 (편집 모드일 때만)
-      if (gestureState.mode === 'transform' && activeTouches.length === 2 && editingItemEl === el) {
-        e.preventDefault();
-        
-        const [t1, t2] = activeTouches;
-
-        const dx = t2.x - t1.x;
-        const dy = t2.y - t1.y;
-
-        // 확대 비율
-        const dist = Math.hypot(dx, dy);
-        const scale = dist / gestureState.startDist;
-
-        // 회전 (민감도 적용)
-        const angle = Math.atan2(dy, dx);
-        const angleDiff = angle - gestureState.startAngle;
-        const rotation = gestureState.startRotation + (angleDiff * gestureState.rotationSensitivity);
-
-        // 적용
-        const newW = gestureState.startWidth * scale;
-        const newH = gestureState.startHeight * scale;
-
-        // 강제 리플로우로 잔상 제거
-        el.style.width = `${newW}px`;
-        el.style.height = `${newH}px`;
-        el.style.transform = `rotate(${rotation}rad)`;
-        void el.offsetHeight; // 강제 리플로우
-
-        item.w = newW;
-        item.h = newH;
-        item.rotation = rotation;
-      }
-    }
-
-    function onGesturePointerUp(e) {
-      // 길게 누르기 타이머 취소
+    // 2 fingers: transform (only in edit mode)
+    if (activeTouches.length === 2 && editingItemEl === el) {
       if (longPressTimer) {
         clearTimeout(longPressTimer);
         longPressTimer = null;
       }
-      longPressStartPos = null;
-      
-      activeTouches = activeTouches.filter(t => t.id !== e.pointerId);
 
-      // 손가락이 모두 떨어지면 제스처 종료
-      if (activeTouches.length === 0) {
-        gestureState = null;
+      const [t1, t2] = activeTouches;
+      const dx = t2.x - t1.x;
+      const dy = t2.y - t1.y;
+
+      gestureState = {
+        mode:'transform',
+        startDist: Math.hypot(dx,dy),
+        startAngle: Math.atan2(dy,dx),
+        startRotation: item.rotation || 0,
+        rotationSensitivity: 0.3,
+        startWidth: item.w,
+        startHeight: item.h
+      };
+    }
+  }
+
+  function onGesturePointerMove(e) {
+    const el = e.currentTarget;
+    const item = getItemByElement(el);
+
+    if (longPressTimer && longPressStartPos) {
+      const dx = Math.abs(e.clientX - longPressStartPos.x);
+      const dy = Math.abs(e.clientY - longPressStartPos.y);
+      if (dx > 10 || dy > 10) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+        longPressStartPos = null;
       }
     }
 
-    // 타임라인 배경 클릭 시 편집 모드 해제
-    timeline.addEventListener('click', (e) => {
-      if (e.target === timeline || e.target.classList.contains('timeline-inner')) {
-        exitEditMode();
+    activeTouches = activeTouches.map(t =>
+      t.id === e.pointerId ? { ...t, x:e.clientX, y:e.clientY } : t
+    );
+
+    if (!gestureState) return;
+
+    // move
+    if (gestureState.mode === 'move' && activeTouches.length === 1 && editingItemEl === el) {
+      e.preventDefault();
+
+      const dx = e.clientX - gestureState.startX;
+      const dy = e.clientY - gestureState.startY;
+
+      const newX = gestureState.origX + dx;
+      const newY = gestureState.origY + dy;
+
+      el.style.left = `${newX}px`;
+      el.style.top = `${newY}px`;
+      void el.offsetHeight;
+
+      item.x = newX;
+      item.y = newY;
+    }
+
+    // transform
+    if (gestureState.mode === 'transform' && activeTouches.length === 2 && editingItemEl === el) {
+      e.preventDefault();
+
+      const [t1, t2] = activeTouches;
+      const dx = t2.x - t1.x;
+      const dy = t2.y - t1.y;
+
+      const dist = Math.hypot(dx,dy);
+      const scale = dist / gestureState.startDist;
+
+      const angle = Math.atan2(dy,dx);
+      const angleDiff = angle - gestureState.startAngle;
+      const rotation = gestureState.startRotation + (angleDiff * gestureState.rotationSensitivity);
+
+      const newW = gestureState.startWidth * scale;
+      const newH = gestureState.startHeight * scale;
+
+      el.style.width = `${newW}px`;
+      el.style.height = `${newH}px`;
+      el.style.transform = `rotate(${rotation}rad)`;
+      void el.offsetHeight;
+
+      item.w = newW;
+      item.h = newH;
+      item.rotation = rotation;
+    }
+  }
+
+  function onGesturePointerUp(e) {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+    longPressStartPos = null;
+
+    activeTouches = activeTouches.filter(t => t.id !== e.pointerId);
+    if (activeTouches.length === 0) gestureState = null;
+  }
+
+  /* ---------- Events ---------- */
+  // 초기 적용
+  applyTitleFont(currentTitleFont);
+  applyTextFont(currentTextFont);
+
+  buildTimeOptions();
+  resetTimelineDataAndDom();
+
+  const today = new Date().toISOString().slice(0,10);
+  dateInput.value = today;
+  headerLabel.textContent = today + ' 타임라인';
+
+  dateInput.addEventListener('change', () => {
+    headerLabel.textContent = dateInput.value + ' 타임라인';
+    resetTimelineDataAndDom();
+  });
+
+  datePickerBtn.addEventListener('click', () => {
+    if (typeof dateInput.showPicker === 'function') dateInput.showPicker();
+    else { dateInput.focus(); dateInput.click(); }
+  });
+
+  startTimeSelect.addEventListener('change', () => {
+    updateEndTimeOptions(parseInt(startTimeSelect.value,10));
+  });
+
+  itemTypeButtons.forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      itemTypeButtons.forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      currentItemType = btn.dataset.type;
+
+      if (currentItemType==='text') {
+        textInputGroup.style.display='block';
+        imageInputGroup.style.display='none';
+      } else {
+        textInputGroup.style.display='none';
+        imageInputGroup.style.display='block';
       }
     });
+  });
 
-  
+  animationModeButtons.forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      animationModeButtons.forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      currentAnimationMode = btn.dataset.mode;
+    });
+  });
 
+  // 기본 표시 상태
+  textInputGroup.style.display='none';
+  imageInputGroup.style.display='block';
 
-  </script>
+  speedInput.addEventListener('input',()=>{ speedLabel.textContent = speedInput.value + '초'; });
+
+  addItemBtn.addEventListener('click',()=>{
+    if (!dateInput.value){
+      alert('날짜를 먼저 선택해주세요.');
+      return;
+    }
+
+    const startMinutes = parseInt(startTimeSelect.value,10);
+    const endMinutes = parseInt(endTimeSelect.value,10);
+
+    if (isNaN(startMinutes)||isNaN(endMinutes)||endMinutes<=startMinutes){
+      alert('시작/끝 시간을 올바르게 선택해주세요.');
+      return;
+    }
+
+    const itemData = {
+      id:'item-'+Date.now()+'-'+Math.random().toString(16).slice(2),
+      blockId:null,
+      type:'',
+      x:0,y:0,w:0,h:0,
+      rotation:0
+    };
+
+    let itemType;
+
+    if (currentItemType==='text'){
+      const text = textContentInput.value.trim();
+      if (!text){ alert('텍스트를 입력해주세요.'); return; }
+      itemType='text';
+      itemData.text=text;
+      itemData.fontKey = currentTextFont;
+    } else {
+      const file = imageFileInput.files[0];
+      if (!file){ alert('파일을 선택해주세요.'); return; }
+      itemData.src = URL.createObjectURL(file);
+      itemType = file.type && file.type.startsWith('video/') ? 'video' : 'image';
+    }
+
+    itemData.type=itemType;
+
+    const block = getOrCreateBlock(startMinutes,endMinutes);
+    itemData.blockId=block.id;
+
+    const blockRect = block.element.getBoundingClientRect();
+    const blockTop = parseFloat(block.element.style.top) || 0;
+    const blockHeight = parseFloat(block.element.style.height) || 0;
+
+    const existing = items.filter(it=>it.blockId===block.id);
+
+    if (!existing.length){
+      const padding=12;
+      const availableWidth = blockRect.width - 32;
+      const availableHeight = Math.max(MIN_ITEM_HEIGHT, blockHeight - padding*2);
+
+      itemData.x=70;
+      itemData.y=blockTop + padding;
+      itemData.w=availableWidth;
+      itemData.h=availableHeight;
+    } else {
+      const w = Math.max(80, blockRect.width*0.5);
+      const h = Math.max(MIN_ITEM_HEIGHT, Math.max(80, blockRect.height*0.5));
+
+      itemData.w=w; itemData.h=h;
+      itemData.x=70 + (blockRect.width-w)/2;
+      itemData.y=blockTop + (blockRect.height-h)/2;
+    }
+
+    items.push(itemData);
+    createItemElement(itemData);
+
+    scrollToBlock(block.id);
+
+    if (itemType==='image'||itemType==='video') imageFileInput.value='';
+    updateBlockList();
+  });
+
+  playBtn.addEventListener('click', runAnimation);
+
+  playFullscreenBtn.addEventListener('click', () => {
+    enterRecordMode();
+    requestAnimationFrame(() => requestAnimationFrame(() => runAnimation()));
+  });
+
+  recordExitBtn.addEventListener('click', exitRecordMode);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') exitRecordMode(); });
+
+  viewport.addEventListener('scroll',()=>{
+    if (animFrameId===null) highlightHourByScroll(viewport.scrollTop);
+  });
+
+  stepButtons.forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const step = btn.dataset.step;
+      stepButtons.forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+
+      Object.entries(stepPanels).forEach(([key,p])=>{
+        if (key===step) p.classList.add('active');
+        else p.classList.remove('active');
+      });
+
+      document.body.dataset.step = step;
+    });
+  });
+
+  themeToggleBtn.addEventListener('click', () => {
+    const body = document.body;
+    if (body.classList.contains('theme-dark')) {
+      body.classList.remove('theme-dark');
+      body.classList.add('theme-light');
+      themeToggleBtn.textContent = '다크 모드';
+    } else {
+      body.classList.remove('theme-light');
+      body.classList.add('theme-dark');
+      themeToggleBtn.textContent = '라이트 모드';
+    }
+  });
+
+  // 타임라인 배경 클릭 시 편집 모드 해제
+  timeline.addEventListener('click', (e) => {
+    if (e.target === timeline || e.target.classList.contains('timeline-inner')) {
+      exitEditMode();
+    }
+  });
+
+})();
+</script>
+
 </body>
 </html>
+
 
 
 
