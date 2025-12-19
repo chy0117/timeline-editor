@@ -968,6 +968,18 @@ button{
   height: 22px !important;
 }
 
+/* 폰트 선택 버튼: 터치 영역은 유지, 글씨는 크게 */
+.title-font-toggle .toggle-btn,
+.text-font-toggle .toggle-btn{
+  padding: 0 10px;      /* ✅ 위아래 패딩 제거(높이로 관리) */
+  min-height: 44px;     /* ✅ 모바일 터치 타겟 */
+  font-size: 18px;      /* ✅ 폰트 차이 보이게 */
+  line-height: 1;       /* ✅ 글리프가 또렷하게 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
   </style>
 </head>
 <body class="theme-dark" data-step="1">
@@ -2007,6 +2019,7 @@ playFullscreenBtn.addEventListener('click', () => {
   </script>
 </body>
 </html>
+
 
 
 
