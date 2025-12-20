@@ -133,7 +133,10 @@ body.theme-light label{ color:rgba(2,6,23,0.70); }
 
 /* Step1에서는 설명 텍스트 숨김(온보딩/설명서로 분리) */
 body[data-step="1"] .hint{ display:none !important; }
-
+#step2Panel .hint,
+#step2Panel ul.hint{
+  display:none !important;
+}
 /* ---------- Form Controls ---------- */
 input,select,textarea,button{
   font-size:var(--ui-input);
@@ -1962,5 +1965,6 @@ body.theme-light .s1-divider{
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
