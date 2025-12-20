@@ -234,6 +234,30 @@ input[type="file"]{
 }
 .step-panel{ display:none; }
 .step-panel.active{ display:block; }
+    /* ---------- Step2 Sub Navigation ---------- */
+.step2-subnav{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+}
+
+.step2-subnav .sub-btn{
+  flex:1;
+  padding:10px 10px;
+  font-size:14px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+.step2-subnav .sub-btn.active{
+  background:var(--accent);
+  border-color:var(--accent-strong);
+  color:#020617;
+}
 
 /* ---------- Toggle Buttons (공통) ---------- */
 .item-type-toggle,
@@ -1104,6 +1128,7 @@ body.theme-light .s1-divider{
   const videoTitleInput = document.getElementById('videoTitle');
 
   const stepButtons = document.querySelectorAll('.step-btn');
+  const step2SubNav = document.getElementById('step2SubNav');
   const itemTypeButtons = document.querySelectorAll('.item-type-toggle .toggle-btn');
   const animationModeButtons = document.querySelectorAll('.animation-mode-toggle .toggle-btn');
 
@@ -1124,6 +1149,10 @@ body.theme-light .s1-divider{
 
     titleOverlay.classList.remove('titlefont-bagel','titlefont-nanum','titlefont-pretendard','titlefont-laudrygo');
     titleOverlay.classList.add(`titlefont-${fontKey}`);
+    if (titleItem) {
+  titleItem.fontKey = fontKey;
+  applyTitleItemStyles();
+}
     markDirtyAndSave('titleFont');
   }
 
@@ -1164,6 +1193,47 @@ body.theme-light .s1-divider{
   let longPressStartPos = null;
   let zCounter = 1;
 
+  let step2View = 'timeline'; // 'timeline' | 'title'
+
+function hasVideoTitle(){
+  return !!(videoTitleInput.value && videoTitleInput.value.trim());
+}
+
+function setStep2View(next){
+  step2View = next;
+
+  // 버튼 active 처리
+  step2SubNav.querySelectorAll('.sub-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.view === next);
+  });
+
+  // 제목 편집 화면에서만 제목 아이템 보이게
+  if (next === 'title') {
+    ensureTitleItem();
+    showTitleItem(true);
+    exitEditMode(); // 포커스 깔끔하게
+  } else {
+    showTitleItem(false);
+  }
+}
+
+function updateStep2SubNavVisibility(){
+  const isStep2 = document.body.dataset.step === '2';
+  const show = isStep2 && hasVideoTitle();
+
+  step2SubNav.style.display = show ? 'flex' : 'none';
+
+  // 제목이 없어졌으면 강제로 timeline로 복귀 + 제목 숨김
+  if (!show) {
+    step2View = 'timeline';
+    showTitleItem(false);
+  } else {
+    // step2 들어왔는데 서브탭 보이면 기본은 타임라인(원래 흐름 유지)
+    setStep2View(step2View || 'timeline');
+  }
+}
+
+  
   /* ---------- Utils ---------- */
   function minutesToTimeLabel(totalMinutes) {
     const isNext = totalMinutes >= 1440;
@@ -1486,7 +1556,96 @@ body.theme-light .s1-divider{
     timeline.appendChild(el);
     return el;
   }
+let titleItem = null;
+let titleItemEl = null;
 
+function ensureTitleItem(){
+  const titleText = (videoTitleInput.value || '').trim();
+  if (!titleText) return;
+
+  if (!titleItem) {
+    titleItem = {
+      id: 'title-item',
+      blockId: null,
+      type: 'text',
+      text: titleText,
+      x: 24,
+      y: 90,
+      w: 312,   // viewport(360) 기준 대충 여백 남긴 값
+      h: 120,
+      rotation: 0,
+      fontKey: currentTitleFont,
+      fontSize: 32
+    };
+    items.push(titleItem);
+  } else {
+    titleItem.text = titleText;
+    titleItem.fontKey = currentTitleFont;
+  }
+
+  if (!titleItemEl) {
+    titleItemEl = document.createElement('div');
+    titleItemEl.className = 'timeline-item';
+    titleItemEl.dataset.id = titleItem.id;
+
+    // 텍스트 엘리먼트(기존 스타일 재사용)
+    const t = document.createElement('div');
+    t.className = 'timeline-item-text';
+    titleItemEl.appendChild(t);
+
+    // 제스처 이벤트(기존 핸들러 그대로 재사용)
+    titleItemEl.addEventListener('pointerdown', onGesturePointerDown);
+    titleItemEl.addEventListener('pointermove', onGesturePointerMove);
+    titleItemEl.addEventListener('pointerup', onGesturePointerUp);
+    titleItemEl.addEventListener('pointercancel', onGesturePointerUp);
+
+    titleItemEl.addEventListener('contextmenu', e => e.preventDefault());
+    titleItemEl.addEventListener('dragstart', e => e.preventDefault());
+
+    // ✅ 스크롤되는 timeline 말고 viewport에 붙인다 (화면 기준 편집)
+    viewport.appendChild(titleItemEl);
+  }
+
+  applyTitleItemStyles();
+  syncTitleItemText();
+}
+
+function applyTitleItemStyles(){
+  if (!titleItem || !titleItemEl) return;
+
+  titleItemEl.style.left = titleItem.x + 'px';
+  titleItemEl.style.top = titleItem.y + 'px';
+  titleItemEl.style.width = titleItem.w + 'px';
+  titleItemEl.style.height = titleItem.h + 'px';
+  titleItemEl.style.transform = `rotate(${titleItem.rotation || 0}rad)`;
+  titleItemEl.dataset.rotation = titleItem.rotation || 0;
+  titleItemEl.style.zIndex = '9998'; // 항상 위
+
+  const t = titleItemEl.querySelector('.timeline-item-text');
+  if (t) {
+    const fontMap = {
+      pretendard: '"PretendardSemiBoldLocal","Pretendard",system-ui,sans-serif',
+      laudrygo: '"LaudrygoLocal",system-ui,sans-serif',
+      nanum: '"NanumNaMuJeongWeonLocal",system-ui,sans-serif',
+      bagel: '"BagelFatOneLocal",system-ui,sans-serif'
+    };
+    t.style.fontFamily = fontMap[titleItem.fontKey] || fontMap.pretendard;
+    t.style.fontSize = (titleItem.fontSize || 32) + 'px';
+  }
+}
+
+function syncTitleItemText(){
+  if (!titleItem || !titleItemEl) return;
+  const t = titleItemEl.querySelector('.timeline-item-text');
+  if (t) t.textContent = titleItem.text || '';
+}
+
+function showTitleItem(show){
+  if (!titleItemEl) return;
+  titleItemEl.style.display = show ? 'block' : 'none';
+}
+
+  
   /* ---------- Edit Mode ---------- */
   function enterEditMode(el) {
     exitEditMode();
@@ -1970,6 +2129,7 @@ body.theme-light .s1-divider{
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
