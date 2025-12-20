@@ -1174,6 +1174,9 @@ body.theme-light .s1-divider{
   textFontButtons.forEach(btn => {
     btn.addEventListener('click', () => applyTextFont(btn.dataset.font));
   });
+  
+  // ✅ 최초 1회: step2 서브탭 표시 조건 동기화
+updateStep2SubNavVisibility();
 
   /* ---------- State ---------- */
   let currentItemType = 'file';
@@ -1950,9 +1953,20 @@ function showTitleItem(show){
     markDirtyAndSave('dateChange');
   });
 
-  videoTitleInput.addEventListener('input', () => {
+ videoTitleInput.addEventListener('input', () => {
+  // ✅ 제목이 있으면 titleItem 준비 + 텍스트 싱크
+  if (hasVideoTitle()) {
+    ensureTitleItem();
+    syncTitleItemText();
+    applyTitleItemStyles();
+  }
+
+  // ✅ step2에서만 조건부로 서브탭 보이게
+  updateStep2SubNavVisibility();
+
   markDirtyAndSave('titleInput');
 });
+
   
   datePickerBtn.addEventListener('click', () => {
     if (typeof dateInput.showPicker === 'function') dateInput.showPicker();
@@ -2097,8 +2111,18 @@ function showTitleItem(show){
       });
 
       document.body.dataset.step = step;
+       // ✅ step2 진입/이탈 시 서브탭 표시 조건 갱신
+      updateStep2SubNavVisibility();
     });
   });
+
+  // ✅ Step2 서브탭 클릭
+step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    setStep2View(btn.dataset.view);
+    markDirtyAndSave('step2SubViewChange');
+  });
+});
 
   themeToggleBtn.addEventListener('click', () => {
     const body = document.body;
@@ -2129,6 +2153,7 @@ function showTitleItem(show){
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
