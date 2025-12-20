@@ -35,6 +35,17 @@
   --ui-gap:16px;
   --ui-row-gap:10px;
   --ui-min-hit:44px;
+
+    /* ---------- Timeline Grid Colors ---------- */
+  --tl-bg: #0b1220;                 /* 다크 타임라인 배경 */
+  --tl-label: rgba(229,231,235,0.70);
+  --tl-line: rgba(229,231,235,0.18);
+  --tl-line-soft: rgba(229,231,235,0.10);
+  --tl-boundary: rgba(229,231,235,0.28);
+
+  --tl-boundary-label-bg: rgba(2,6,23,0.85);
+  --tl-boundary-label-fg: rgba(229,231,235,0.85);
+  --tl-boundary-label-border: rgba(148,163,184,0.22);
 }
 
 body.theme-light{
@@ -49,6 +60,16 @@ body.theme-light{
   --accent:#22c55e;
   --accent-strong:#15803d;
   --muted:#9ca3af;
+   /* ---------- Timeline Grid Colors (Light) ---------- */
+  --tl-bg: #ffffff;
+  --tl-label: rgba(17,24,39,0.55);
+  --tl-line: rgba(17,24,39,0.18);
+  --tl-line-soft: rgba(17,24,39,0.10);
+  --tl-boundary: rgba(17,24,39,0.25);
+
+  --tl-boundary-label-bg: #ffffff;
+  --tl-boundary-label-fg: rgba(17,24,39,0.70);
+  --tl-boundary-label-border: rgba(229,231,235,1);
 }
 
 *{ box-sizing:border-box; }
@@ -493,10 +514,7 @@ body.theme-light .timeline-title-overlay{
   position:relative;
   width:100%;
   height:5760px;
-  background:#ffffff;              /* ✅ 완전 흰 배경 */
-}
-body.theme-light .timeline-inner{
-  background:#ffffff;              /* ✅ 라이트도 동일 */
+   background: var(--tl-bg);      
 }
 
 
@@ -506,7 +524,7 @@ body.theme-light .timeline-inner{
   width:48px;
   font-weight:700;
   letter-spacing:-0.2px;
-  color:rgba(17,24,39,0.55);
+  color: var(--tl-label);
   font-size:15px;      /* ✅ 글씨 조금 크게 */
   line-height:1;
 }
@@ -521,7 +539,7 @@ body.theme-light .timeline-inner{
   left:44px;                       /* ✅ 라벨 영역만 남기고 */
   right:10px;
   height:0;
-  border-top:1px dotted rgba(17,24,39,0.18);  /* ✅ 점선 */
+   border-top: 1px dotted var(--tl-line);
   background:none;
 }
 
@@ -530,7 +548,7 @@ body.theme-light .timeline-inner{
   left:44px;
   right:10px;
   height:0;
-  border-top:1px dotted rgba(17,24,39,0.10); /* ✅ 더 연한 점선 */
+    border-top: 1px dotted var(--tl-line-soft);
 }
 
 /* ---------- Day Boundary (24h) ---------- */
@@ -548,7 +566,7 @@ body.theme-light .timeline-inner{
   left:44px;
   right:10px;
   height:0;
-  border-top:2px solid rgba(17,24,39,0.25); /* ✅ 24h 경계는 조금 더 진하게 */
+   border-top: 2px solid var(--tl-boundary);
 }
 
 .day-boundary-label{
@@ -557,12 +575,13 @@ body.theme-light .timeline-inner{
   top:-12px;            /* 선 위로 살짝 */
   padding:4px 8px;
   border-radius:10px;
-  background:#ffffff;   /* ✅ 흰 배경에서 라벨 읽히게 */
-  color:rgba(17,24,39,0.70);
+  background: var(--tl-boundary-label-bg);
+ color: var(--tl-boundary-label-fg);
   font-size:14px;       /* ✅ 글씨 조금 크게 */
   font-weight:800;
   letter-spacing:-0.2px;
   box-shadow:0 6px 14px rgba(0,0,0,0.06);
+  border: 1px solid var(--tl-boundary-label-border);
 }
     
 
@@ -2271,6 +2290,7 @@ step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
