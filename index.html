@@ -653,12 +653,14 @@ body.theme-light .timeline-title-overlay{
 }
 
 .timeline-item-text{
-  width:100%;
-  height:100%;
+  width:auto;          /* ✅ 100% 제거 */
+  height:auto;         /* ✅ 100% 제거 */
+  display:inline-block; /* ✅ 내용 크기만큼 */
   padding:6px 8px;
   font-size:24px;
   line-height:1.35;
   color:#f9fafb;
+  white-space:pre-wrap;
   word-break:break-word;
   background:transparent;
 }
@@ -1345,7 +1347,33 @@ function updateHeaderDateByScroll(scrollTop){
   const dateStr = getDatePlusDays(base, clampedDay);
   headerLabel.textContent = dateStr + ' 타임라인';
 }
+function fitTextBoxToContent(el, item, maxW){
+  const t = el.querySelector('.timeline-item-text');
+  if (!t) return;
 
+  // ✅ 최대 폭(모바일 기준 너무 길어지지 않게)
+  const limitW = maxW || Math.max(160, viewport.clientWidth - 80);
+
+  // 측정 전: 자연 크기 + 줄바꿈 허용 + 최대폭 제한
+  t.style.width = 'max-content';
+  t.style.maxWidth = limitW + 'px';
+  t.style.height = 'auto';
+
+  // 레이아웃 반영 후 실제 크기 읽기
+  requestAnimationFrame(() => {
+    const rect = t.getBoundingClientRect();
+
+    // 터치 가능한 최소 크기 보장
+    const newW = clamp(Math.ceil(rect.width), 80, limitW);
+    const newH = clamp(Math.ceil(rect.height), 44, 2000);
+
+    el.style.width = newW + 'px';
+    el.style.height = newH + 'px';
+
+    item.w = newW;
+    item.h = newH;
+  });
+}
   
     /* ---------- Save: 즉시 저장 + 3분 백업 저장 ---------- */
   const STORAGE_KEY = 'tse_v21_state';
@@ -1673,8 +1701,11 @@ function buildHourGrid() {
       t.style.fontFamily = fontMap[key] || fontMap.pretendard;
       t.style.fontSize = (item.fontSize || 24) + 'px'; // 최소 24px 보장
       el.appendChild(t);
+       // ✅ 추가: 텍스트 크기에 맞춰 박스 자동 맞춤
+  fitTextBoxToContent(el, item);
     }
-
+    
+    
     // 제스처 이벤트
     el.addEventListener('pointerdown', onGesturePointerDown);
     el.addEventListener('pointermove', onGesturePointerMove);
@@ -1766,6 +1797,8 @@ function applyTitleItemStyles(){
     t.style.fontFamily = fontMap[titleItem.fontKey] || fontMap.pretendard;
     t.style.fontSize = (titleItem.fontSize || 32) + 'px';
   }
+  // ✅ 제목도 텍스트에 맞게 박스 줄이기(옵션)
+  fitTextBoxToContent(titleItemEl, titleItem, viewport.clientWidth - 48);
 }
 
 function syncTitleItemText(){
@@ -2306,6 +2339,7 @@ step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
