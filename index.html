@@ -1382,20 +1382,24 @@ function fitTextBoxToContent(el, item, maxW){
   let backupSaveTimer = null;
 
   function getStateSnapshot() {
-    return {
-      v: '2.1',
-      savedAt: Date.now(),
-      date: dateInput.value || '',
-      title: videoTitleInput.value || '',
-      currentTitleFont,
-      currentTextFont,
-      currentItemType,
-      currentAnimationMode,
-      blocks,
-      items
-      // ⚠️ 참고: image/video의 src(ObjectURL)는 새로고침 후 복원 불가할 수 있음
-    };
-  }
+  return {
+    v: '2.1',
+    savedAt: Date.now(),
+    date: dateInput.value || '',
+    title: videoTitleInput.value || '',
+    currentTitleFont,
+    currentTextFont,
+    currentItemType,
+    currentAnimationMode,
+    blocks,
+    items,
+    ui: {
+      step: document.body.dataset.step || '1',
+      step2View,
+      scrollTop: viewport.scrollTop || 0
+    }
+  };
+}
 
   
 
@@ -1412,6 +1416,7 @@ function fitTextBoxToContent(el, item, maxW){
 
   // 액션이 발생하면: 1) 즉시 저장  2) 3분 뒤 백업 저장 예약(리셋)
   function markDirtyAndSave(reason = '') {
+    if (isRestoring) return; // ✅ 복원 중 저장 방지
     // 1) 즉시 저장
     saveStateNow(reason);
 
@@ -1423,6 +1428,188 @@ function fitTextBoxToContent(el, item, maxW){
     }, BACKUP_SAVE_MS);
   }
 
+  let isRestoring = false; // ✅ 복원 중엔 저장 호출 막기
+
+  /* ---------- Restore (새로고침 복원) ---------- */
+function setActiveByDataset(buttons, key, value){
+  buttons.forEach(b => b.classList.toggle('active', b.dataset[key] === value));
+}
+
+function applyTitleFontUI(fontKey){
+  // 버튼 active
+  titleFontButtons.forEach(b => b.classList.toggle('active', b.dataset.font === fontKey));
+  // overlay class
+  titleOverlay.classList.remove('titlefont-bagel','titlefont-nanum','titlefont-pretendard','titlefont-laudrygo');
+  titleOverlay.classList.add(`titlefont-${fontKey}`);
+}
+
+function applyTextFontUI(fontKey){
+  textFontButtons.forEach(b => b.classList.toggle('active', b.dataset.font === fontKey));
+}
+
+function applyItemTypeUI(typeKey){
+  currentItemType = typeKey;
+  setActiveByDataset(itemTypeButtons, 'type', typeKey);
+
+  if (typeKey === 'text') {
+    textInputGroup.style.display = 'block';
+    imageInputGroup.style.display = 'none';
+  } else {
+    textInputGroup.style.display = 'none';
+    imageInputGroup.style.display = 'block';
+  }
+}
+
+function applyAnimationModeUI(modeKey){
+  currentAnimationMode = modeKey;
+  setActiveByDataset(animationModeButtons, 'mode', modeKey);
+}
+
+function rebuildFromState(loadedBlocks, loadedItems){
+  // 1) 기존 DOM/상태 초기화
+  blocks = [];
+  items = [];
+  editingItemEl = null;
+  stopAnimation();
+  clearHourHighlight();
+  exitEditMode();
+
+  while (timeline.firstChild) timeline.removeChild(timeline.firstChild);
+  timeline.style.height = (TOTAL_HOURS * HOUR_HEIGHT) + 'px';
+
+  buildHourGrid();
+  buildDayBoundary();
+
+  // 2) 블록 DOM 재구성 (+ element 포인터 붙이기)
+  loadedBlocks = Array.isArray(loadedBlocks) ? loadedBlocks : [];
+  loadedBlocks.forEach(b => {
+    const top = b.startMinutes * MINUTE_PX;
+    const height = (b.endMinutes - b.startMinutes) * MINUTE_PX;
+
+    const blockEl = document.createElement('div');
+    blockEl.className = 'time-block';
+    blockEl.style.top = top + 'px';
+    blockEl.style.height = height + 'px';
+    blockEl.dataset.id = b.id;
+
+    const inner = document.createElement('div');
+    inner.className = 'time-block-inner';
+    blockEl.appendChild(inner);
+    timeline.appendChild(blockEl);
+
+    blocks.push({
+      id: b.id,
+      startMinutes: b.startMinutes,
+      endMinutes: b.endMinutes,
+      duration: b.duration || (b.endMinutes - b.startMinutes),
+      element: blockEl
+    });
+  });
+
+  // 3) 아이템 DOM 재구성
+  loadedItems = Array.isArray(loadedItems) ? loadedItems : [];
+
+  // title-item은 따로 핸들링(viewport에 붙는 구조니까)
+  titleItem = loadedItems.find(it => it && it.id === 'title-item') || null;
+  titleItemEl = null;
+
+  // 일반 아이템들
+  loadedItems
+    .filter(it => it && it.id !== 'title-item')
+    .forEach(it => {
+      items.push(it);
+      createItemElement(it);
+    });
+
+  // 타이틀 아이템 복원(있으면)
+  if (titleItem) {
+    // ensureTitleItem()는 items.push(titleItem)을 할 수 있으니, 중복 방지용으로 직접 세팅
+    // items에는 titleItem도 유지되도록 넣어둔다
+    const already = items.find(x => x.id === 'title-item');
+    if (!already) items.push(titleItem);
+
+    // viewport에 타이틀 아이템 생성/적용
+    ensureTitleItem();
+  }
+
+  updateTimeSummary();
+}
+
+function loadStateAndRestore(){
+  let raw = null;
+  try {
+    raw = localStorage.getItem(STORAGE_KEY);
+  } catch (e) {}
+  if (!raw) return false;
+
+  let snap = null;
+  try {
+    snap = JSON.parse(raw);
+  } catch (e) {
+    return false;
+  }
+  if (!snap || snap.v !== '2.1') return false;
+
+  isRestoring = true;
+  try {
+    // 값 적용
+    if (snap.date) dateInput.value = snap.date;
+    if (typeof snap.title === 'string') videoTitleInput.value = snap.title;
+
+    currentTitleFont = snap.currentTitleFont || currentTitleFont;
+    currentTextFont  = snap.currentTextFont  || currentTextFont;
+
+    applyTitleFontUI(currentTitleFont);
+    applyTextFontUI(currentTextFont);
+
+    applyItemTypeUI(snap.currentItemType || currentItemType);
+    applyAnimationModeUI(snap.currentAnimationMode || currentAnimationMode);
+
+    // 타임라인/블록/아이템 복원
+    rebuildFromState(snap.blocks, snap.items);
+
+    // 헤더 날짜 반영
+    if (dateInput.value) {
+      headerLabel.textContent = dateInput.value + ' 타임라인';
+      updateHeaderDateByScroll(viewport.scrollTop);
+    }
+
+    // step2 서브탭 노출 조건 반영
+    updateStep2SubNavVisibility();
+
+    // (선택) UI 상태 복원
+    if (snap.ui) {
+      const step = snap.ui.step || '1';
+      document.body.dataset.step = step;
+
+      // step 버튼/패널 active 맞추기
+      stepButtons.forEach(b => b.classList.toggle('active', b.dataset.step === step));
+      Object.entries(stepPanels).forEach(([k,p])=>{
+        p.classList.toggle('active', k === step);
+      });
+
+      // step2View 복원(가능할 때만)
+      if (typeof snap.ui.step2View === 'string') {
+        step2View = snap.ui.step2View;
+        updateStep2SubNavVisibility();
+        if (document.body.dataset.step === '2' && hasVideoTitle()) {
+          setStep2View(step2View);
+        }
+      }
+
+      // 스크롤 복원
+      if (typeof snap.ui.scrollTop === 'number') {
+        viewport.scrollTop = snap.ui.scrollTop;
+        highlightHourByScroll(viewport.scrollTop);
+      }
+    }
+
+  } finally {
+    isRestoring = false;
+  }
+
+  return true;
+}
   
   /* ---------- Block / List ---------- */
   function updateBlockList() {
@@ -2135,19 +2322,29 @@ if (activeTouches.length === 2 && editingItemEl === el) {
   }
 
   /* ---------- Events ---------- */
-  // 초기 적용
-  applyTitleFont(currentTitleFont);
-  applyTextFont(currentTextFont);
+ // 초기 적용(저장 없이 UI만 반영)
+applyTitleFontUI(currentTitleFont);
+applyTextFontUI(currentTextFont);
 
-  buildTimeOptions();
+buildTimeOptions();
+
+// ✅ 1) 저장된 게 있으면 복원, 없으면 신규 초기화
+const restored = loadStateAndRestore();
+
+if (!restored) {
   resetTimelineDataAndDom();
- // ✅ 최초 1회: step2 서브탭 표시 조건 동기화
-updateStep2SubNavVisibility();
 
   const today = new Date().toISOString().slice(0,10);
   dateInput.value = today;
   headerLabel.textContent = today + ' 타임라인';
   updateHeaderDateByScroll(viewport.scrollTop);
+
+  // 기본 상태 반영
+  applyItemTypeUI(currentItemType);
+  applyAnimationModeUI(currentAnimationMode);
+
+  updateStep2SubNavVisibility();
+}
   
  dateInput.addEventListener('change', () => {
   resetTimelineDataAndDom();
@@ -2358,6 +2555,7 @@ step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
