@@ -514,6 +514,7 @@ body.theme-light .timeline-inner{
   color:var(--accent);
   font-weight:800;
 }
+    
 
 .hour-line{
   position:absolute;
@@ -531,6 +532,39 @@ body.theme-light .timeline-inner{
   height:0;
   border-top:1px dotted rgba(17,24,39,0.10); /* ✅ 더 연한 점선 */
 }
+
+/* ---------- Day Boundary (24h) ---------- */
+.day-boundary{
+  position:absolute;
+  left:0;
+  right:0;
+  height:0;
+  z-index:2;
+  pointer-events:none;
+}
+
+.day-boundary-line{
+  position:absolute;
+  left:44px;
+  right:10px;
+  height:0;
+  border-top:2px solid rgba(17,24,39,0.25); /* ✅ 24h 경계는 조금 더 진하게 */
+}
+
+.day-boundary-label{
+  position:absolute;
+  left:10px;            /* hour-label과 같은 라인 */
+  top:-12px;            /* 선 위로 살짝 */
+  padding:4px 8px;
+  border-radius:10px;
+  background:#ffffff;   /* ✅ 흰 배경에서 라벨 읽히게 */
+  color:rgba(17,24,39,0.70);
+  font-size:14px;       /* ✅ 글씨 조금 크게 */
+  font-weight:800;
+  letter-spacing:-0.2px;
+  box-shadow:0 6px 14px rgba(0,0,0,0.06);
+}
+    
 
 
 /* ---------- Time Block ---------- */
@@ -1244,22 +1278,54 @@ function updateStep2SubNavVisibility(){
 
   
   /* ---------- Utils ---------- */
-  function minutesToTimeLabel(totalMinutes) {
-    const isNext = totalMinutes >= 1440;
-    let m = totalMinutes;
-    if (isNext) m -= 1440;
+ function minutesToTimeLabel(totalMinutes) {
+  const isNext = totalMinutes >= 1440;
+  let m = totalMinutes;
+  if (isNext) m -= 1440;
 
-    const h = Math.floor(m / 60);
-    const mm = m % 60;
+  const h = Math.floor(m / 60);
+  const mm = m % 60;
 
-    const hh = String(h).padStart(2,'0');
-    const mmStr = String(mm).padStart(2,'0');
-    const base = `${hh}:${mmStr}`;
+  const hh = String(h).padStart(2,'0');
+  const mmStr = String(mm).padStart(2,'0');
+  const base = `${hh}:${mmStr}`;
 
-    return isNext ? `다음날 ${base}` : base;
-  }
+  return isNext ? `+1일 ${base}` : base;
+}
 
   function clamp(n, min, max){ return Math.max(min, Math.min(n, max)); }
+
+  function formatDateYYYYMMDD(dt){
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth()+1).padStart(2,'0');
+  const d = String(dt.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+
+function getDatePlusDays(baseYYYYMMDD, days){
+  if (!baseYYYYMMDD) return '';
+  const [y, m, d] = baseYYYYMMDD.split('-').map(Number);
+  const dt = new Date(y, (m-1), d); // ✅ 로컬 안정 파싱
+  dt.setDate(dt.getDate() + days);
+  return formatDateYYYYMMDD(dt);
+}
+
+function updateHeaderDateByScroll(scrollTop){
+  const base = dateInput.value || '';
+  if (!base) return;
+
+  const viewportHeight = viewport.clientHeight;
+  const centerY = scrollTop + viewportHeight/2;
+  const minutes = centerY / MINUTE_PX;
+
+  const dayIndex = Math.floor(minutes / 1440); // 0: 오늘, 1: +1일
+  const clampedDay = clamp(dayIndex, 0, 1);
+
+  const dateStr = getDatePlusDays(base, clampedDay);
+  headerLabel.textContent = dateStr + ' 타임라인';
+}
+
+  
     /* ---------- Save: 즉시 저장 + 3분 백업 저장 ---------- */
   const STORAGE_KEY = 'tse_v21_state';
   const BACKUP_SAVE_MS = 180000; // 3분 (유지)
@@ -1281,6 +1347,8 @@ function updateStep2SubNavVisibility(){
       // ⚠️ 참고: image/video의 src(ObjectURL)는 새로고침 후 복원 불가할 수 있음
     };
   }
+
+  
 
   function saveStateNow(reason = '') {
     try {
@@ -1424,21 +1492,23 @@ function updateStep2SubNavVisibility(){
   }
 
   /* ---------- Grid ---------- */
- function buildHourGrid() {
+function buildHourGrid() {
   for (let h=0; h<TOTAL_HOURS; h++) {
     const top = h * HOUR_HEIGHT;
 
-    // ✅ 24시간 표기: 0~47 그대로 표시(영상용으로 시간 고정감 최고)
     const label = document.createElement('div');
     label.className = 'hour-label';
     label.style.top = (top + 8) + 'px';
-    label.textContent = String(h);   // 예: 13, 14, ... 23, 24, 25 ...
+
+    // ✅ B안: 오늘은 00~23, 다음날은 "+1일 00~23"
+    const hourInDay = h % 24;
+    const hh = String(hourInDay).padStart(2,'0');
+    label.textContent = (h >= 24) ? `+1일 ${hh}` : hh;
 
     const line = document.createElement('div');
     line.className = 'hour-line';
     line.style.top = (top + 28) + 'px';
 
-    // (옵션) 30분 보조 점선
     const half = document.createElement('div');
     half.className = 'half-line';
     half.style.top = (top + HOUR_HEIGHT/2 + 28) + 'px';
@@ -1448,6 +1518,30 @@ function updateStep2SubNavVisibility(){
     timeline.appendChild(half);
   }
 }
+
+  function buildDayBoundary(){
+  const base = dateInput.value || '';
+  if (!base) return;
+
+  const boundaryTop = 24 * HOUR_HEIGHT;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'day-boundary';
+  wrap.style.top = boundaryTop + 'px';
+
+  const line = document.createElement('div');
+  line.className = 'day-boundary-line';
+  line.style.top = '0px';
+
+  const label = document.createElement('div');
+  label.className = 'day-boundary-label';
+  label.textContent = getDatePlusDays(base, 1); // ✅ 다음날 날짜
+
+  wrap.appendChild(line);
+  wrap.appendChild(label);
+  timeline.appendChild(wrap);
+}
+
 
   function clearHourHighlight() {
     document.querySelectorAll('.hour-label').forEach(l => l.classList.remove('active'));
@@ -1463,6 +1557,9 @@ function updateStep2SubNavVisibility(){
 
     const labels = document.querySelectorAll('.hour-label');
     if (hourIndex>=0 && hourIndex<labels.length) labels[hourIndex].classList.add('active');
+
+      // ✅ 추가: 스크롤 위치에 따라 header 날짜 자동 변경
+  updateHeaderDateByScroll(scrollTop);
   }
 
   function resetTimelineDataAndDom() {
@@ -1477,6 +1574,7 @@ function updateStep2SubNavVisibility(){
     timeline.style.height = (TOTAL_HOURS*HOUR_HEIGHT)+'px';
 
     buildHourGrid();
+    buildDayBoundary();
     updateTimeSummary();
   }
 
@@ -2166,6 +2264,7 @@ step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
