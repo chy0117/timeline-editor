@@ -1215,8 +1215,7 @@ body.theme-light .s1-divider{
     btn.addEventListener('click', () => applyTextFont(btn.dataset.font));
   });
   
-  // ✅ 최초 1회: step2 서브탭 표시 조건 동기화
-updateStep2SubNavVisibility();
+
 
   /* ---------- State ---------- */
   let currentItemType = 'file';
@@ -2055,6 +2054,8 @@ function showTitleItem(show){
 
   buildTimeOptions();
   resetTimelineDataAndDom();
+ // ✅ 최초 1회: step2 서브탭 표시 조건 동기화
+updateStep2SubNavVisibility();
 
   const today = new Date().toISOString().slice(0,10);
   dateInput.value = today;
@@ -2261,6 +2262,8 @@ step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
 
 })();
 </script>
+  </div>
+  
 <!-- </body> 바로 위(또는 <head> 안) 아무데나 추가 -->
 <script>
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -2268,6 +2271,7 @@ step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
