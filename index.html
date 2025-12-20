@@ -1783,6 +1783,10 @@ body.theme-light .s1-divider{
     markDirtyAndSave('dateChange');
   });
 
+  videoTitleInput.addEventListener('input', () => {
+  markDirtyAndSave('titleInput');
+});
+  
   datePickerBtn.addEventListener('click', () => {
     if (typeof dateInput.showPicker === 'function') dateInput.showPicker();
     else { dateInput.focus(); dateInput.click(); }
@@ -1805,6 +1809,7 @@ body.theme-light .s1-divider{
         textInputGroup.style.display='none';
         imageInputGroup.style.display='block';
       }
+       markDirtyAndSave('itemTypeChange'); 
     });
   });
 
@@ -1813,6 +1818,7 @@ body.theme-light .s1-divider{
       animationModeButtons.forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       currentAnimationMode = btn.dataset.mode;
+       markDirtyAndSave('animationModeChange');
     });
   });
 
@@ -1956,3 +1962,4 @@ body.theme-light .s1-divider{
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
