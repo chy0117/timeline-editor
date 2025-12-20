@@ -1225,6 +1225,9 @@ updateStep2SubNavVisibility();
   let blocks = [];
   let items = [];
 
+  let titleItem = null;
+let titleItemEl = null;
+  
   let editingItemEl = null;
   let animFrameId = null;
 
@@ -1670,8 +1673,7 @@ function buildHourGrid() {
     timeline.appendChild(el);
     return el;
   }
-let titleItem = null;
-let titleItemEl = null;
+
 
 function ensureTitleItem(){
   const titleText = (videoTitleInput.value || '').trim();
@@ -2266,6 +2268,7 @@ step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
