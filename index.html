@@ -2057,12 +2057,14 @@ function showTitleItem(show){
   const today = new Date().toISOString().slice(0,10);
   dateInput.value = today;
   headerLabel.textContent = today + ' 타임라인';
+  updateHeaderDateByScroll(viewport.scrollTop);
+  
+ dateInput.addEventListener('change', () => {
+  resetTimelineDataAndDom();
+  updateHeaderDateByScroll(viewport.scrollTop);
+  markDirtyAndSave('dateChange');
+});
 
-  dateInput.addEventListener('change', () => {
-    headerLabel.textContent = dateInput.value + ' 타임라인';
-    resetTimelineDataAndDom();
-    markDirtyAndSave('dateChange');
-  });
 
  videoTitleInput.addEventListener('input', () => {
   // ✅ 제목이 있으면 titleItem 준비 + 텍스트 싱크
@@ -2264,6 +2266,7 @@ step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
