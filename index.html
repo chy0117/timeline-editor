@@ -1017,15 +1017,6 @@ body.theme-light .s1-divider{
   margin: 0 0 10px;      /* 위쪽 여백 제거 */
   line-height: 1.1;
 }
-/* ✅ 상단 고정 영역 (H1 + STEP NAV) */
-.sidebar-top{
-  position:sticky;
-  top:0;
-  z-index:60;
-  background:var(--sidebar-bg);
-  padding:18px 20px 10px;
-  border-bottom:1px solid var(--border);
-}
 
 /* ✅ STEP 패널 스크롤 영역 */
 .sidebar-scroll{
@@ -1138,6 +1129,9 @@ body.record-mode #recordExitBtn{
 <body class="theme-dark" data-step="1">
 <div class="sidebar">
 
+
+
+  
   <!-- ✅ 상단 고정 영역 (H1 + STEP NAV) -->
   <div class="sidebar-top">
     <h1>
@@ -3230,6 +3224,7 @@ function ensureTitleBgDimLayer(){
   titlePageLayer.appendChild(titleBgDimLayerEl);
 }
 
+// ✅ 이 함수를 여기에 추가
 function applyTitleBgToTitlePage(){
   // 배경 없으면 정리
   if (!titleBgDataUrl){
@@ -3237,7 +3232,10 @@ function applyTitleBgToTitlePage(){
     // blur도 해제
     if (titleBgItemEl){
       const img = titleBgItemEl.querySelector('img');
-      if (img) { img.style.filter = 'none'; img.style.transform = ''; }
+      if (img) { 
+        img.style.filter = 'none'; 
+        img.style.transform = ''; 
+      }
     }
     return;
   }
@@ -3259,6 +3257,16 @@ function applyTitleBgToTitlePage(){
   titleBgDimLayerEl.style.display = 'block';
   titleBgDimLayerEl.style.background = `rgba(0,0,0,${alpha.toFixed(2)})`;
 }
+
+function refreshTitleBgMetaUI(){
+  if (!titleBgDataUrl) {
+    titleBgMeta.style.display = 'none';
+    titleBgName.textContent = '';
+    return;
+  }
+  titleBgMeta.style.display = 'flex';
+}
+
 
 
   function refreshTitleBgMetaUI(){
@@ -3420,6 +3428,7 @@ pvDimRange.addEventListener('input', () => {
 <!-- </body> 바로 위(또는 <head> 안) 아무데나 추가 -->
 </body>
 </html>
+
 
 
 
