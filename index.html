@@ -1566,11 +1566,13 @@ speedSec: Number(speedInput.value) || 30,
 theme: document.body.classList.contains('theme-light') ? 'light' : 'dark', 
 blocks,
     items,
-       titleBg: {
-  dataUrl: titleBgDataUrl,
+      titleBg: {
+  list: titleBgList,          // ✅ 추가
+  dataUrl: titleBgDataUrl,    // ✅ 구버전 호환용으로 남겨도 됨
   blurPx: titleBgBlurPx,
   dimPct: titleBgDimPct
 },
+
     ui: {
       step: document.body.dataset.step || '1',
       step2View,
@@ -1765,15 +1767,24 @@ if (snap.theme === 'light') {
 }
 
     // ✅ titleBg 복원
-// ✅ titleBg 복원 (blurOn 제거 버전: 0px이면 OFF)
+// ✅ titleBg 복원 (list 우선 + 구버전 dataUrl fallback)
 if (snap.titleBg) {
-  titleBgDataUrl = snap.titleBg.dataUrl || null;
+  titleBgList = Array.isArray(snap.titleBg.list) ? snap.titleBg.list : [];
+
+  // ✅ list[0] 우선, 없으면 구버전 dataUrl
+  titleBgDataUrl = titleBgList[0] || snap.titleBg.dataUrl || null;
+
   titleBgBlurPx  = Number(snap.titleBg.blurPx || 0);     // 0이면 OFF
   titleBgDimPct  = Number(snap.titleBg.dimPct || 45);
 
   // UI 반영
   refreshTitleBgMetaUI();
   applyTitleBgToOverlay();
+
+  // ✅ 타이틀 페이지 아이템 반영(메인 + 추가 흩뿌리기)
+  // (함수들이 이미 추가돼 있다는 전제)
+  ensureTitleBgItem();
+  scatterExtraTitleBgItems(titleBgList.slice(1));
 
   // 블러 UI (0px = OFF)
   titleBlurRange.value = String(clamp(titleBgBlurPx, 0, 20));
@@ -1787,6 +1798,7 @@ if (snap.titleBg) {
   updateStep2TitleControlsVisibility();
 } else {
   // snap에 titleBg가 없으면 기본값으로 정리
+  titleBgList = [];
   titleBgDataUrl = null;
   titleBgBlurPx  = 0;
   titleBgDimPct  = 45;
@@ -1801,6 +1813,7 @@ if (snap.titleBg) {
 
   updateStep2TitleControlsVisibility();
 }
+
 
     // 타임라인/블록/아이템 복원
     rebuildFromState(snap.blocks, snap.items);
@@ -3120,6 +3133,7 @@ function clearTitleBg(){
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
