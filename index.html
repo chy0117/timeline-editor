@@ -2155,6 +2155,46 @@ let endScroll = Math.max(contentMaxBottom - viewportHeight + 40, 0);
     }
   }
 
+    /* ---------- True Fullscreen (REAL) ---------- */
+  function requestViewportFullscreen() {
+    const el = viewport;
+
+    const req =
+      el.requestFullscreen ||
+      el.webkitRequestFullscreen ||
+      el.mozRequestFullScreen ||
+      el.msRequestFullscreen;
+
+    if (!req) return Promise.reject(new Error('Fullscreen API not supported'));
+    const ret = req.call(el);
+    // 어떤 브라우저는 Promise를 안 줄 수 있어서 통일
+    return (ret && typeof ret.then === 'function') ? ret : Promise.resolve();
+  }
+
+  function isViewportFullscreen() {
+    const fsEl =
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement;
+    return fsEl === viewport;
+  }
+
+  function onFullscreenChange() {
+    // 풀스크린에서 빠져나온 순간(ESC 등)
+    if (!isViewportFullscreen()) {
+      stopAnimation();
+      clearHourHighlight();
+      // 제목 오버레이가 떠있으면 안전하게 내림
+      titleOverlay.style.display = 'none';
+    }
+  }
+
+  document.addEventListener('fullscreenchange', onFullscreenChange);
+  document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+  document.addEventListener('mozfullscreenchange', onFullscreenChange);
+  document.addEventListener('MSFullscreenChange', onFullscreenChange);
+
   /* ---------- Record Mode (Fake Fullscreen) ---------- */
   const recordExitBtn = document.getElementById('recordExitBtn');
 
@@ -2487,10 +2527,23 @@ if (!restored) {
 
   playBtn.addEventListener('click', runAnimation);
 
-  playFullscreenBtn.addEventListener('click', () => {
-    enterRecordMode();
+   playFullscreenBtn.addEventListener('click', async () => {
+    // 먼저 편집/애니메이션 상태 정리
+    stopAnimation();
+    exitEditMode();
+
+    try {
+      // ✅ 진짜 전체화면 요청
+      await requestViewportFullscreen();
+    } catch (err) {
+      // ✅ Fullscreen API 미지원/차단이면 기존 방식으로 fallback
+      enterRecordMode();
+    }
+
+    // ✅ 레이아웃 변경(전체화면) 반영 후 재생 시작
     requestAnimationFrame(() => requestAnimationFrame(() => runAnimation()));
   });
+
 
   recordExitBtn.addEventListener('click', exitRecordMode);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') exitRecordMode(); });
@@ -2555,6 +2608,7 @@ step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
