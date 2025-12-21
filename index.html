@@ -500,6 +500,10 @@ body.theme-light .viewport-header{
   --title-font:"PretendardSemiBoldLocal";
   font-family:var(--title-font),system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
+.timeline-title-overlay > *{
+  position:relative;
+  z-index:2;
+}
 body.theme-light .timeline-title-overlay{
   background:rgba(15,23,42,0.25);
   color:#020617;
@@ -509,6 +513,10 @@ body.theme-light .timeline-title-overlay{
 .timeline-title-overlay.titlefont-pretendard{ --title-font:"PretendardSemiBoldLocal"; }
 .timeline-title-overlay.titlefont-laudrygo{ --title-font:"LaudrygoLocal"; }
 
+.timeline-title-overlay.has-bg{ ... }
+.timeline-title-overlay.has-bg::before{ ... }
+.timeline-title-overlay.has-bg::after{ ... }
+    
 /* ---------- Timeline Inner / Grid ---------- */
 .timeline-inner{
   position:relative;
@@ -1098,6 +1106,38 @@ body.theme-light .s1-divider{
         빈 공간을 탭하면 편집 모드가 해제됩니다.<br/>
         아이템들이 겹칠 수 있으며, 편집하는 아이템이 가장 위에 표시됩니다.
       </p>
+<!-- ✅ Step2: 영상 제목 배경 스타일(블러/딤) -->
+<div id="step2TitleControls" style="display:none; margin-top:14px;">
+  <div class="s1-section" style="padding:14px;">
+    <div class="s1-head">
+      <div class="s1-title">제목 배경 스타일</div>
+    </div>
+
+    <div class="s1-subtitle">블러</div>
+    <div class="row" style="gap:10px; align-items:center;">
+      <button type="button" id="titleBlurToggle" class="btn-secondary" style="flex:0 0 auto; width:auto;">
+        블러: OFF
+      </button>
+      <span id="titleBlurLabel" class="hint" style="margin:0; text-align:right;">0px</span>
+    </div>
+    <input type="range" id="titleBlurRange" min="0" max="20" step="1" value="8" style="margin-top:8px;" />
+
+    <div class="s1-divider"></div>
+
+    <div class="s1-subtitle">딤(어둡게)</div>
+    <div class="row" style="gap:10px; align-items:center;">
+      <span class="hint" style="margin:0;">0%</span>
+      <input type="range" id="titleDimRange" min="0" max="80" step="1" value="45" />
+      <span id="titleDimLabel" class="hint" style="margin:0; text-align:right;">45%</span>
+    </div>
+
+    <p class="hint" style="margin-top:10px;">
+      배경 사진이 있을 때만 눈에 보이게 적용돼요.
+    </p>
+  </div>
+</div>
+
+      
     </div>
 
     <!-- STEP 3 -->
@@ -1150,7 +1190,7 @@ body.theme-light .s1-divider{
     날짜를 선택해주세요
   </div>
   <div class="timeline-title-overlay" id="titleOverlay"></div>
-
+  
   <div class="timeline-inner" id="timeline"></div>
 </div>
 
@@ -1230,6 +1270,31 @@ body.theme-light .s1-divider{
     btn.addEventListener('click', () => applyTitleFont(btn.dataset.font));
   });
 
+  <!-- ✅ 제목 배경사진(선택) -->
+<div style="margin-top:12px;">
+  <div class="row" style="gap:10px; align-items:center;">
+    <div style="flex:1; font-weight:800; font-size:14px; letter-spacing:-0.2px;">
+      배경사진(선택)
+    </div>
+
+    <button type="button" id="titleBgPickBtn" class="btn-secondary" style="flex:0 0 auto; width:auto;">
+      파일 추가
+    </button>
+
+    <input type="file" id="titleBgFile" accept="image/*" style="display:none;" />
+  </div>
+
+  <!-- 파일명 표시 + 삭제(X) -->
+  <div id="titleBgMeta"
+       style="display:none; margin-top:8px; align-items:center; justify-content:space-between; gap:8px;">
+    <span id="titleBgName"
+          style="font-size:13px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+    </span>
+    <button type="button" id="titleBgClearBtn" class="block-delete-btn" aria-label="배경 사진 삭제">✕</button>
+  </div>
+</div>
+
+
   /* ---------- Text Font Toggle ---------- */
   const textFontButtons = document.querySelectorAll('#textFontToggle .toggle-btn');
   let currentTextFont = localStorage.getItem('textFont') || 'pretendard';
@@ -1245,7 +1310,6 @@ body.theme-light .s1-divider{
     btn.addEventListener('click', () => applyTextFont(btn.dataset.font));
   });
   
-
 
   /* ---------- State ---------- */
   let currentItemType = 'file';
@@ -1453,6 +1517,7 @@ function applyTitleFontUI(fontKey){
   titleOverlay.classList.remove('titlefont-bagel','titlefont-nanum','titlefont-pretendard','titlefont-laudrygo');
   titleOverlay.classList.add(`titlefont-${fontKey}`);
 }
+    
 
 function applyTextFontUI(fontKey){
   textFontButtons.forEach(b => b.classList.toggle('active', b.dataset.font === fontKey));
@@ -2644,6 +2709,7 @@ themeToggleBtn.addEventListener('click', () => {
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
