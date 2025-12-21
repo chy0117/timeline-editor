@@ -2264,8 +2264,6 @@ function centerTitleItemInViewport(){
     applyTitleItemStyles();
   });
 }
-
-
 /* ---------- Title BG (메인 + 추가 흩뿌리기) ---------- */
 
 function clearExtraTitleBgItems(){
@@ -2281,6 +2279,9 @@ function clearExtraTitleBgItems(){
 function ensureTitleBgItem(){
   if (!titleBgDataUrl) return;
 
+  const vw = viewport.clientWidth || 360;
+  const vh = viewport.clientHeight || 640;
+
   if (!titleBgItem) {
     titleBgItem = {
       id: 'title-bg-item',
@@ -2289,13 +2290,19 @@ function ensureTitleBgItem(){
       src: titleBgDataUrl,
       x: 0,
       y: 0,
-      w: viewport.clientWidth || 360,
-      h: viewport.clientHeight || 640,
+      w: vw,
+      h: vh,
       rotation: 0
     };
     items.push(titleBgItem);
   } else {
+    // ✅ 화면 크기 바뀌어도 배경은 항상 화면에 맞게
     titleBgItem.src = titleBgDataUrl;
+    titleBgItem.x = 0;
+    titleBgItem.y = 0;
+    titleBgItem.w = vw;
+    titleBgItem.h = vh;
+    titleBgItem.rotation = 0;
   }
 
   if (!titleBgItemEl) {
@@ -2305,7 +2312,7 @@ function ensureTitleBgItem(){
 
     const img = document.createElement('img');
     img.src = titleBgItem.src;
-    img.style.objectFit = 'cover'; // ✅ 꽉 채우기
+    img.style.objectFit = 'cover'; // ✅ 9:16 꽉 채우기
     titleBgItemEl.appendChild(img);
 
     titleBgItemEl.addEventListener('pointerdown', onGesturePointerDown);
@@ -2390,95 +2397,6 @@ function scatterExtraTitleBgItems(extraUrls){
   });
 }
 
-  applyTitleBgItemStyles();
-}
-
-function applyTitleBgItemStyles(){
-  if (!titleBgItem || !titleBgItemEl) return;
-
-  titleBgItemEl.style.left = titleBgItem.x + 'px';
-  titleBgItemEl.style.top = titleBgItem.y + 'px';
-  titleBgItemEl.style.width = titleBgItem.w + 'px';
-  titleBgItemEl.style.height = titleBgItem.h + 'px';
-  titleBgItemEl.style.transform = `rotate(${titleBgItem.rotation || 0}rad)`;
-  titleBgItemEl.dataset.rotation = titleBgItem.rotation || 0;
-
-  // ✅ 배경은 항상 제일 아래로
-  titleBgItemEl.style.zIndex = '1';
-
-  const img = titleBgItemEl.querySelector('img');
-  if (img) img.src = titleBgItem.src;
-}
-
-function showTitleBgItem(show){
-  if (!titleBgItemEl) return;
-  titleBgItemEl.style.display = show ? 'block' : 'none';
-}
-
-function centerTitleItemInViewport(){
-  if (!titleItem || !titleItemEl) return;
-
-  // 크기 반영 후 중앙 배치
-  requestAnimationFrame(() => {
-    const vw = viewport.clientWidth || 360;
-    const vh = viewport.clientHeight || 640;
-
-    const w = parseFloat(titleItemEl.style.width) || titleItemEl.offsetWidth || 200;
-    const h = parseFloat(titleItemEl.style.height) || titleItemEl.offsetHeight || 80;
-
-    titleItem.x = Math.round((vw - w) / 2);
-    titleItem.y = Math.round((vh - h) / 2);
-
-    applyTitleItemStyles();
-  });
-}
-
-function scatterExtraTitleBgItems(extraUrls){
-  if (!Array.isArray(extraUrls) || extraUrls.length === 0) return;
-
-  const vw = viewport.clientWidth || 360;
-  const vh = viewport.clientHeight || 640;
-
-  extraUrls.forEach((src, idx) => {
-    const id = `title-bg-extra-${Date.now()}-${idx}`;
-
-    // ✅ 우리의 아이템 사이즈 느낌으로 랜덤
-    const w = Math.round(clamp(80 + Math.random()*160, 80, vw*0.8));
-    const h = Math.round(clamp(80 + Math.random()*200, 80, vh*0.7));
-    const x = Math.round(clamp(Math.random()*(vw - w), 0, vw - w));
-    const y = Math.round(clamp(Math.random()*(vh - h), 0, vh - h));
-    const r = (Math.random()*0.6 - 0.3); // -0.3~0.3 rad
-
-    const it = { id, blockId:null, type:'image', src, x, y, w, h, rotation:r };
-    items.push(it);
-
-    const el = document.createElement('div');
-    el.className = 'timeline-item';
-    el.dataset.id = it.id;
-    el.style.left = it.x + 'px';
-    el.style.top = it.y + 'px';
-    el.style.width = it.w + 'px';
-    el.style.height = it.h + 'px';
-    el.style.transform = `rotate(${it.rotation}rad)`;
-    el.dataset.rotation = it.rotation;
-    el.style.zIndex = String(10 + idx);
-
-    const img = document.createElement('img');
-    img.src = it.src;
-    img.style.objectFit = 'contain';
-    el.appendChild(img);
-
-    el.addEventListener('pointerdown', onGesturePointerDown);
-    el.addEventListener('pointermove', onGesturePointerMove);
-    el.addEventListener('pointerup', onGesturePointerUp);
-    el.addEventListener('pointercancel', onGesturePointerUp);
-
-    el.addEventListener('contextmenu', e => e.preventDefault());
-    el.addEventListener('dragstart', e => e.preventDefault());
-
-    titlePageLayer.appendChild(el);
-  });
-}
   
   const t = titleItemEl.querySelector('.timeline-item-text');
   if (t) {
@@ -3254,6 +3172,7 @@ function clearTitleBg(){
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
