@@ -1392,9 +1392,10 @@ function fitTextBoxToContent(el, item, maxW){
     currentTitleFont,
     currentTextFont,
     currentItemType,
-    currentAnimationMode,
-    speedSec: Number(speedInput.value) || 30,  
-    blocks,
+currentAnimationMode,
+speedSec: Number(speedInput.value) || 30,
+theme: document.body.classList.contains('theme-light') ? 'light' : 'dark', 
+blocks,
     items,
     ui: {
       step: document.body.dataset.step || '1',
@@ -2624,6 +2625,7 @@ step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
