@@ -2396,34 +2396,6 @@ function scatterExtraTitleBgItems(extraUrls){
     titlePageLayer.appendChild(el);
   });
 }
-
-  
-  const t = titleItemEl.querySelector('.timeline-item-text');
-  if (t) {
-    const fontMap = {
-      pretendard: '"PretendardSemiBoldLocal","Pretendard",system-ui,sans-serif',
-      laudrygo: '"LaudrygoLocal",system-ui,sans-serif',
-      nanum: '"NanumNaMuJeongWeonLocal",system-ui,sans-serif',
-      bagel: '"BagelFatOneLocal",system-ui,sans-serif'
-    };
-    t.style.fontFamily = fontMap[titleItem.fontKey] || fontMap.pretendard;
-    t.style.fontSize = (titleItem.fontSize || 32) + 'px';
-  }
-  // ✅ 제목도 텍스트에 맞게 박스 줄이기(옵션)
-  fitTextBoxToContent(titleItemEl, titleItem, viewport.clientWidth - 48);
-}
-
-function syncTitleItemText(){
-  if (!titleItem || !titleItemEl) return;
-  const t = titleItemEl.querySelector('.timeline-item-text');
-  if (t) t.textContent = titleItem.text || '';
-}
-
-function showTitleItem(show){
-  if (!titleItemEl) return;
-  titleItemEl.style.display = show ? 'block' : 'none';
-}
-
   
   /* ---------- Edit Mode ---------- */
   function enterEditMode(el) {
@@ -3172,6 +3144,7 @@ function clearTitleBg(){
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
