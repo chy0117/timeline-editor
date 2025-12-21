@@ -1566,9 +1566,9 @@ speedSec: Number(speedInput.value) || 30,
 theme: document.body.classList.contains('theme-light') ? 'light' : 'dark', 
 blocks,
     items,
-      titleBg: {
-  list: titleBgList,          // ✅ 추가
-  dataUrl: titleBgDataUrl,    // ✅ 구버전 호환용으로 남겨도 됨
+     titleBg: {
+  list: titleBgList,          // ✅ 멀티 우선
+  dataUrl: titleBgDataUrl,    // ✅ 구버전/호환용
   blurPx: titleBgBlurPx,
   dimPct: titleBgDimPct
 },
@@ -3133,6 +3133,7 @@ function clearTitleBg(){
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
