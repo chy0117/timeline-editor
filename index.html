@@ -513,9 +513,35 @@ body.theme-light .timeline-title-overlay{
 .timeline-title-overlay.titlefont-pretendard{ --title-font:"PretendardSemiBoldLocal"; }
 .timeline-title-overlay.titlefont-laudrygo{ --title-font:"LaudrygoLocal"; }
 
-.timeline-title-overlay.has-bg{ ... }
-.timeline-title-overlay.has-bg::before{ ... }
-.timeline-title-overlay.has-bg::after{ ... }
+/* ✅ Title Overlay Background Image Support */
+.timeline-title-overlay{
+  isolation:isolate; /* pseudo-element z-index 안정화 */
+}
+
+.timeline-title-overlay.has-bg{
+  background: transparent !important; /* 기본 rgba 배경 대신, bg사진+딤을 사용 */
+}
+
+.timeline-title-overlay.has-bg::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background-image: var(--title-bg-url);
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.05); /* 블러 가장자리 티 방지 */
+  filter: blur(var(--title-bg-blur, 0px));
+  z-index:-2;
+}
+
+.timeline-title-overlay.has-bg::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: rgba(0,0,0,var(--title-bg-dim, 0.45)); /* 0~0.8 */
+  z-index:-1;
+}
+
     
 /* ---------- Timeline Inner / Grid ---------- */
 .timeline-inner{
@@ -1037,13 +1063,31 @@ body.theme-light .s1-divider{
             <button type="button" class="toggle-btn" data-font="nanum">제목</button>
             <button type="button" class="toggle-btn" data-font="bagel">제목</button>
           </div>
+          
+<!-- ✅ 제목 배경사진(선택): 파일 추가 + 파일명 표시 + 삭제(X) -->
+<div style="margin-top:12px;">
+  <div class="row" style="gap:10px; align-items:center;">
+    <div style="flex:1; font-weight:800; font-size:14px; letter-spacing:-0.2px;">
+      배경사진(선택)
+    </div>
 
-          <div style="margin-top:10px;">
-  <div class="row" style="gap:10px;">
-    <button type="button" id="titleBgToggle" class="btn-secondary">배경 사진: OFF</button>
+    <button type="button" id="titleBgPickBtn" class="btn-secondary" style="flex:0 0 auto; width:auto;">
+      파일 추가
+    </button>
+
     <input type="file" id="titleBgFile" accept="image/*" style="display:none;" />
   </div>
+
+  <div id="titleBgMeta"
+       style="display:none; margin-top:8px; align-items:center; justify-content:space-between; gap:8px;">
+    <span id="titleBgName"
+          style="font-size:13px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+    </span>
+    <button type="button" id="titleBgClearBtn" class="block-delete-btn" aria-label="배경 사진 삭제">✕</button>
+  </div>
 </div>
+
+ 
         </section>
 
         <!-- 3) 아이템 추가 -->
@@ -1236,6 +1280,22 @@ body.theme-light .s1-divider{
   const playBtn = document.getElementById('playBtn');
   const playFullscreenBtn = document.getElementById('playFullscreenBtn');
   const videoTitleInput = document.getElementById('videoTitle');
+  
+    // ✅ Title BG DOM
+  const titleBgPickBtn = document.getElementById('titleBgPickBtn');
+  const titleBgFile = document.getElementById('titleBgFile');
+  const titleBgMeta = document.getElementById('titleBgMeta');
+  const titleBgName = document.getElementById('titleBgName');
+  const titleBgClearBtn = document.getElementById('titleBgClearBtn');
+
+  // ✅ Step2 제목 배경 스타일 컨트롤
+  const step2TitleControls = document.getElementById('step2TitleControls');
+  const titleBlurToggle = document.getElementById('titleBlurToggle');
+  const titleBlurRange = document.getElementById('titleBlurRange');
+  const titleBlurLabel = document.getElementById('titleBlurLabel');
+  const titleDimRange = document.getElementById('titleDimRange');
+  const titleDimLabel = document.getElementById('titleDimLabel');
+
 
   const stepButtons = document.querySelectorAll('.step-btn');
   const step2SubNav = document.getElementById('step2SubNav');
@@ -1270,29 +1330,7 @@ body.theme-light .s1-divider{
     btn.addEventListener('click', () => applyTitleFont(btn.dataset.font));
   });
 
-  <!-- ✅ 제목 배경사진(선택) -->
-<div style="margin-top:12px;">
-  <div class="row" style="gap:10px; align-items:center;">
-    <div style="flex:1; font-weight:800; font-size:14px; letter-spacing:-0.2px;">
-      배경사진(선택)
-    </div>
 
-    <button type="button" id="titleBgPickBtn" class="btn-secondary" style="flex:0 0 auto; width:auto;">
-      파일 추가
-    </button>
-
-    <input type="file" id="titleBgFile" accept="image/*" style="display:none;" />
-  </div>
-
-  <!-- 파일명 표시 + 삭제(X) -->
-  <div id="titleBgMeta"
-       style="display:none; margin-top:8px; align-items:center; justify-content:space-between; gap:8px;">
-    <span id="titleBgName"
-          style="font-size:13px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-    </span>
-    <button type="button" id="titleBgClearBtn" class="block-delete-btn" aria-label="배경 사진 삭제">✕</button>
-  </div>
-</div>
 
 
   /* ---------- Text Font Toggle ---------- */
@@ -1344,6 +1382,7 @@ function setStep2View(next){
   // 버튼 active 처리
   step2SubNav.querySelectorAll('.sub-btn').forEach(b=>{
     b.classList.toggle('active', b.dataset.view === next);
+    
   });
 
   // 제목 편집 화면에서만 제목 아이템 보이게
@@ -1354,6 +1393,7 @@ function setStep2View(next){
   } else {
     showTitleItem(false);
   }
+  updateStep2TitleControlsVisibility();
 }
 
 function updateStep2SubNavVisibility(){
@@ -1474,6 +1514,12 @@ blocks,
       scrollTop: viewport.scrollTop || 0
     }
   };
+    titleBg: {
+  dataUrl: titleBgDataUrl,
+  blurOn: titleBgBlurOn,
+  blurPx: titleBgBlurPx,
+  dimPct: titleBgDimPct
+},
 }
 
   
@@ -1660,6 +1706,27 @@ if (snap.theme === 'light') {
   themeToggleBtn.textContent = '라이트 모드';
 }
 
+    // ✅ titleBg 복원
+if (snap.titleBg) {
+  titleBgDataUrl = snap.titleBg.dataUrl || null;
+  titleBgBlurOn = !!snap.titleBg.blurOn;
+  titleBgBlurPx = Number(snap.titleBg.blurPx || 0);
+  titleBgDimPct = Number(snap.titleBg.dimPct || 45);
+
+  // UI 반영
+  refreshTitleBgMetaUI();
+  applyTitleBgToOverlay();
+
+  titleBlurToggle.textContent = titleBgBlurOn ? '블러: ON' : '블러: OFF';
+  titleBlurRange.value = String(clamp(titleBgBlurPx || 8, 0, 20));
+  titleBlurLabel.textContent = (titleBgBlurOn ? titleBgBlurPx : 0) + 'px';
+
+  titleDimRange.value = String(clamp(titleBgDimPct, 0, 80));
+  titleDimLabel.textContent = titleBgDimPct + '%';
+
+  updateStep2TitleControlsVisibility();
+}
+
 
     // 타임라인/블록/아이템 복원
     rebuildFromState(snap.blocks, snap.items);
@@ -1677,7 +1744,8 @@ if (snap.theme === 'light') {
     if (snap.ui) {
       const step = snap.ui.step || '1';
       document.body.dataset.step = step;
-
+      updateStep2TitleControlsVisibility();
+      
       // step 버튼/패널 active 맞추기
       stepButtons.forEach(b => b.classList.toggle('active', b.dataset.step === step));
       Object.entries(stepPanels).forEach(([k,p])=>{
@@ -2690,7 +2758,118 @@ themeToggleBtn.addEventListener('click', () => {
   markDirtyAndSave('themeChange'); // ✅ 추가
 });
 
+  /* ---------- Title BG State ---------- */
+  let titleBgDataUrl = null;        // base64 (복원용)
+  let titleBgBlurOn = false;
+  let titleBgBlurPx = 0;
+  let titleBgDimPct = 45;           // 0~80
 
+  function applyTitleBgToOverlay(){
+    if (!titleBgDataUrl) {
+      titleOverlay.classList.remove('has-bg');
+      titleOverlay.style.removeProperty('--title-bg-url');
+      return;
+    }
+    titleOverlay.classList.add('has-bg');
+    titleOverlay.style.setProperty('--title-bg-url', `url("${titleBgDataUrl}")`);
+
+    const blurPx = titleBgBlurOn ? titleBgBlurPx : 0;
+    titleOverlay.style.setProperty('--title-bg-blur', blurPx + 'px');
+    titleOverlay.style.setProperty('--title-bg-dim', (titleBgDimPct / 100).toFixed(2));
+  }
+
+  function refreshTitleBgMetaUI(){
+    if (!titleBgDataUrl) {
+      titleBgMeta.style.display = 'none';
+      titleBgName.textContent = '';
+      return;
+    }
+    titleBgMeta.style.display = 'flex';
+  }
+
+  function setTitleBg(file){
+    if (!file) return;
+
+    // localStorage 저장을 위해 dataURL로 (용량 큰 이미지는 실패할 수 있음)
+    const reader = new FileReader();
+    reader.onload = () => {
+      titleBgDataUrl = String(reader.result || '');
+      titleBgName.textContent = file.name || '선택된 이미지';
+      refreshTitleBgMetaUI();
+      applyTitleBgToOverlay();
+      markDirtyAndSave('titleBgSet');
+      // step2에서 컨트롤 표시 조건 갱신
+      updateStep2TitleControlsVisibility();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearTitleBg(){
+    titleBgDataUrl = null;
+    titleBgBlurOn = false;
+    titleBgBlurPx = 0;
+    titleBgDimPct = 45;
+
+    titleBlurToggle.textContent = '블러: OFF';
+    titleBlurRange.value = '8';
+    titleBlurLabel.textContent = '0px';
+    titleDimRange.value = '45';
+    titleDimLabel.textContent = '45%';
+
+    refreshTitleBgMetaUI();
+    applyTitleBgToOverlay();
+    markDirtyAndSave('titleBgClear');
+    updateStep2TitleControlsVisibility();
+  }
+
+  function updateStep2TitleControlsVisibility(){
+    // step2 + 제목탭 + 배경사진 있을 때만 표시
+    const isStep2 = document.body.dataset.step === '2';
+    const show = isStep2 && (step2View === 'title') && !!titleBgDataUrl;
+    step2TitleControls.style.display = show ? 'block' : 'none';
+  }
+
+  // ✅ 파일 추가 버튼 -> 파일 선택 열기
+  titleBgPickBtn.addEventListener('click', () => titleBgFile.click());
+
+  // ✅ 파일 선택 시 적용
+  titleBgFile.addEventListener('change', () => {
+    const file = titleBgFile.files && titleBgFile.files[0];
+    if (!file) return;
+    setTitleBg(file);
+    titleBgFile.value = '';
+  });
+
+  // ✅ X 삭제
+  titleBgClearBtn.addEventListener('click', () => clearTitleBg());
+
+  // ✅ Step2: 블러 토글/범위/딤 적용
+  titleBlurToggle.addEventListener('click', () => {
+    titleBgBlurOn = !titleBgBlurOn;
+    titleBlurToggle.textContent = titleBgBlurOn ? '블러: ON' : '블러: OFF';
+
+    titleBgBlurPx = titleBgBlurOn ? Number(titleBlurRange.value || 0) : 0;
+    titleBlurLabel.textContent = (titleBgBlurOn ? titleBgBlurPx : 0) + 'px';
+
+    applyTitleBgToOverlay();
+    markDirtyAndSave('titleBlurToggle');
+  });
+
+  titleBlurRange.addEventListener('input', () => {
+    titleBgBlurPx = Number(titleBlurRange.value || 0);
+    titleBlurLabel.textContent = (titleBgBlurOn ? titleBgBlurPx : 0) + 'px';
+    if (titleBgBlurOn) applyTitleBgToOverlay();
+    markDirtyAndSave('titleBlurRange');
+  });
+
+  titleDimRange.addEventListener('input', () => {
+    titleBgDimPct = Number(titleDimRange.value || 0);
+    titleDimLabel.textContent = titleBgDimPct + '%';
+    applyTitleBgToOverlay();
+    markDirtyAndSave('titleDimRange');
+  });
+
+  
   // 타임라인 배경 클릭 시 편집 모드 해제
   timeline.addEventListener('click', (e) => {
     if (e.target === timeline || e.target.classList.contains('timeline-inner')) {
@@ -2709,6 +2888,7 @@ themeToggleBtn.addEventListener('click', () => {
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
