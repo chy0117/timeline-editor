@@ -1029,6 +1029,13 @@ body.theme-light .s1-divider{
             <button type="button" class="toggle-btn" data-font="nanum">제목</button>
             <button type="button" class="toggle-btn" data-font="bagel">제목</button>
           </div>
+
+          <div style="margin-top:10px;">
+  <div class="row" style="gap:10px;">
+    <button type="button" id="titleBgToggle" class="btn-secondary">배경 사진: OFF</button>
+    <input type="file" id="titleBgFile" accept="image/*" style="display:none;" />
+  </div>
+</div>
         </section>
 
         <!-- 3) 아이템 추가 -->
@@ -2637,6 +2644,7 @@ themeToggleBtn.addEventListener('click', () => {
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
