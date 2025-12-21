@@ -1393,6 +1393,7 @@ function fitTextBoxToContent(el, item, maxW){
     currentTextFont,
     currentItemType,
     currentAnimationMode,
+    speedSec: Number(speedInput.value) || 30,  
     blocks,
     items,
     ui: {
@@ -1566,6 +1567,16 @@ function loadStateAndRestore(){
 
     applyItemTypeUI(snap.currentItemType || currentItemType);
     applyAnimationModeUI(snap.currentAnimationMode || currentAnimationMode);
+
+    // ✅ speed 복원
+if (typeof snap.speedSec === 'number' && !Number.isNaN(snap.speedSec)) {
+  speedInput.value = String(clamp(Math.round(snap.speedSec), 3, 55));
+  speedLabel.textContent = speedInput.value + '초';
+} else {
+  // 혹시 값 없으면 현재 값 기준으로 라벨만 정리
+  speedLabel.textContent = speedInput.value + '초';
+}
+
 
     // 타임라인/블록/아이템 복원
     rebuildFromState(snap.blocks, snap.items);
@@ -2611,6 +2622,7 @@ step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
