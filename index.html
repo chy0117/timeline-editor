@@ -2460,7 +2460,9 @@ if (!restored) {
   textInputGroup.style.display='none';
   imageInputGroup.style.display='block';
 
-  speedInput.addEventListener('input',()=>{ speedLabel.textContent = speedInput.value + '초'; });
+  speedInput.addEventListener('input',()=>{ 
+    speedLabel.textContent = speedInput.value + '초';
+    markDirtyAndSave('speedChange');   });
   speedLabel.textContent = speedInput.value + '초';
 
   addItemBtn.addEventListener('click',()=>{
@@ -2622,6 +2624,7 @@ step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
