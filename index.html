@@ -1358,6 +1358,11 @@ body.theme-light .s1-divider{
 
   let titleItem = null;
 let titleItemEl = null;
+
+  let titleBgDataUrl = null;        // base64 (복원용)
+  let titleBgBlurOn = false;
+  let titleBgBlurPx = 0;
+  let titleBgDimPct = 45;           // 0~80
   
   let editingItemEl = null;
   let animFrameId = null;
@@ -1508,18 +1513,19 @@ speedSec: Number(speedInput.value) || 30,
 theme: document.body.classList.contains('theme-light') ? 'light' : 'dark', 
 blocks,
     items,
+        titleBg: {
+  dataUrl: titleBgDataUrl,
+  blurOn: titleBgBlurOn,
+  blurPx: titleBgBlurPx,
+  dimPct: titleBgDimPct
+},
     ui: {
       step: document.body.dataset.step || '1',
       step2View,
       scrollTop: viewport.scrollTop || 0
     }
   };
-    titleBg: {
-  dataUrl: titleBgDataUrl,
-  blurOn: titleBgBlurOn,
-  blurPx: titleBgBlurPx,
-  dimPct: titleBgDimPct
-},
+
 }
 
   
@@ -2759,10 +2765,7 @@ themeToggleBtn.addEventListener('click', () => {
 });
 
   /* ---------- Title BG State ---------- */
-  let titleBgDataUrl = null;        // base64 (복원용)
-  let titleBgBlurOn = false;
-  let titleBgBlurPx = 0;
-  let titleBgDimPct = 45;           // 0~80
+  
 
   function applyTitleBgToOverlay(){
     if (!titleBgDataUrl) {
@@ -2888,6 +2891,7 @@ themeToggleBtn.addEventListener('click', () => {
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
