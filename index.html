@@ -1107,8 +1107,8 @@ body.theme-light .s1-divider{
       <div style="margin-top: 8px;">
         <label>애니메이션 재생 시간 (전체 스크롤 시간)</label>
         <div class="speed-row">
-          <input type="range" id="speed" min="3" max="20" step="1" value="8" />
-          <span id="speedLabel">8초</span>
+<input type="range" id="speed" min="3" max="55" step="1" value="30" />
+<span id="speedLabel">30초</span>
         </div>
       </div>
 
@@ -2450,6 +2450,7 @@ if (!restored) {
   imageInputGroup.style.display='block';
 
   speedInput.addEventListener('input',()=>{ speedLabel.textContent = speedInput.value + '초'; });
+  speedLabel.textContent = speedInput.value + '초';
 
   addItemBtn.addEventListener('click',()=>{
     if (!dateInput.value){
@@ -2610,6 +2611,7 @@ step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
