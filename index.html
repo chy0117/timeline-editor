@@ -1577,6 +1577,16 @@ if (typeof snap.speedSec === 'number' && !Number.isNaN(snap.speedSec)) {
   // 혹시 값 없으면 현재 값 기준으로 라벨만 정리
   speedLabel.textContent = speedInput.value + '초';
 }
+ // ✅ theme 복원
+if (snap.theme === 'light') {
+  document.body.classList.remove('theme-dark');
+  document.body.classList.add('theme-light');
+  themeToggleBtn.textContent = '다크 모드';
+} else {
+  document.body.classList.remove('theme-light');
+  document.body.classList.add('theme-dark');
+  themeToggleBtn.textContent = '라이트 모드';
+}
 
 
     // 타임라인/블록/아이템 복원
@@ -2594,18 +2604,20 @@ step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
   });
 });
 
-  themeToggleBtn.addEventListener('click', () => {
-    const body = document.body;
-    if (body.classList.contains('theme-dark')) {
-      body.classList.remove('theme-dark');
-      body.classList.add('theme-light');
-      themeToggleBtn.textContent = '다크 모드';
-    } else {
-      body.classList.remove('theme-light');
-      body.classList.add('theme-dark');
-      themeToggleBtn.textContent = '라이트 모드';
-    }
-  });
+themeToggleBtn.addEventListener('click', () => {
+  const body = document.body;
+  if (body.classList.contains('theme-dark')) {
+    body.classList.remove('theme-dark');
+    body.classList.add('theme-light');
+    themeToggleBtn.textContent = '다크 모드';
+  } else {
+    body.classList.remove('theme-light');
+    body.classList.add('theme-dark');
+    themeToggleBtn.textContent = '라이트 모드';
+  }
+  markDirtyAndSave('themeChange'); // ✅ 추가
+});
+
 
   // 타임라인 배경 클릭 시 편집 모드 해제
   timeline.addEventListener('click', (e) => {
@@ -2625,6 +2637,7 @@ step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
