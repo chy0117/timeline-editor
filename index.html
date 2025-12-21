@@ -786,23 +786,33 @@ body.theme-light .fullscreen-mask{
 }
 
 /* ---------- Record Mode (가짜 전체화면) ---------- */
-body.record-mode{ overflow:hidden; }
+body.record-mode{ overflow:hidden; background:#000; }
 body.record-mode .sidebar{ display:none !important; }
 body.record-mode .main{ padding:0 !important; }
 
+/* ✅ 9:16 유지 + 화면 중앙 정렬 (레터박스) */
 body.record-mode .timeline-viewport{
   position:fixed !important;
-  inset:0 !important;
-  width:100vw !important;
-  height:100dvh !important;
-  max-width:100vw !important;
+  top:0 !important;
+  bottom:0 !important;
+
+  /* 9:16 폭 = 높이 * 9/16 */
+  width: min(100vw, calc(100dvh * 9 / 16)) !important;
+  height: 100dvh !important;
+
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+
+  max-width: min(100vw, calc(100dvh * 9 / 16)) !important;
   max-height:100dvh !important;
+
   border-radius:0 !important;
   border:none !important;
   margin:0 !important;
   z-index:9999 !important;
   box-shadow:none !important;
 }
+
 
 .record-exit{
   position:fixed;
@@ -1071,8 +1081,12 @@ body.record-mode .timeline-viewport {
   pointer-events: none;
 }
 
-body.record-mode .record-controls{
-  display: block;
+/* record-controls: 기본 숨김 */
+body.record-mode .record-controls{ display:none; }
+
+/* ✅ Step2 + 제목 탭 프리뷰에서만 표시 */
+body.record-mode[data-step="2"][data-step2view="title"] .record-controls{
+  display:block;
 }
 
 .record-controls .rc-card{
@@ -1336,6 +1350,22 @@ body.record-mode #recordExitBtn{
     </div>
 
 <div class="timeline-viewport" id="viewport">
+<!-- ✅ Step2 제목 프리뷰용: 하단 고정 블러/딤 컨트롤 -->
+<div class="record-controls" id="titlePreviewControls" aria-label="제목 프리뷰 컨트롤">
+  <div class="rc-card">
+    <div class="rc-row">
+      <div class="rc-title">블러</div>
+      <div class="rc-pill" id="pvBlurPill">0px (OFF)</div>
+    </div>
+    <input type="range" id="pvBlurRange" min="0" max="20" step="1" value="0" />
+
+    <div class="rc-row" style="margin-top:10px;">
+      <div class="rc-title">딤(어둡게)</div>
+      <div class="rc-pill" id="pvDimPill">45%</div>
+    </div>
+    <input type="range" id="pvDimRange" min="0" max="80" step="1" value="45" />
+  </div>
+</div>
 
   <!-- ✅ (추가) 녹화 모드(가짜 전체화면) 종료 버튼 -->
   <button type="button" id="recordExitBtn" class="record-exit" aria-label="녹화 모드 종료">✕</button>
@@ -1412,7 +1442,25 @@ body.record-mode #recordExitBtn{
   const titleDimRange = document.getElementById('titleDimRange');
   const titleDimLabel = document.getElementById('titleDimLabel');
 
+ // ✅ Preview Controls DOM (하단 고정)
+const pvBlurRange = document.getElementById('pvBlurRange');
+const pvDimRange  = document.getElementById('pvDimRange');
+const pvBlurPill  = document.getElementById('pvBlurPill');
+const pvDimPill   = document.getElementById('pvDimPill');
 
+function syncPreviewControlsFromState(){
+  if (!pvBlurRange || !pvDimRange) return;
+  const b = clamp(Number(titleBgBlurPx || 0), 0, 20);
+  const d = clamp(Number(titleBgDimPct || 45), 0, 80);
+
+  pvBlurRange.value = String(b);
+  pvDimRange.value = String(d);
+
+  pvBlurPill.textContent = (b === 0) ? '0px (OFF)' : (b + 'px');
+  pvDimPill.textContent = d + '%';
+}
+
+  
   const stepButtons = document.querySelectorAll('.step-btn');
   const step2SubNav = document.getElementById('step2SubNav');
   const itemTypeButtons = document.querySelectorAll('.item-type-toggle .toggle-btn');
@@ -1510,25 +1558,34 @@ function setStep2View(next){
   step2SubNav.querySelectorAll('.sub-btn').forEach(b=>{
     b.classList.toggle('active', b.dataset.view === next);
   });
+if (next === 'title') {
+  // ✅ 제목 탭 = 곧바로 프리뷰(가짜 전체화면)
+  enterRecordMode('titlePreview');
 
-  if (next === 'title') {
-    // ✅ 타이틀 편집 화면: 타이틀 페이지 레이어 ON
-    titlePageLayer.style.display = 'block';
+  titlePageLayer.style.display = 'block';
 
-    ensureTitleItem();      // 제목 텍스트 아이템
-    ensureTitleBgItem();    // 배경 아이템(있으면)
+  ensureTitleItem();
+  ensureTitleBgItem();
 
-    showTitleItem(true);
-    showTitleBgItem(true);
+  // ✅ “블러/딤 적용 안 됨” 타이밍 방지: 배경 요소 생성 후 한 번 더 반영
+  applyTitleBgToTitlePage();
 
-    centerTitleItemInViewport();
-    exitEditMode();
-  } else {
-    // ✅ 타임라인 편집 화면: 타이틀 페이지 레이어 OFF
-    titlePageLayer.style.display = 'none';
-    showTitleItem(false);
-    showTitleBgItem(false);
+  showTitleItem(true);
+  showTitleBgItem(true);
+
+  centerTitleItemInViewport();
+  syncPreviewControlsFromState();
+  exitEditMode();
+} else {
+  // ✅ 제목 탭 벗어나면 프리뷰 종료
+  if (document.body.classList.contains('record-mode') && recordModeReason === 'titlePreview') {
+    exitRecordMode();
   }
+
+  titlePageLayer.style.display = 'none';
+  showTitleItem(false);
+  showTitleBgItem(false);
+}
 
   updateStep2TitleControlsVisibility();
 }
@@ -2419,6 +2476,8 @@ function ensureTitleBgItem(){
   }
 
   applyTitleBgItemStyles();
+  /* ✅ 추가: bg DOM 생성/갱신 이후 블러/딤을 다시 강제 반영 */
+ applyTitleBgToTitlePage();
 }
 
 function applyTitleBgItemStyles(){
@@ -2686,20 +2745,35 @@ let endScroll = Math.max(contentMaxBottom - viewportHeight + 40, 0);
 
   /* ---------- Record Mode (Fake Fullscreen) ---------- */
   const recordExitBtn = document.getElementById('recordExitBtn');
+ let recordModeReason = null; // 'titlePreview' | 'playback' | null
 
-  function enterRecordMode() {
-    document.body.classList.add('record-mode');
-    const mask = viewport.querySelector('.fullscreen-mask');
-    if (mask) mask.style.display = 'block';
-  }
+  function enterRecordMode(reason = 'playback') {
+  recordModeReason = reason;
+  document.body.classList.add('record-mode');
+  const mask = viewport.querySelector('.fullscreen-mask');
+  if (mask) mask.style.display = 'block';
 
-  function exitRecordMode() {
-    document.body.classList.remove('record-mode');
-    stopAnimation();
-    clearHourHighlight();
-    const mask = viewport.querySelector('.fullscreen-mask');
-    if (mask) mask.style.display = 'none';
-  }
+  // ✅ 레이아웃 변경 직후(9:16 중앙정렬) 사이즈 기반 요소 재정렬
+  requestAnimationFrame(() => {
+    if (document.body.dataset.step === '2' && document.body.dataset.step2view === 'title') {
+      // 배경/딤/블러가 “안 먹는” 타이밍 방지용
+      ensureTitleBgItem();
+      applyTitleBgToTitlePage();
+      centerTitleItemInViewport();
+      syncPreviewControlsFromState();
+    }
+  });
+}
+
+function exitRecordMode() {
+  document.body.classList.remove('record-mode');
+  stopAnimation();
+  clearHourHighlight();
+  const mask = viewport.querySelector('.fullscreen-mask');
+  if (mask) mask.style.display = 'none';
+  recordModeReason = null;
+}
+
 
   /* ---------- Gestures ---------- */
   function onGesturePointerDown(e) {
@@ -3029,7 +3103,7 @@ if (!restored) {
       await requestViewportFullscreen();
     } catch (err) {
       // ✅ Fullscreen API 미지원/차단이면 기존 방식으로 fallback
-      enterRecordMode();
+      enterRecordMode('playback');
     }
 
     // ✅ 레이아웃 변경(전체화면) 반영 후 재생 시작
@@ -3037,8 +3111,27 @@ if (!restored) {
   });
 
 
-  recordExitBtn.addEventListener('click', exitRecordMode);
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') exitRecordMode(); });
+  recordExitBtn.addEventListener('click', () => {
+  if (recordModeReason === 'titlePreview') {
+    // ✅ Step2 "타임라인 편집" 탭으로 자동 이동
+    exitRecordMode();
+    setStep2View('timeline');
+  } else {
+    // (기존) 재생 fallback record-mode 종료
+    exitRecordMode();
+  }
+});
+
+  document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (recordModeReason === 'titlePreview') {
+      exitRecordMode();
+      setStep2View('timeline');
+    } else {
+      exitRecordMode();
+    }
+  }
+});
 
   viewport.addEventListener('scroll',()=>{
     if (animFrameId===null) highlightHourByScroll(viewport.scrollTop);
@@ -3243,7 +3336,31 @@ function clearTitleBg(){
 
   // ✅ X 삭제
   titleBgClearBtn.addEventListener('click', () => clearTitleBg());
+  pvBlurRange.addEventListener('input', () => {
+  titleBgBlurPx = Number(pvBlurRange.value || 0);
 
+  // 기존(사이드) UI도 값 맞춰두기 (나중에 다시 켜도 동기화)
+  titleBlurRange.value = String(titleBgBlurPx);
+  titleBlurLabel.textContent = titleBgBlurPx === 0 ? '0px (OFF)' : (titleBgBlurPx + 'px');
+
+  pvBlurPill.textContent = titleBgBlurPx === 0 ? '0px (OFF)' : (titleBgBlurPx + 'px');
+
+  applyTitleBgToOverlay();
+  markDirtyAndSave('pvTitleBlur');
+});
+
+pvDimRange.addEventListener('input', () => {
+  titleBgDimPct = Number(pvDimRange.value || 0);
+
+  titleDimRange.value = String(titleBgDimPct);
+  titleDimLabel.textContent = titleBgDimPct + '%';
+
+  pvDimPill.textContent = titleBgDimPct + '%';
+
+  applyTitleBgToOverlay();
+  markDirtyAndSave('pvTitleDim');
+});
+  
   // ✅ Step2: 블러 토글/범위/딤 적용
   titleBlurRange.addEventListener('input', () => {
   titleBgBlurPx = Number(titleBlurRange.value || 0);
@@ -3256,6 +3373,7 @@ function clearTitleBg(){
     titleBgDimPct = Number(titleDimRange.value || 0);
     titleDimLabel.textContent = titleBgDimPct + '%';
     applyTitleBgToOverlay();
+     syncPreviewControlsFromState();
     markDirtyAndSave('titleDimRange');
   });
 
@@ -3278,6 +3396,7 @@ function clearTitleBg(){
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
