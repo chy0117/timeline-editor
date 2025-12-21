@@ -2157,6 +2157,9 @@ function buildHourGrid() {
     return el;
   }
 
+  /* =========================
+   Title Page (Step2 - Title)
+   ========================= */
 
 function ensureTitleItem(){
   const titleText = (videoTitleInput.value || '').trim();
@@ -2170,7 +2173,7 @@ function ensureTitleItem(){
       text: titleText,
       x: 24,
       y: 90,
-      w: 312,   // viewport(360) 기준 대충 여백 남긴 값
+      w: 312,
       h: 120,
       rotation: 0,
       fontKey: currentTitleFont,
@@ -2187,12 +2190,10 @@ function ensureTitleItem(){
     titleItemEl.className = 'timeline-item';
     titleItemEl.dataset.id = titleItem.id;
 
-    // 텍스트 엘리먼트(기존 스타일 재사용)
     const t = document.createElement('div');
     t.className = 'timeline-item-text';
     titleItemEl.appendChild(t);
 
-    // 제스처 이벤트(기존 핸들러 그대로 재사용)
     titleItemEl.addEventListener('pointerdown', onGesturePointerDown);
     titleItemEl.addEventListener('pointermove', onGesturePointerMove);
     titleItemEl.addEventListener('pointerup', onGesturePointerUp);
@@ -2201,12 +2202,12 @@ function ensureTitleItem(){
     titleItemEl.addEventListener('contextmenu', e => e.preventDefault());
     titleItemEl.addEventListener('dragstart', e => e.preventDefault());
 
-    // ✅ 타이틀 페이지 레이어에 붙인다 (Step2 영상 제목 탭 전용)
-titlePageLayer.appendChild(titleItemEl);
+    // ✅ Step2 제목 탭 전용 레이어에 붙임
+    titlePageLayer.appendChild(titleItemEl);
   }
 
-  applyTitleItemStyles();
   syncTitleItemText();
+  applyTitleItemStyles();
 }
 
 function applyTitleItemStyles(){
@@ -2218,7 +2219,7 @@ function applyTitleItemStyles(){
   titleItemEl.style.height = titleItem.h + 'px';
   titleItemEl.style.transform = `rotate(${titleItem.rotation || 0}rad)`;
   titleItemEl.dataset.rotation = titleItem.rotation || 0;
-  titleItemEl.style.zIndex = '9998'; // 항상 위
+  titleItemEl.style.zIndex = '9998';
 
   const t = titleItemEl.querySelector('.timeline-item-text');
   if (t) {
@@ -2232,8 +2233,49 @@ function applyTitleItemStyles(){
     t.style.fontSize = (titleItem.fontSize || 32) + 'px';
   }
 
-  // ✅ 제목도 텍스트에 맞게 박스 줄이기(옵션)
+  // ✅ 제목도 텍스트에 맞춰 박스 자동 맞춤
   fitTextBoxToContent(titleItemEl, titleItem, (viewport.clientWidth || 360) - 48);
+}
+
+function syncTitleItemText(){
+  if (!titleItem || !titleItemEl) return;
+  const t = titleItemEl.querySelector('.timeline-item-text');
+  if (t) t.textContent = titleItem.text || '';
+}
+
+function showTitleItem(show){
+  if (!titleItemEl) return;
+  titleItemEl.style.display = show ? 'block' : 'none';
+}
+
+function centerTitleItemInViewport(){
+  if (!titleItem || !titleItemEl) return;
+
+  requestAnimationFrame(() => {
+    const vw = viewport.clientWidth || 360;
+    const vh = viewport.clientHeight || 640;
+
+    const w = parseFloat(titleItemEl.style.width) || titleItemEl.offsetWidth || 200;
+    const h = parseFloat(titleItemEl.style.height) || titleItemEl.offsetHeight || 80;
+
+    titleItem.x = Math.round((vw - w) / 2);
+    titleItem.y = Math.round((vh - h) / 2);
+
+    applyTitleItemStyles();
+  });
+}
+
+
+/* ---------- Title BG (메인 + 추가 흩뿌리기) ---------- */
+
+function clearExtraTitleBgItems(){
+  // DOM 제거
+  Array.from(titlePageLayer.querySelectorAll('.timeline-item')).forEach(el => {
+    const id = el.dataset.id || '';
+    if (id.startsWith('title-bg-extra-')) el.remove();
+  });
+  // 상태 제거
+  items = items.filter(it => !String(it.id).startsWith('title-bg-extra-'));
 }
 
 function ensureTitleBgItem(){
@@ -2263,7 +2305,7 @@ function ensureTitleBgItem(){
 
     const img = document.createElement('img');
     img.src = titleBgItem.src;
-    img.style.objectFit = 'cover'; // ✅ 9:16 꽉 채우기
+    img.style.objectFit = 'cover'; // ✅ 꽉 채우기
     titleBgItemEl.appendChild(img);
 
     titleBgItemEl.addEventListener('pointerdown', onGesturePointerDown);
@@ -2300,23 +2342,6 @@ function applyTitleBgItemStyles(){
 function showTitleBgItem(show){
   if (!titleBgItemEl) return;
   titleBgItemEl.style.display = show ? 'block' : 'none';
-}
-
-function centerTitleItemInViewport(){
-  if (!titleItem || !titleItemEl) return;
-
-  requestAnimationFrame(() => {
-    const vw = viewport.clientWidth || 360;
-    const vh = viewport.clientHeight || 640;
-
-    const w = parseFloat(titleItemEl.style.width) || titleItemEl.offsetWidth || 200;
-    const h = parseFloat(titleItemEl.style.height) || titleItemEl.offsetHeight || 80;
-
-    titleItem.x = Math.round((vw - w) / 2);
-    titleItem.y = Math.round((vh - h) / 2);
-
-    applyTitleItemStyles();
-  });
 }
 
 function scatterExtraTitleBgItems(extraUrls){
@@ -2364,7 +2389,6 @@ function scatterExtraTitleBgItems(extraUrls){
     titlePageLayer.appendChild(el);
   });
 }
-
 
   applyTitleBgItemStyles();
 }
@@ -3128,6 +3152,7 @@ async function setTitleBgFiles(fileList){
 
   // ✅ 타이틀 페이지 아이템으로 반영
   ensureTitleBgItem();         // 첫번째는 9:16 꽉 채우는 메인 배경
+  clearExtraTitleBgItems();
   scatterExtraTitleBgItems(urls.slice(1)); // 나머지는 랜덤 흩뿌리기
 
   updateStep2TitleControlsVisibility();
@@ -3229,6 +3254,7 @@ function clearTitleBg(){
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
