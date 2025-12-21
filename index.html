@@ -1522,6 +1522,8 @@ function syncPreviewControlsFromState(){
 
   let titleItem = null;
 let titleItemEl = null;
+  // ✅ 제목 위치를 사용자가 옮겼는지
+let titleItemUserMoved = false;
 
   let titleBgDataUrl = null;        // base64 (복원용)
 let titleBgBlurPx = 0;            // 0이면 OFF
@@ -1573,7 +1575,8 @@ if (next === 'title') {
   showTitleItem(true);
   showTitleBgItem(true);
 
-  centerTitleItemInViewport();
+ // ✅ 처음 진입 때만 중앙정렬 (사용자가 옮겼으면 유지)
+if (!titleItemUserMoved) centerTitleItemInViewport();
   syncPreviewControlsFromState();
   exitEditMode();
 } else {
@@ -2919,6 +2922,10 @@ if (activeTouches.length === 2 && editingItemEl === el) {
 
     if (activeTouches.length === 0) {
       gestureState = null;
+        // ✅ [추가] title-item을 사용자가 실제로 건드렸으면 이후엔 중앙정렬 안 함
+    if (editingItemEl && editingItemEl.dataset.id === 'title-item') {
+      titleItemUserMoved = true;
+    }
       // ✅ 드래그/핀치/회전 조작이 끝나는 순간 즉시 저장 + 3분 백업 예약
       markDirtyAndSave('gestureEnd');
     }
@@ -3137,22 +3144,43 @@ if (!restored) {
     if (animFrameId===null) highlightHourByScroll(viewport.scrollTop);
   });
 
-  stepButtons.forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      const step = btn.dataset.step;
-      stepButtons.forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
+ stepButtons.forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const step = btn.dataset.step;
 
-      Object.entries(stepPanels).forEach(([key,p])=>{
-        if (key===step) p.classList.add('active');
-        else p.classList.remove('active');
-      });
+    stepButtons.forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
 
-      document.body.dataset.step = step;
-       // ✅ step2 진입/이탈 시 서브탭 표시 조건 갱신
-      updateStep2SubNavVisibility();
+    Object.entries(stepPanels).forEach(([key,p])=>{
+      if (key===step) p.classList.add('active');
+      else p.classList.remove('active');
     });
+
+    document.body.dataset.step = step;
+
+    // ✅ step2 진입/이탈 시 서브탭 표시 조건 갱신
+    updateStep2SubNavVisibility();
+
+    // ✅ [추가] Step2 들어오면 무조건 "타임라인 편집"부터
+    if (step === '2') {
+      // titlePreview record-mode 잔상 제거
+      if (document.body.classList.contains('record-mode')) exitRecordMode();
+
+      // 서브탭이 보여도 기본은 timeline
+      setStep2View('timeline');
+    } else {
+      // step2 밖에서는 title 레이어/record-mode가 남지 않게
+      if (document.body.classList.contains('record-mode')) exitRecordMode();
+      document.body.dataset.step2view = 'timeline';
+      if (titlePageLayer) titlePageLayer.style.display = 'none';
+      showTitleItem(false);
+      showTitleBgItem(false);
+    }
+
+    markDirtyAndSave('stepChange');
   });
+});
+
 
   // ✅ Step2 서브탭 클릭
 step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
@@ -3396,6 +3424,7 @@ pvDimRange.addEventListener('input', () => {
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
+
 
 
 
