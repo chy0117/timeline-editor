@@ -1415,19 +1415,22 @@ body.theme-light .record-controls .fx-label{
 <!-- ✅ Step2 제목 프리뷰용: 하단 고정 블러/딤 컨트롤 -->
 <div class="record-controls" id="titlePreviewControls" aria-label="제목 프리뷰 컨트롤">
   <div class="rc-card">
-    <div class="rc-row">
-      <div class="rc-title">블러</div>
-      <div class="rc-pill" id="pvBlurPill">0px (OFF)</div>
-    </div>
-    <input type="range" id="pvBlurRange" min="0" max="20" step="1" value="0" />
 
-    <div class="rc-row" style="margin-top:10px;">
-      <div class="rc-title">딤(어둡게)</div>
-      <div class="rc-pill" id="pvDimPill">45%</div>
+    <div class="fx-control">
+      <span class="fx-label">흐리게</span>
+      <input class="fx-range" type="range" id="pvBlurRange" min="0" max="20" step="1" value="0" />
+      <span class="fx-badge" id="pvBlurPill">0px (OFF)</span>
     </div>
-    <input type="range" id="pvDimRange" min="0" max="80" step="1" value="45" />
+
+    <div class="fx-control" style="margin-top:8px;">
+      <span class="fx-label">어둡게</span>
+      <input class="fx-range" type="range" id="pvDimRange" min="0" max="80" step="1" value="45" />
+      <span class="fx-badge" id="pvDimPill">45%</span>
+    </div>
+
   </div>
 </div>
+
 
   <!-- ✅ (추가) 녹화 모드(가짜 전체화면) 종료 버튼 -->
   <button type="button" id="recordExitBtn" class="record-exit" aria-label="녹화 모드 종료">✕</button>
@@ -3502,6 +3505,7 @@ pvDimRange.addEventListener('input', () => {
 <!-- </body> 바로 위(또는 <head> 안) 아무데나 추가 -->
 </body>
 </html>
+
 
 
 
