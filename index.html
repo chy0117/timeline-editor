@@ -685,13 +685,17 @@ body[data-step="2"][data-step2view="title"] #viewport{
   opacity:1;
   transition:opacity .4s ease;
   z-index:1;
-  touch-action:none;
+  touch-action: pan-y;
   user-select:none;
   -webkit-user-select:none;
   -webkit-touch-callout:none;
   will-change:transform;
 }
-
+.timeline-item.edit-mode,
+.timeline-item.editing,
+.timeline-viewport.edit-mode .timeline-item{
+  touch-action: none;    /* ✅ 편집 모드일 때만 제스처 직접 처리 */
+  
 .timeline-item.editing{ transition:none; }
 .timeline-item.edit-mode{
   box-shadow:0 0 0 3px var(--accent), 0 8px 20px rgba(34,197,94,0.3);
@@ -2774,30 +2778,36 @@ function exitRecordMode() {
 
   /* ---------- Gestures ---------- */
   function onGesturePointerDown(e) {
+  const el = e.currentTarget;
+  const item = getItemByElement(el);
+
+  // ✅ 평상시엔 스크롤을 살려둔다 (모바일 핵심)
+  const alreadyEditing = (editingItemEl === el);
+  if (alreadyEditing) {
     e.preventDefault();
+    try { el.setPointerCapture(e.pointerId); } catch(_) {}
+  }
 
-    const el = e.currentTarget;
-    el.setPointerCapture(e.pointerId);
+  activeTouches.push({ id:e.pointerId, x:e.clientX, y:e.clientY });
 
-    activeTouches.push({ id:e.pointerId, x:e.clientX, y:e.clientY });
+  // 1 finger: long press to enter edit mode
+  if (activeTouches.length === 1) {
+    longPressStartPos = { x:e.clientX, y:e.clientY };
+    const pid = e.pointerId;
 
-    const item = getItemByElement(el);
+    longPressTimer = setTimeout(() => {
+      enterEditMode(el);
+      try { el.setPointerCapture(pid); } catch(_) {}
 
-    // 1 finger: long press to enter edit mode
-    if (activeTouches.length === 1) {
-      longPressStartPos = { x:e.clientX, y:e.clientY };
-
-      longPressTimer = setTimeout(() => {
-        enterEditMode(el);
-        gestureState = {
-          mode:'move',
-          startX:e.clientX,
-          startY:e.clientY,
-          origX:item.x,
-          origY:item.y
-        };
-      }, 500);
-    }
+      gestureState = {
+        mode:'move',
+        startX:e.clientX,
+        startY:e.clientY,
+        origX:item.x,
+        origY:item.y
+      };
+    }, 500);
+  }
 
 if (activeTouches.length === 2 && editingItemEl === el) {
   if (longPressTimer) {
@@ -3428,5 +3438,6 @@ pvDimRange.addEventListener('input', () => {
 <!-- </body> 바로 위(또는 <head> 안) 아무데나 추가 -->
 </body>
 </html>
+
 
 
