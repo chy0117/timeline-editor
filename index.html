@@ -3440,8 +3440,14 @@ function clearTitleBg(){
   const files = titleBgFile.files;
   if (!files || !files.length) return;
 
-  await setTitleBgFiles(files);
-  titleBgFile.value = '';
+  try {
+    await setTitleBgFiles(files);
+    titleBgFile.value = '';
+  } catch (err) {
+    console.error('Failed to load background image:', err);
+    alert('배경 이미지를 불러오는데 실패했습니다. 다시 시도해주세요.');
+    titleBgFile.value = '';
+  }
 });
 
 
