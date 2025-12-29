@@ -1253,27 +1253,12 @@ body.theme-light .record-controls .fx-label{
             <button type="button" class="toggle-btn" data-font="bagel">제목</button>
           </div>
           
-<!-- ✅ 제목 배경사진(선택): 파일 추가 + 파일명 표시 + 삭제(X) -->
+<!-- ✅ 제목 배경사진(선택): 파일 선택 -->
 <div style="margin-top:12px;">
-  <div class="row" style="gap:10px; align-items:center;">
-    <div style="flex:1; font-weight:800; font-size:14px; letter-spacing:-0.2px;">
-      배경사진(선택)
-    </div>
-
-    <button type="button" id="titleBgPickBtn" class="btn-secondary" style="flex:0 0 auto; width:auto;">
-      파일 추가
-    </button>
-
-    <input type="file" id="titleBgFile" accept="image/*" multiple style="display:none;" />
+  <div style="font-weight:800; font-size:14px; letter-spacing:-0.2px; margin-bottom:8px;">
+    배경사진(선택)
   </div>
-
-  <div id="titleBgMeta"
-       style="display:none; margin-top:8px; align-items:center; justify-content:space-between; gap:8px;">
-    <span id="titleBgName"
-          style="font-size:13px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-    </span>
-    <button type="button" id="titleBgClearBtn" class="block-delete-btn" aria-label="배경 사진 삭제">✕</button>
-  </div>
+  <input type="file" id="titleBgFile" accept="image/*" />
 </div>
 
  
@@ -1484,13 +1469,9 @@ body.theme-light .record-controls .fx-label{
   const playBtn = document.getElementById('playBtn');
   const playFullscreenBtn = document.getElementById('playFullscreenBtn');
   const videoTitleInput = document.getElementById('videoTitle');
-  
+
     // ✅ Title BG DOM
-  const titleBgPickBtn = document.getElementById('titleBgPickBtn');
   const titleBgFile = document.getElementById('titleBgFile');
-  const titleBgMeta = document.getElementById('titleBgMeta');
-  const titleBgName = document.getElementById('titleBgName');
-  const titleBgClearBtn = document.getElementById('titleBgClearBtn');
 
   // ✅ Step2 제목 배경 스타일 컨트롤
   const step2TitleControls = document.getElementById('step2TitleControls');
@@ -1914,7 +1895,6 @@ function rebuildFromState(loadedBlocks, loadedItems){
     const already = items.find(x => x.id === 'title-item');
     if (!already) items.push(titleItem);
 
-    if (titleBgDataUrl) titleBgName.textContent = '복원된 배경사진';
     // viewport에 타이틀 아이템 생성/적용
     ensureTitleItem();
   }
@@ -3329,26 +3309,6 @@ function applyTitleBgToTitlePage(){
   titleBgDimLayerEl.style.background = `rgba(0,0,0,${alpha.toFixed(2)})`;
 }
 
-function refreshTitleBgMetaUI(){
-  if (!titleBgDataUrl) {
-    titleBgMeta.style.display = 'none';
-    titleBgName.textContent = '';
-    return;
-  }
-  titleBgMeta.style.display = 'flex';
-}
-
-
-
-  function refreshTitleBgMetaUI(){
-    if (!titleBgDataUrl) {
-      titleBgMeta.style.display = 'none';
-      titleBgName.textContent = '';
-      return;
-    }
-    titleBgMeta.style.display = 'flex';
-  }
-
 function readAsDataURL(file){
   return new Promise((resolve, reject) => {
     const r = new FileReader();
@@ -3367,11 +3327,6 @@ async function setTitleBgFiles(fileList){
   titleBgList = urls;
   titleBgDataUrl = urls[0] || null;
 
-  // 파일명 표시(첫번째 기준)
-  titleBgName.textContent =
-    (files[0].name || '선택된 이미지') + (files.length > 1 ? ` (+${files.length-1})` : '');
-
-  refreshTitleBgMetaUI();
   applyTitleBgToOverlay();     // ✅ 애니메이션 titleOverlay에도 그대로 적용됨
 
   // ✅ 타이틀 페이지 아이템으로 반영
@@ -3413,7 +3368,6 @@ function clearTitleBg(){
   titleDimRange.value = '45';
   titleDimLabel.textContent = '45%';
 
-  refreshTitleBgMetaUI();
   applyTitleBgToOverlay(); // titleOverlay쪽도 제거
   updateStep2TitleControlsVisibility();
 
@@ -3428,9 +3382,6 @@ function clearTitleBg(){
     step2TitleControls.style.display = show ? 'block' : 'none';
   }
 
-  // ✅ 파일 추가 버튼 -> 파일 선택 열기
-  titleBgPickBtn.addEventListener('click', () => titleBgFile.click());
-
   // ✅ 파일 선택 시 적용
  titleBgFile.addEventListener('change', async () => {
   const files = titleBgFile.files;
@@ -3440,9 +3391,6 @@ function clearTitleBg(){
   titleBgFile.value = '';
 });
 
-
-  // ✅ X 삭제
-  titleBgClearBtn.addEventListener('click', () => clearTitleBg());
   pvBlurRange.addEventListener('input', () => {
   titleBgBlurPx = Number(pvBlurRange.value || 0);
 
