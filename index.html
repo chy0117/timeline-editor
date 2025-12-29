@@ -1932,7 +1932,9 @@ function loadStateAndRestore(){
   let raw = null;
   try {
     raw = localStorage.getItem(STORAGE_KEY);
-  } catch (e) {}
+  } catch (e) {
+    console.warn('loadStateAndRestore: localStorage access failed:', e);
+  }
   if (!raw) return false;
 
   let snap = null;
