@@ -1087,6 +1087,11 @@ body.record-mode[data-step="2"][data-step2view="title"] .record-controls{
 
 /* ✅ 하단 record-controls 카드: 완전 유리판 */
 .record-controls .rc-card{
+  pointer-events: auto;
+  max-width: 520px;
+  margin: 0 auto;
+  border-radius: 18px;
+  padding: 12px;
   background: rgba(2,6,23,0.25);     /* 0.45 -> 0.25 */
   border: 1px solid rgba(148,163,184,0.16);
   backdrop-filter: blur(14px);
@@ -1175,16 +1180,6 @@ body.theme-light .fx-badge{
   background: rgba(15,23,42,0.08);
   color: rgba(17,24,39,0.75);
   border-color: rgba(229,231,235,1);
-}
-
-/* ✅ 하단 record-controls 카드: 더 “투명하게” */
-.record-controls .rc-card{
-  background: rgba(2,6,23,0.45); /* 0.72 -> 0.45 */
-  border: 1px solid rgba(148,163,184,0.18);
-}
-body.theme-light .record-controls .rc-card{
-  background: rgba(249,250,251,0.65);
-  border: 1px solid rgba(229,231,235,0.9);
 }
 
    /* ✅ record-controls 안에서도 fx-control가 깔끔하게 보이게 */
