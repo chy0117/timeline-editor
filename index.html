@@ -1258,29 +1258,20 @@ body.theme-light .record-controls .fx-label{
             <button type="button" class="toggle-btn" data-font="nanum">제목</button>
             <button type="button" class="toggle-btn" data-font="bagel">제목</button>
           </div>
-          
-<!-- ✅ 제목 배경사진(선택): 파일 추가 + 파일명 표시 + 삭제(X) -->
-<div style="margin-top:12px;">
-  <div class="row" style="gap:10px; align-items:center;">
-    <div style="flex:1; font-weight:800; font-size:14px; letter-spacing:-0.2px;">
-      배경사진(선택)
-    </div>
 
-    <button type="button" id="titleBgPickBtn" class="btn-secondary" style="flex:0 0 auto; width:auto;">
-      파일 추가
-    </button>
+          <div class="s1-divider"></div>
 
-    <input type="file" id="titleBgFile" accept="image/*" multiple style="display:none;" />
-  </div>
+          <div class="s1-subtitle">배경사진(선택)</div>
+          <input type="file" id="titleBgFile" accept="image/*" multiple />
 
-  <div id="titleBgMeta"
-       style="display:none; margin-top:8px; align-items:center; justify-content:space-between; gap:8px;">
-    <span id="titleBgName"
-          style="font-size:13px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-    </span>
-    <button type="button" id="titleBgClearBtn" class="block-delete-btn" aria-label="배경 사진 삭제">✕</button>
-  </div>
-</div>
+          <!-- 파일 선택 후 파일명 표시 + 삭제 버튼 -->
+          <div id="titleBgMeta"
+               style="display:none; margin-top:8px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <span id="titleBgName"
+                  style="font-size:13px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            </span>
+            <button type="button" id="titleBgClearBtn" class="block-delete-btn" aria-label="배경 사진 삭제">✕</button>
+          </div>
 
  
         </section>
@@ -1490,9 +1481,8 @@ body.theme-light .record-controls .fx-label{
   const playBtn = document.getElementById('playBtn');
   const playFullscreenBtn = document.getElementById('playFullscreenBtn');
   const videoTitleInput = document.getElementById('videoTitle');
-  
+
     // ✅ Title BG DOM
-  const titleBgPickBtn = document.getElementById('titleBgPickBtn');
   const titleBgFile = document.getElementById('titleBgFile');
   const titleBgMeta = document.getElementById('titleBgMeta');
   const titleBgName = document.getElementById('titleBgName');
@@ -3431,9 +3421,6 @@ function clearTitleBg(){
     const show = isStep2 && (step2View === 'title') && !!titleBgDataUrl;
     step2TitleControls.style.display = show ? 'block' : 'none';
   }
-
-  // ✅ 파일 추가 버튼 -> 파일 선택 열기
-  titleBgPickBtn.addEventListener('click', () => titleBgFile.click());
 
   // ✅ 파일 선택 시 적용
  titleBgFile.addEventListener('change', async () => {
