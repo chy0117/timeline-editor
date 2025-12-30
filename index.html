@@ -1512,7 +1512,7 @@ const pvBlurPill  = document.getElementById('pvBlurPill');
 const pvDimPill   = document.getElementById('pvDimPill');
 
 function syncPreviewControlsFromState(){
-  if (!pvBlurRange || !pvDimRange) return;
+  if (!pvBlurRange || !pvDimRange || !pvBlurPill || !pvDimPill) return;
   const b = clamp(Number(titleBgBlurPx || 0), 0, 20);
   const d = clamp(Number(titleBgDimPct || 45), 0, 80);
 
