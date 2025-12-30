@@ -2846,6 +2846,9 @@ function exitRecordMode() {
   const el = e.currentTarget;
   const item = getItemByElement(el);
 
+  // ✅ item이 없으면 early return (모바일 크래시 방지)
+  if (!item) return;
+
   // ✅ 평상시엔 스크롤을 살려둔다 (모바일 핵심)
   const alreadyEditing = (editingItemEl === el);
   if (alreadyEditing) {
@@ -2904,6 +2907,9 @@ if (activeTouches.length === 2 && editingItemEl === el) {
   function onGesturePointerMove(e) {
     const el = e.currentTarget;
     const item = getItemByElement(el);
+
+    // ✅ item이 없으면 early return (모바일 크래시 방지)
+    if (!item) return;
 
     if (longPressTimer && longPressStartPos) {
       const dx = Math.abs(e.clientX - longPressStartPos.x);
