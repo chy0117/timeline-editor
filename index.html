@@ -1266,23 +1266,19 @@ body.theme-light .record-controls .fx-label{
       배경사진(선택)
     </div>
 
-    <button type="button" id="titleBgPickBtn" class="btn-secondary" style="flex:0 0 auto; width:auto;">
-      파일 추가
-    </button>
-
-    <input type="file" id="titleBgFile" accept="image/*" multiple style="display:none;" />
-  </div>
-
-  <div id="titleBgMeta"
-       style="display:none; margin-top:8px; align-items:center; justify-content:space-between; gap:8px;">
-    <span id="titleBgName"
-          style="font-size:13px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-    </span>
-    <button type="button" id="titleBgClearBtn" class="block-delete-btn" aria-label="배경 사진 삭제">✕</button>
-  </div>
+    <!-- 아이템 '파일 선택' 버튼과 같은 클래스 사용 -->
+<button type="button" id="titleBgPickBtn" class="file-btn" style="flex:0 0 auto; width:auto;">
+  배경 파일 선택
+</button>
+    
+<input type="file" id="titleBgFile" accept="image/*" hidden multiple>
+<div id="titleBgMeta" style="display:none; margin-top:8px; align-items:center; justify-content:space-between; gap:8px;">
+  <span id="titleBgName"
+        style="font-size:13px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+  </span>
+  <button type="button" id="titleBgClearBtn" class="block-delete-btn" aria-label="배경 사진 삭제">✕</button>
 </div>
-
- 
+  </div>
         </section>
 
         <!-- 3) 아이템 추가 -->
@@ -1317,7 +1313,7 @@ body.theme-light .record-controls .fx-label{
           </div>
 
           <div id="imageInputGroup" style="margin-top:10px;">
-            <input type="file" id="imageFile" accept="image/*,video/*" />
+            <input type="file" id="itemFile" accept="image/*,video/*" />
           </div>
 
           <div class="s1-divider"></div>
@@ -1416,15 +1412,18 @@ body.theme-light .record-controls .fx-label{
 <div class="record-controls" id="titlePreviewControls" aria-label="제목 프리뷰 컨트롤">
   <div class="rc-card">
 
-    <div class="fx-control">
-      <span class="fx-label">흐리게</span>
-      <input class="fx-range" type="range" id="pvBlurRange" min="0" max="20" step="1" value="0" />
-    </div>
+  <div class="fx-control">
+  <span class="fx-label">흐리게</span>
+  <input class="fx-range" type="range" id="pvBlurRange" min="0" max="20" step="1" value="0" />
+  <span id="pvBlurPill" class="fx-badge">0px (OFF)</span>
+</div>
 
-    <div class="fx-control" style="margin-top:8px;">
-      <span class="fx-label">어둡게</span>
-      <input class="fx-range" type="range" id="pvDimRange" min="0" max="80" step="1" value="45" />
-    </div>
+<div class="fx-control" style="margin-top:8px;">
+  <span class="fx-label">어둡게</span>
+  <input class="fx-range" type="range" id="pvDimRange" min="0" max="80" step="1" value="45" />
+  <span id="pvDimPill" class="fx-badge">45%</span>
+</div>
+
 
   </div>
 </div>
@@ -1475,7 +1474,7 @@ body.theme-light .record-controls .fx-label{
   const endTimeSelect = document.getElementById('endTime');
 
   const textContentInput = document.getElementById('textContent');
-  const imageFileInput = document.getElementById('imageFile');
+  const itemFileInput = document.getElementById('itemFile');
   const textInputGroup = document.getElementById('textInputGroup');
   const imageInputGroup = document.getElementById('imageInputGroup');
 
@@ -1491,25 +1490,129 @@ body.theme-light .record-controls .fx-label{
   const playFullscreenBtn = document.getElementById('playFullscreenBtn');
   const videoTitleInput = document.getElementById('videoTitle');
   
-    // ✅ Title BG DOM
-  const titleBgPickBtn = document.getElementById('titleBgPickBtn');
-  const titleBgFile = document.getElementById('titleBgFile');
-  const titleBgMeta = document.getElementById('titleBgMeta');
-  const titleBgName = document.getElementById('titleBgName');
-  const titleBgClearBtn = document.getElementById('titleBgClearBtn');
+  // ✅ Title BG DOM
+const titleBgPickBtn = document.getElementById('titleBgPickBtn');
+const titleBgFile    = document.getElementById('titleBgFile');
+const titleBgMeta    = document.getElementById('titleBgMeta');
+const titleBgName    = document.getElementById('titleBgName');
+const titleBgClearBtn= document.getElementById('titleBgClearBtn');
+
+// UI
+function refreshTitleBgMetaUI(){
+  if (!titleBgMeta || !titleBgName) return;
+  if (!titleBgDataUrl) {
+    titleBgMeta.style.display = 'none';
+    titleBgName.textContent = '';
+    return;
+  }
+  titleBgMeta.style.display = 'flex';
+  titleBgName.textContent = (titleBgList.length > 1)
+    ? `배경 ${titleBgList.length}장 선택됨`
+    : `배경 1장 선택됨`;
+}
+
+// 파일 읽기
+function readAsDataURL(file){
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result || ''));
+    r.onerror = () => reject(r.error || new Error('read failed'));
+    r.readAsDataURL(file);
+  });
+}
+
+// 여러 장 지원
+async function setTitleBgFiles(fileList){
+  const files = Array.from(fileList || []).filter(Boolean);
+  if (!files.length) return;
+
+  const urls = await Promise.all(files.map(readAsDataURL));
+
+  titleBgList = urls;
+  titleBgDataUrl = urls[0] || null;
+
+  refreshTitleBgMetaUI();
+
+  // ✅ 타이틀 오버레이 + 타이틀 탭 레이어 반영
+  applyTitleBgToOverlay();      // 내부에서 applyTitleBgToTitlePage()도 호출함
+  ensureTitleBgItem();
+  clearExtraTitleBgItems();
+  scatterExtraTitleBgItems(titleBgList.slice(1));
+
+  updateStep2TitleControlsVisibility?.();
+  markDirtyAndSave('titleBgSet');
+}
+
+function clearTitleBg(){
+  if (titleBgFile) titleBgFile.value = '';
+  titleBgList = [];
+  titleBgDataUrl = null;
+
+  refreshTitleBgMetaUI();
+
+  applyTitleBgToOverlay(); // overlay/딤/블러 정리
+  clearExtraTitleBgItems();
+
+  // 메인 BG DOM 숨김/정리
+  if (titleBgItemEl) titleBgItemEl.style.display = 'none';
+
+  updateStep2TitleControlsVisibility?.();
+  markDirtyAndSave('titleBgClear');
+}
+
+// 초기 UI
+refreshTitleBgMetaUI();
+
+titleBgPickBtn?.addEventListener('click', () => titleBgFile?.click());
+
+titleBgFile?.addEventListener('change', async (e) => {
+  const files = e.target.files;
+  if (!files || !files.length) {
+    refreshTitleBgMetaUI();
+    return;
+  }
+  try {
+    await setTitleBgFiles(files);
+  } catch (err) {
+    console.warn(err);
+    alert('배경 이미지를 불러오지 못했어요.');
+  }
+});
+
+titleBgClearBtn?.addEventListener('click', clearTitleBg);
+
 
   // ✅ Step2 제목 배경 스타일 컨트롤
   const step2TitleControls = document.getElementById('step2TitleControls');
-  const titleBlurRange = document.getElementById('titleBlurRange');
-  const titleBlurLabel = document.getElementById('titleBlurLabel');
-  const titleDimRange = document.getElementById('titleDimRange');
-  const titleDimLabel = document.getElementById('titleDimLabel');
+const blurRange = document.getElementById('titleBlurRange');
+const blurLabel = document.getElementById('titleBlurLabel');
+
+const dimRange  = document.getElementById('titleDimRange');
+const dimLabel  = document.getElementById('titleDimLabel');
+
+function updateBlurLabel() {
+  if (!blurRange || !blurLabel) return;
+  const v = Number(blurRange.value);
+  blurLabel.textContent = (v === 0) ? '0px (OFF)' : `${v}px`;
+}
+
+function updateDimLabel() {
+  if (!dimRange || !dimLabel) return;
+  const v = Number(dimRange.value);
+  dimLabel.textContent = `${v}%`;
+}
+
+if (blurRange) blurRange.addEventListener('input', updateBlurLabel);
+if (dimRange)  dimRange.addEventListener('input', updateDimLabel);
+
+// 처음 로드 시에도 현재 value 기준으로 한번 맞춰줌
+updateBlurLabel();
+updateDimLabel();
 
  // ✅ Preview Controls DOM (하단 고정)
 const pvBlurRange = document.getElementById('pvBlurRange');
 const pvDimRange  = document.getElementById('pvDimRange');
-const pvBlurPill  = document.getElementById('pvBlurPill');
-const pvDimPill   = document.getElementById('pvDimPill');
+
 
 function syncPreviewControlsFromState(){
   if (!pvBlurRange || !pvDimRange) return;
@@ -2077,7 +2180,7 @@ function buildHourGrid() {
     el.addEventListener('contextmenu', e => e.preventDefault());
     el.addEventListener('dragstart', e => e.preventDefault());
 
-    el.style.touchAction = 'none';
+    el.style.touchAction = 'pan-y';
     el.style.userSelect = 'none';
     el.style.webkitUserSelect = 'none';
 
@@ -2833,7 +2936,7 @@ dateInput.addEventListener('change', () => {
       itemData.text=text;
       itemData.fontKey = currentTextFont;
     } else {
-      const file = imageFileInput.files[0];
+      const file = itemFileInput.files[0];
       if (!file){ alert('파일을 선택해주세요.'); return; }
       itemData.src = URL.createObjectURL(file);
       itemType = file.type && file.type.startsWith('video/') ? 'video' : 'image';
@@ -2873,7 +2976,7 @@ dateInput.addEventListener('change', () => {
 
     scrollToBlock(block.id);
 
-    if (itemType==='image'||itemType==='video') imageFileInput.value='';
+    if (itemType==='image'||itemType==='video') itemFileInput.value='';
     updateBlockList();
   });
 
@@ -3192,6 +3295,15 @@ pvDimRange.addEventListener('input', () => {
 <!-- </body> 바로 위(또는 <head> 안) 아무데나 추가 -->
 </body>
 </html>
+
+
+
+
+
+
+
+
+
 
 
 
