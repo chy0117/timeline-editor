@@ -1550,7 +1550,6 @@ function syncPreviewControlsFromState(){
   titleItem.fontKey = fontKey;
   applyTitleItemStyles();
 }
-    markDirtyAndSave('titleFont');
   }
 
   titleFontButtons.forEach(btn => {
@@ -1568,7 +1567,6 @@ function syncPreviewControlsFromState(){
     textFontButtons.forEach(b => b.classList.toggle('active', b.dataset.font === fontKey));
     currentTextFont = fontKey;
     localStorage.setItem('textFont', fontKey);
-    markDirtyAndSave('textFont');
   }
 
   textFontButtons.forEach(btn => {
@@ -1750,80 +1748,8 @@ function fitTextBoxToContent(el, item, maxW){
     item.h = newH;
   });
 }
-  
-    /* ---------- Save: 즉시 저장 + 3분 백업 저장 ---------- */
-  const STORAGE_KEY = 'tse_v21_state';
-  const BACKUP_SAVE_MS = 180000; // 3분 (유지)
 
-  let backupSaveTimer = null;
-
-  function getStateSnapshot() {
-  return {
-    v: '2.1',
-    savedAt: Date.now(),
-    date: dateInput.value || '',
-    title: videoTitleInput.value || '',
-    currentTitleFont,
-    currentTextFont,
-    currentItemType,
-currentAnimationMode,
-speedSec: Number(speedInput.value) || 30,
-theme: document.body.classList.contains('theme-light') ? 'light' : 'dark',
-blocks,
-    items,
-     titleBg: {
-  list: titleBgList,          // ✅ 멀티 우선
-  dataUrl: titleBgDataUrl,    // ✅ 구버전/호환용
-  blurPx: titleBgBlurPx,
-  dimPct: titleBgDimPct
-},
-
-    ui: {
-      step: document.body.dataset.step || '1',
-      step2View,
-      scrollTop: viewport ? (viewport.scrollTop || 0) : 0  // ✅ null 체크 추가
-    }
-  };
-
-}
-
-  
-
-  function saveStateNow(reason = '') {
-    try {
-      const snap = getStateSnapshot();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(snap));
-      // 필요하면 디버그용:
-      // console.log('[SAVE NOW]', reason, new Date().toLocaleTimeString());
-    } catch (err) {
-      // ✅ localStorage quota 초과 에러 처리 (모바일에서 자주 발생)
-      if (err.name === 'QuotaExceededError' || err.code === 22) {
-        console.error('localStorage quota exceeded! 이미지가 너무 많거나 큽니다.');
-        // 사용자에게 알림 (선택사항 - 너무 자주 뜨면 성가실 수 있음)
-        // alert('저장 공간이 부족합니다. 이미지 개수를 줄여주세요.');
-      } else {
-        console.warn('saveStateNow failed:', err);
-      }
-    }
-  }
-
-  // 액션이 발생하면: 1) 즉시 저장  2) 3분 뒤 백업 저장 예약(리셋)
-  function markDirtyAndSave(reason = '') {
-    if (isRestoring) return; // ✅ 복원 중 저장 방지
-    // 1) 즉시 저장
-    saveStateNow(reason);
-
-    // 2) 3분 백업 저장 예약 (기존 3분 유지)
-    if (backupSaveTimer) clearTimeout(backupSaveTimer);
-    backupSaveTimer = setTimeout(() => {
-      saveStateNow('backup(3min)');
-      backupSaveTimer = null;
-    }, BACKUP_SAVE_MS);
-  }
-
-  let isRestoring = false; // ✅ 복원 중엔 저장 호출 막기
-
-  /* ---------- Restore (새로고침 복원) ---------- */
+  /* ---------- UI Helper Functions ---------- */
 function setActiveByDataset(buttons, key, value){
   buttons.forEach(b => b.classList.toggle('active', b.dataset[key] === value));
 }
@@ -1859,228 +1785,7 @@ function applyAnimationModeUI(modeKey){
   setActiveByDataset(animationModeButtons, 'mode', modeKey);
 }
 
-function rebuildFromState(loadedBlocks, loadedItems){
-  // 1) 기존 DOM/상태 초기화
-  blocks = [];
-  items = [];
-  editingItemEl = null;
-  stopAnimation();
-  clearHourHighlight();
-  exitEditMode();
-
-  while (timeline.firstChild) timeline.removeChild(timeline.firstChild);
-  timeline.style.height = (TOTAL_HOURS * HOUR_HEIGHT) + 'px';
-
-  buildHourGrid();
-  buildDayBoundary();
-
-  // 2) 블록 DOM 재구성 (+ element 포인터 붙이기)
-  loadedBlocks = Array.isArray(loadedBlocks) ? loadedBlocks : [];
-  loadedBlocks.forEach(b => {
-    const top = b.startMinutes * MINUTE_PX;
-    const height = (b.endMinutes - b.startMinutes) * MINUTE_PX;
-
-    const blockEl = document.createElement('div');
-    blockEl.className = 'time-block';
-    blockEl.style.top = top + 'px';
-    blockEl.style.height = height + 'px';
-    blockEl.dataset.id = b.id;
-
-    const inner = document.createElement('div');
-    inner.className = 'time-block-inner';
-    blockEl.appendChild(inner);
-    timeline.appendChild(blockEl);
-
-    blocks.push({
-      id: b.id,
-      startMinutes: b.startMinutes,
-      endMinutes: b.endMinutes,
-      duration: b.duration || (b.endMinutes - b.startMinutes),
-      element: blockEl
-    });
-  });
-
-  // 3) 아이템 DOM 재구성
-  loadedItems = Array.isArray(loadedItems) ? loadedItems : [];
-
-  // title-item은 따로 핸들링(viewport에 붙는 구조니까)
-  titleItem = loadedItems.find(it => it && it.id === 'title-item') || null;
-  titleItemEl = null;
-
-  // 일반 아이템들
-  loadedItems
-  .filter(it => {
-    if (!it) return false;
-    if (it.id === 'title-item') return false;
-    if (it.id === 'title-bg-item') return false;
-    if (String(it.id).startsWith('title-bg-extra-')) return false;
-    return true;
-  })
-  .forEach(it => {
-    items.push(it);
-    createItemElement(it);
-  });
-
-
-  // 타이틀 아이템 복원(있으면)
-  if (titleItem) {
-    // ensureTitleItem()는 items.push(titleItem)을 할 수 있으니, 중복 방지용으로 직접 세팅
-    // items에는 titleItem도 유지되도록 넣어둔다
-    const already = items.find(x => x.id === 'title-item');
-    if (!already) items.push(titleItem);
-
-    if (titleBgDataUrl) titleBgName.textContent = '복원된 배경사진';
-    // viewport에 타이틀 아이템 생성/적용
-    ensureTitleItem();
-  }
-
-  updateTimeSummary();
-}
-
-function loadStateAndRestore(){
-  let raw = null;
-  try {
-    raw = localStorage.getItem(STORAGE_KEY);
-  } catch (e) {}
-  if (!raw) return false;
-
-  let snap = null;
-  try {
-    snap = JSON.parse(raw);
-  } catch (e) {
-    return false;
-  }
-  if (!snap || snap.v !== '2.1') return false;
-
-  isRestoring = true;
-  try {
-    // 값 적용
-    if (snap.date) dateInput.value = snap.date;
-    if (typeof snap.title === 'string') videoTitleInput.value = snap.title;
-
-    currentTitleFont = snap.currentTitleFont || currentTitleFont;
-    currentTextFont  = snap.currentTextFont  || currentTextFont;
-
-    applyTitleFontUI(currentTitleFont);
-    applyTextFontUI(currentTextFont);
-
-    applyItemTypeUI(snap.currentItemType || currentItemType);
-    applyAnimationModeUI(snap.currentAnimationMode || currentAnimationMode);
-
-    // ✅ speed 복원
-if (typeof snap.speedSec === 'number' && !Number.isNaN(snap.speedSec)) {
-  speedInput.value = String(clamp(Math.round(snap.speedSec), 3, 55));
-  speedLabel.textContent = speedInput.value + '초';
-} else {
-  // 혹시 값 없으면 현재 값 기준으로 라벨만 정리
-  speedLabel.textContent = speedInput.value + '초';
-}
- // ✅ theme 복원 (수정: theme-dark 제거, theme-light만 사용)
-if (snap.theme === 'light') {
-  document.body.classList.add('theme-light');
-  themeToggleBtn.textContent = '다크 모드';
-} else {
-  document.body.classList.remove('theme-light');
-  themeToggleBtn.textContent = '라이트 모드';
-}
-
-    // ✅ titleBg 복원
-// ✅ titleBg 복원 (list 우선 + 구버전 dataUrl fallback)
-if (snap.titleBg) {
-  titleBgList = Array.isArray(snap.titleBg.list) ? snap.titleBg.list : [];
-
-  // ✅ list[0] 우선, 없으면 구버전 dataUrl
-  titleBgDataUrl = titleBgList[0] || snap.titleBg.dataUrl || null;
-
-  titleBgBlurPx  = Number(snap.titleBg.blurPx || 0);     // 0이면 OFF
-  titleBgDimPct  = Number(snap.titleBg.dimPct || 45);
-
-  // UI 반영
-  refreshTitleBgMetaUI();
-  applyTitleBgToOverlay();
-
-  // ✅ 타이틀 페이지 아이템 반영(메인 + 추가 흩뿌리기)
-  // (함수들이 이미 추가돼 있다는 전제)
-  ensureTitleBgItem();
-  scatterExtraTitleBgItems(titleBgList.slice(1));
-
-  // 블러 UI (0px = OFF)
-  titleBlurRange.value = String(clamp(titleBgBlurPx, 0, 20));
-  titleBlurLabel.textContent =
-    (clamp(titleBgBlurPx, 0, 20) === 0) ? '0px (OFF)' : (clamp(titleBgBlurPx, 0, 20) + 'px');
-
-  // 딤 UI
-  titleDimRange.value = String(clamp(titleBgDimPct, 0, 80));
-  titleDimLabel.textContent = clamp(titleBgDimPct, 0, 80) + '%';
-
-  updateStep2TitleControlsVisibility();
-} else {
-  // snap에 titleBg가 없으면 기본값으로 정리
-  titleBgList = [];
-  titleBgDataUrl = null;
-  titleBgBlurPx  = 0;
-  titleBgDimPct  = 45;
-
-  refreshTitleBgMetaUI();
-  applyTitleBgToOverlay();
-
-  titleBlurRange.value = '0';
-  titleBlurLabel.textContent = '0px (OFF)';
-  titleDimRange.value = '45';
-  titleDimLabel.textContent = '45%';
-
-  updateStep2TitleControlsVisibility();
-}
-
-
-    // 타임라인/블록/아이템 복원
-    rebuildFromState(snap.blocks, snap.items);
-
-    // 헤더 날짜 반영
-    if (dateInput.value) {
-      headerLabel.textContent = dateInput.value + ' 타임라인';
-      updateHeaderDateByScroll(viewport.scrollTop);
-    }
-
-    // step2 서브탭 노출 조건 반영
-    updateStep2SubNavVisibility();
-
-    // (선택) UI 상태 복원
-    if (snap.ui) {
-      const step = snap.ui.step || '1';
-      document.body.dataset.step = step;
-      updateStep2TitleControlsVisibility();
-      
-      // step 버튼/패널 active 맞추기
-      stepButtons.forEach(b => b.classList.toggle('active', b.dataset.step === step));
-      Object.entries(stepPanels).forEach(([k,p])=>{
-        p.classList.toggle('active', k === step);
-      });
-
-      // step2View 복원(가능할 때만)
-      if (typeof snap.ui.step2View === 'string') {
-        step2View = snap.ui.step2View;
-        updateStep2SubNavVisibility();
-        if (document.body.dataset.step === '2' && hasVideoTitle()) {
-          setStep2View(step2View);
-        }
-      }
-
-      // 스크롤 복원
-      if (typeof snap.ui.scrollTop === 'number') {
-        viewport.scrollTop = snap.ui.scrollTop;
-        highlightHourByScroll(viewport.scrollTop);
-      }
-    }
-
-  } finally {
-    isRestoring = false;
-  }
-
-  return true;
-}
-  
-  /* ---------- Block / List ---------- */
+/* ---------- Block / List ---------- */
   function updateBlockList() {
     blockListEl.innerHTML = '';
     if (!blocks.length) return;
@@ -2169,7 +1874,6 @@ if (snap.titleBg) {
 
     editingItemEl = null;
     updateTimeSummary();
-     markDirtyAndSave('deleteBlock');
   }
 
   /* ---------- Time Options ---------- */
@@ -3013,7 +2717,6 @@ if (activeTouches.length === 2 && editingItemEl === el) {
       titleItemUserMoved = true;
     }
       // ✅ 드래그/핀치/회전 조작이 끝나는 순간 즉시 저장 + 3분 백업 예약
-      markDirtyAndSave('gestureEnd');
     }
   }
 
@@ -3024,28 +2727,23 @@ applyTextFontUI(currentTextFont);
 
 buildTimeOptions();
 
-// ✅ 1) 저장된 게 있으면 복원, 없으면 신규 초기화
-const restored = loadStateAndRestore();
+// ✅ 초기화
+resetTimelineDataAndDom();
 
-if (!restored) {
-  resetTimelineDataAndDom();
+const today = new Date().toISOString().slice(0,10);
+dateInput.value = today;
+headerLabel.textContent = today + ' 타임라인';
+updateHeaderDateByScroll(viewport.scrollTop);
 
-  const today = new Date().toISOString().slice(0,10);
-  dateInput.value = today;
-  headerLabel.textContent = today + ' 타임라인';
-  updateHeaderDateByScroll(viewport.scrollTop);
+// 기본 상태 반영
+applyItemTypeUI(currentItemType);
+applyAnimationModeUI(currentAnimationMode);
 
-  // 기본 상태 반영
-  applyItemTypeUI(currentItemType);
-  applyAnimationModeUI(currentAnimationMode);
+updateStep2SubNavVisibility();
 
-  updateStep2SubNavVisibility();
-}
-  
- dateInput.addEventListener('change', () => {
+dateInput.addEventListener('change', () => {
   resetTimelineDataAndDom();
   updateHeaderDateByScroll(viewport.scrollTop);
-  markDirtyAndSave('dateChange');
 });
 
 
@@ -3060,7 +2758,6 @@ if (!restored) {
   // ✅ step2에서만 조건부로 서브탭 보이게
   updateStep2SubNavVisibility();
 
-  markDirtyAndSave('titleInput');
 });
 
   
@@ -3086,7 +2783,6 @@ if (!restored) {
         textInputGroup.style.display='none';
         imageInputGroup.style.display='block';
       }
-       markDirtyAndSave('itemTypeChange'); 
     });
   });
 
@@ -3095,7 +2791,6 @@ if (!restored) {
       animationModeButtons.forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       currentAnimationMode = btn.dataset.mode;
-       markDirtyAndSave('animationModeChange');
     });
   });
 
@@ -3105,7 +2800,6 @@ if (!restored) {
 
   speedInput.addEventListener('input',()=>{ 
     speedLabel.textContent = speedInput.value + '초';
-    markDirtyAndSave('speedChange');   });
   speedLabel.textContent = speedInput.value + '초';
 
   addItemBtn.addEventListener('click',()=>{
@@ -3181,7 +2875,6 @@ if (!restored) {
 
     if (itemType==='image'||itemType==='video') imageFileInput.value='';
     updateBlockList();
-    markDirtyAndSave('addItem');
   });
 
   playBtn.addEventListener('click', runAnimation);
@@ -3263,7 +2956,6 @@ if (!restored) {
       showTitleBgItem(false);
     }
 
-    markDirtyAndSave('stepChange');
   });
 });
 
@@ -3272,7 +2964,6 @@ if (!restored) {
 step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     setStep2View(btn.dataset.view);
-    markDirtyAndSave('step2SubViewChange');
   });
 });
 
@@ -3286,7 +2977,6 @@ themeToggleBtn.addEventListener('click', () => {
     body.classList.add('theme-light');
     themeToggleBtn.textContent = '다크 모드';
   }
-  markDirtyAndSave('themeChange'); // ✅ 추가
 });
 
   /* ---------- Title BG State ---------- */
@@ -3389,7 +3079,6 @@ async function setTitleBgFiles(fileList){
   scatterExtraTitleBgItems(urls.slice(1)); // 나머지는 랜덤 흩뿌리기
 
   updateStep2TitleControlsVisibility();
-  markDirtyAndSave('titleBgSetMulti');
 }
 
 
@@ -3426,7 +3115,6 @@ function clearTitleBg(){
   applyTitleBgToOverlay(); // titleOverlay쪽도 제거
   updateStep2TitleControlsVisibility();
 
-  markDirtyAndSave('titleBgClear');
 }
 
 
@@ -3462,7 +3150,6 @@ function clearTitleBg(){
   pvBlurPill.textContent = titleBgBlurPx === 0 ? '0px (OFF)' : (titleBgBlurPx + 'px');
 
   applyTitleBgToOverlay();
-  markDirtyAndSave('pvTitleBlur');
 });
 
 pvDimRange.addEventListener('input', () => {
@@ -3474,7 +3161,6 @@ pvDimRange.addEventListener('input', () => {
   pvDimPill.textContent = titleBgDimPct + '%';
 
   applyTitleBgToOverlay();
-  markDirtyAndSave('pvTitleDim');
 });
   
   // ✅ Step2: 블러 토글/범위/딤 적용
@@ -3482,7 +3168,6 @@ pvDimRange.addEventListener('input', () => {
   titleBgBlurPx = Number(titleBlurRange.value || 0);
   titleBlurLabel.textContent = titleBgBlurPx === 0 ? '0px (OFF)' : (titleBgBlurPx + 'px');
   applyTitleBgToOverlay();
-  markDirtyAndSave('titleBlurRange');
 });
 
   titleDimRange.addEventListener('input', () => {
@@ -3490,7 +3175,6 @@ pvDimRange.addEventListener('input', () => {
     titleDimLabel.textContent = titleBgDimPct + '%';
     applyTitleBgToOverlay();
      syncPreviewControlsFromState();
-    markDirtyAndSave('titleDimRange');
   });
 
   
