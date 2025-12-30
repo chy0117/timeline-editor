@@ -152,33 +152,6 @@
       <p class="hint">
         빈 공간을 탭하면 편집 모드가 해제됩니다.<br/>
         아이템들이 겹칠 수 있으며, 편집하는 아이템이 가장 위에 표시됩니다.
-      </p>
-<!-- ✅ Step2: 영상 제목 배경 스타일(블러/딤) -->
-<div id="step2TitleControls" style="display:none; margin-top:14px;">
-  <div class="s1-section" style="padding:14px;">
-    <div class="s1-head">
-      <div class="s1-title">제목 배경 스타일</div>
-    </div>
-
-<div class="fx-control">
-  <span class="fx-label">흐리게</span>
-  <input class="fx-range" type="range" id="titleBlurRange" min="0" max="20" step="1" value="0" />
-  <span id="titleBlurLabel" class="fx-badge">0px (OFF)</span>
-</div>
-
-<div class="fx-control">
-  <span class="fx-label">어둡게</span>
-  <input class="fx-range" type="range" id="titleDimRange" min="0" max="80" step="1" value="45" />
-  <span id="titleDimLabel" class="fx-badge">45%</span>
-</div>
-
-    <p class="hint" style="margin-top:10px;">
-      배경 사진이 있을 때만 눈에 보이게 적용돼요.
-    </p>
-  </div>
-</div>
-
-      
     </div>
 
     <!-- STEP 3 -->
@@ -220,27 +193,6 @@
     </div>
 
 <div class="timeline-viewport" id="viewport">
-<!-- ✅ Step2 제목 프리뷰용: 하단 고정 블러/딤 컨트롤 -->
-<div class="record-controls" id="titlePreviewControls" aria-label="제목 프리뷰 컨트롤">
-  <div class="rc-card">
-
-  <div class="fx-control">
-  <span class="fx-label">흐리게</span>
-  <input class="fx-range" type="range" id="pvBlurRange" min="0" max="20" step="1" value="0" />
-  <span id="pvBlurPill" class="fx-badge">0px (OFF)</span>
-</div>
-
-<div class="fx-control" style="margin-top:8px;">
-  <span class="fx-label">어둡게</span>
-  <input class="fx-range" type="range" id="pvDimRange" min="0" max="80" step="1" value="45" />
-  <span id="pvDimPill" class="fx-badge">45%</span>
-</div>
-
-
-  </div>
-</div>
-
-
   <!-- ✅ (추가) 녹화 모드(가짜 전체화면) 종료 버튼 -->
   <button type="button" id="recordExitBtn" class="record-exit" aria-label="녹화 모드 종료">✕</button>
   

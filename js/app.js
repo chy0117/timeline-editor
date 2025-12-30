@@ -90,7 +90,6 @@ async function setTitleBgFiles(fileList){
   clearExtraTitleBgItems();
   scatterExtraTitleBgItems(titleBgList.slice(1));
 
-  updateStep2TitleControlsVisibility?.();
   markDirtyAndSave('titleBgSet');
 }
 
@@ -101,13 +100,12 @@ function clearTitleBg(){
 
   refreshTitleBgMetaUI();
 
-  applyTitleBgToOverlay(); // overlay/딤/블러 정리
+  applyTitleBgToOverlay(); // overlay 정리
   clearExtraTitleBgItems();
 
   // 메인 BG DOM 숨김/정리
   if (titleBgItemEl) titleBgItemEl.style.display = 'none';
 
-  updateStep2TitleControlsVisibility?.();
   markDirtyAndSave('titleBgClear');
 }
 
@@ -132,52 +130,6 @@ titleBgFile?.addEventListener('change', async (e) => {
 
 titleBgClearBtn?.addEventListener('click', clearTitleBg);
 
-
-  // ✅ Step2 제목 배경 스타일 컨트롤
-  const step2TitleControls = document.getElementById('step2TitleControls');
-const blurRange = document.getElementById('titleBlurRange');
-const blurLabel = document.getElementById('titleBlurLabel');
-
-const dimRange  = document.getElementById('titleDimRange');
-const dimLabel  = document.getElementById('titleDimLabel');
-
-function updateBlurLabel() {
-  if (!blurRange || !blurLabel) return;
-  const v = Number(blurRange.value);
-  blurLabel.textContent = (v === 0) ? '0px (OFF)' : `${v}px`;
-}
-
-function updateDimLabel() {
-  if (!dimRange || !dimLabel) return;
-  const v = Number(dimRange.value);
-  dimLabel.textContent = `${v}%`;
-}
-
-if (blurRange) blurRange.addEventListener('input', updateBlurLabel);
-if (dimRange)  dimRange.addEventListener('input', updateDimLabel);
-
-// 처음 로드 시에도 현재 value 기준으로 한번 맞춰줌
-updateBlurLabel();
-updateDimLabel();
-
- // ✅ Preview Controls DOM (하단 고정)
-const pvBlurRange = document.getElementById('pvBlurRange');
-const pvDimRange  = document.getElementById('pvDimRange');
-
-
-function syncPreviewControlsFromState(){
-  if (!pvBlurRange || !pvDimRange) return;
-  const b = clamp(Number(titleBgBlurPx || 0), 0, 20);
-  const d = clamp(Number(titleBgDimPct || 45), 0, 80);
-
-  pvBlurRange.value = String(b);
-  pvDimRange.value = String(d);
-
-  pvBlurPill.textContent = (b === 0) ? '0px (OFF)' : (b + 'px');
-  pvDimPill.textContent = d + '%';
-}
-
-  
   const stepButtons = document.querySelectorAll('.step-btn');
   const step2SubNav = document.getElementById('step2SubNav');
   const itemTypeButtons = document.querySelectorAll('.item-type-toggle .toggle-btn');
@@ -241,9 +193,7 @@ let titleItemEl = null;
 let titleItemUserMoved = false;
 
   let titleBgDataUrl = null;        // base64 (복원용)
-let titleBgBlurPx = 0;            // 0이면 OFF
-let titleBgDimPct = 45;           // 0~80
-  
+
   let editingItemEl = null;
   let animFrameId = null;
 
@@ -292,7 +242,6 @@ if (next === 'title') {
 
  // ✅ 처음 진입 때만 중앙정렬 (사용자가 옮겼으면 유지)
 if (!titleItemUserMoved) centerTitleItemInViewport();
-  syncPreviewControlsFromState();
   exitEditMode();
 } else {
   // ✅ 제목 탭 벗어나면 프리뷰 종료
@@ -304,8 +253,6 @@ if (!titleItemUserMoved) centerTitleItemInViewport();
   showTitleItem(false);
   showTitleBgItem(false);
 }
-
-  updateStep2TitleControlsVisibility();
 }
 
 
@@ -1191,11 +1138,10 @@ let endScroll = Math.max(contentMaxBottom - viewportHeight + 40, 0);
   // ✅ 레이아웃 변경 직후(9:16 중앙정렬) 사이즈 기반 요소 재정렬
   requestAnimationFrame(() => {
     if (document.body.dataset.step === '2' && document.body.dataset.step2view === 'title') {
-      // 배경/딤/블러가 “안 먹는” 타이밍 방지용
+      // 배경 반영
       ensureTitleBgItem();
       applyTitleBgToTitlePage();
       centerTitleItemInViewport();
-      syncPreviewControlsFromState();
     }
   });
 }
@@ -1642,55 +1588,14 @@ themeToggleBtn.addEventListener('click', () => {
     }
     titleOverlay.classList.add('has-bg');
     titleOverlay.style.setProperty('--title-bg-url', `url("${titleBgDataUrl}")`);
-
-    const blurPx = Number(titleBgBlurPx || 0); // 0이면 OFF
-titleOverlay.style.setProperty('--title-bg-blur', blurPx + 'px');
-    titleOverlay.style.setProperty('--title-bg-dim', (titleBgDimPct / 100).toFixed(2));
     applyTitleBgToTitlePage(); // ✅ titlePageLayer에도 같이 반영
   }
 
-  // ✅ Title 편집 화면(titlePageLayer)에도 블러/딤 적용
-let titleBgDimLayerEl = null;
-
-function ensureTitleBgDimLayer(){
-  if (titleBgDimLayerEl) return;
-  titleBgDimLayerEl = document.createElement('div');
-  titleBgDimLayerEl.id = 'titleBgDimLayer';
-  titlePageLayer.appendChild(titleBgDimLayerEl);
-}
-
-// ✅ 이 함수를 여기에 추가
+  // ✅ Title 편집 화면(titlePageLayer) 배경 반영
 function applyTitleBgToTitlePage(){
-  // 배경 없으면 정리
-  if (!titleBgDataUrl){
-    if (titleBgDimLayerEl) titleBgDimLayerEl.style.display = 'none';
-    // blur도 해제
-    if (titleBgItemEl){
-      const img = titleBgItemEl.querySelector('img');
-      if (img) { 
-        img.style.filter = 'none'; 
-        img.style.transform = ''; 
-      }
-    }
-    return;
-  }
-
-  // 1) 메인 배경(title-bg-item)에 블러 적용
-  if (titleBgItemEl){
-    const img = titleBgItemEl.querySelector('img');
-    if (img){
-      const blurPx = Number(titleBgBlurPx || 0);
-      img.style.filter = blurPx > 0 ? `blur(${blurPx}px)` : 'none';
-      // blur 가장자리 티 방지(가볍게 확대)
-      img.style.transform = blurPx > 0 ? 'scale(1.05)' : '';
-    }
-  }
-
-  // 2) 딤은 레이어로 덮기 (추가로 뿌린 이미지들도 같이 어두워짐)
-  ensureTitleBgDimLayer();
-  const alpha = clamp(Number(titleBgDimPct || 0), 0, 80) / 100;
-  titleBgDimLayerEl.style.display = 'block';
-  titleBgDimLayerEl.style.background = `rgba(0,0,0,${alpha.toFixed(2)})`;
+  // 배경이 없으면 아무것도 안 함
+  if (!titleBgDataUrl) return;
+  // 배경 이미지는 ensureTitleBgItem()에서 이미 처리됨
 }
 
 function refreshTitleBgMetaUI(){
@@ -1731,8 +1636,6 @@ async function setTitleBgFiles(fileList){
   ensureTitleBgItem();         // 첫번째는 9:16 꽉 채우는 메인 배경
   clearExtraTitleBgItems();
   scatterExtraTitleBgItems(urls.slice(1)); // 나머지는 랜덤 흩뿌리기
-
-  updateStep2TitleControlsVisibility();
 }
 
 
