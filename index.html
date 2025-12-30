@@ -1711,6 +1711,8 @@ function updateHeaderDateByScroll(scrollTop){
   const base = dateInput.value || '';
   if (!base) return;
 
+  // ✅ viewport null 체크 추가
+  if (!viewport) return;
   const viewportHeight = viewport.clientHeight;
   const centerY = scrollTop + viewportHeight/2;
   const minutes = centerY / MINUTE_PX;
@@ -1766,7 +1768,7 @@ function fitTextBoxToContent(el, item, maxW){
     currentItemType,
 currentAnimationMode,
 speedSec: Number(speedInput.value) || 30,
-theme: document.body.classList.contains('theme-light') ? 'light' : 'dark', 
+theme: document.body.classList.contains('theme-light') ? 'light' : 'dark',
 blocks,
     items,
      titleBg: {
@@ -1779,7 +1781,7 @@ blocks,
     ui: {
       step: document.body.dataset.step || '1',
       step2View,
-      scrollTop: viewport.scrollTop || 0
+      scrollTop: viewport ? (viewport.scrollTop || 0) : 0  // ✅ null 체크 추가
     }
   };
 
@@ -1794,7 +1796,14 @@ blocks,
       // 필요하면 디버그용:
       // console.log('[SAVE NOW]', reason, new Date().toLocaleTimeString());
     } catch (err) {
-      console.warn('saveStateNow failed:', err);
+      // ✅ localStorage quota 초과 에러 처리 (모바일에서 자주 발생)
+      if (err.name === 'QuotaExceededError' || err.code === 22) {
+        console.error('localStorage quota exceeded! 이미지가 너무 많거나 큽니다.');
+        // 사용자에게 알림 (선택사항 - 너무 자주 뜨면 성가실 수 있음)
+        // alert('저장 공간이 부족합니다. 이미지 개수를 줄여주세요.');
+      } else {
+        console.warn('saveStateNow failed:', err);
+      }
     }
   }
 
@@ -2244,6 +2253,8 @@ function buildHourGrid() {
   }
 
   function highlightHourByScroll(scrollTop) {
+    // ✅ viewport null 체크 추가
+    if (!viewport) return;
     const viewportHeight = viewport.clientHeight;
     const centerY = scrollTop + viewportHeight/2;
     const minutes = centerY / MINUTE_PX;
@@ -2492,8 +2503,9 @@ function clearExtraTitleBgItems(){
 function ensureTitleBgItem(){
   if (!titleBgDataUrl) return;
 
-  const vw = viewport.clientWidth || 360;
-  const vh = viewport.clientHeight || 640;
+  // ✅ viewport null 체크 추가 (모바일 크래시 방지)
+  const vw = viewport ? (viewport.clientWidth || 360) : 360;
+  const vh = viewport ? (viewport.clientHeight || 640) : 640;
 
   if (!titleBgItem) {
     titleBgItem = {
@@ -2569,8 +2581,9 @@ function showTitleBgItem(show){
 function scatterExtraTitleBgItems(extraUrls){
   if (!Array.isArray(extraUrls) || extraUrls.length === 0) return;
 
-  const vw = viewport.clientWidth || 360;
-  const vh = viewport.clientHeight || 640;
+  // ✅ viewport null 체크 추가 (모바일 크래시 방지)
+  const vw = viewport ? (viewport.clientWidth || 360) : 360;
+  const vh = viewport ? (viewport.clientHeight || 640) : 640;
 
   extraUrls.forEach((src, idx) => {
     const id = `title-bg-extra-${Date.now()}-${idx}`;
