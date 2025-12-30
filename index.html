@@ -3012,10 +3012,16 @@ const restored = loadStateAndRestore();
 if (!restored) {
   resetTimelineDataAndDom();
 
-  const today = new Date().toISOString().slice(0,10);
-  dateInput.value = today;
-  headerLabel.textContent = today + ' 타임라인';
-  updateHeaderDateByScroll(viewport.scrollTop);
+ // ✅ 한국시간(KST) 기준 YYYY-MM-DD
+const todayKST = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Asia/Seoul',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+}).format(new Date());
+
+// 사용 예:
+dateInput.value = todayKST;
 
   // 기본 상태 반영
   applyItemTypeUI(currentItemType);
@@ -3492,6 +3498,7 @@ pvDimRange.addEventListener('input', () => {
 <!-- </body> 바로 위(또는 <head> 안) 아무데나 추가 -->
 </body>
 </html>
+
 
 
 
