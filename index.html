@@ -6,10 +6,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>타임라인 스토리 에디터</title>
   <style>
- /* ================================
-   Timeline Story Editor v2.2 (FINAL CLEAN)
-   - 기능 그대로 / 중복 제거 / Step1 다크모드 섹션 구분 강화
-   ================================ */
+/* ============================================================================
+   Timeline Story Editor v2.2
+
+   구조:
+   1. [COMMON] 공통 스타일 (테마, 레이아웃, 폼, 버튼)
+   2. [STEP 1] 아이템 추가 전용 스타일
+   3. [STEP 2] 타임라인 편집 전용 스타일
+   4. [STEP 3] 애니메이션 재생 전용 스타일
+   5. [RESPONSIVE] 반응형 스타일
+============================================================================ */
+
+
+/* ============================================================================
+   [COMMON] 공통 스타일
+============================================================================ */
 
 /* ---------- Theme Variables ---------- */
 :root{
@@ -412,6 +423,7 @@ input[type="file"]{
 }
 
 /* ---------- Step1 Placeholder ---------- */
+/* Step1에서는 타임라인 대신 안내 메시지 표시 */
 .step1-placeholder{
   display:none;
   align-items:center;
@@ -436,6 +448,11 @@ body[data-step="2"] .timeline-viewport,
 body[data-step="3"] .timeline-viewport{ display:block; }
 body[data-step="2"] .step1-placeholder,
 body[data-step="3"] .step1-placeholder{ display:none; }
+
+
+/* ============================================================================
+   [STEP 2] 타임라인 편집 전용 스타일
+============================================================================ */
 
 /* ---------- Timeline Viewport ---------- */
 .timeline-viewport{
@@ -743,6 +760,11 @@ body.theme-light .timeline-item-text{
 .timeline-item.reveal-hidden{ opacity:0; }
 .timeline-item.reveal-visible{ opacity:1; }
 
+
+/* ============================================================================
+   [STEP 3] 애니메이션 재생 전용 스타일
+============================================================================ */
+
 /* ---------- Fullscreen (API) ---------- */
 .timeline-viewport:fullscreen,
 .timeline-viewport:-webkit-full-screen,
@@ -844,7 +866,11 @@ body.record-mode .record-exit{
   justify-content:center;
 }
 
-/* ---------- Responsive ---------- */
+
+/* ============================================================================
+   [RESPONSIVE] 반응형 스타일 (모바일)
+============================================================================ */
+
 @media (max-width:768px){
   body{ flex-direction:column; height:auto; }
 
@@ -905,10 +931,13 @@ body.record-mode .record-exit{
   font-display:swap;
 }
 
-/* =========================================================
-   ✅ Step1 Section UI (FINAL)
-   - 다크모드에서도 섹션 경계가 확실하게 보이게 (중복 없이 1개만)
-   ========================================================= */
+
+/* ============================================================================
+   [STEP 1] 아이템 추가 전용 스타일
+============================================================================ */
+
+/* ---------- Step1 Section UI ---------- */
+/* 다크모드에서도 섹션 경계가 확실하게 보이는 카드 스타일 */
 
 .step1-sections{
   display:flex;
@@ -1199,12 +1228,15 @@ body.theme-light .record-controls .fx-label{
 
 </head>
 <body class="theme-dark" data-step="1">
+
+<!-- ============================================================
+     SIDEBAR: 좌측 컨트롤 패널 (Step 1, 2, 3)
+     ============================================================ -->
 <div class="sidebar">
 
-
-
-  
-  <!-- ✅ 상단 고정 영역 (H1 + STEP NAV) -->
+  <!-- ============================================================
+       [COMMON] 상단 고정 영역: 제목 + Step 네비게이션
+       ============================================================ -->
   <div class="sidebar-top">
     <h1>
       타임라인 에디터
@@ -1223,14 +1255,23 @@ body.theme-light .record-controls .fx-label{
 </div>
   </div>
 
-  <!-- ✅ 스크롤 영역 (STEP 패널들 전부 여기로) -->
+  <!-- ============================================================
+       [COMMON] 스크롤 영역: 모든 Step 패널 컨테이너
+       ============================================================ -->
   <div class="sidebar-scroll">
 
-    <!-- STEP 1 -->
+    <!-- ============================================================
+         [STEP 1] 아이템 추가 패널
+         - 날짜 선택
+         - 영상 제목 입력 (선택)
+         - 시간 구간 설정
+         - 아이템 타입 선택 (이미지/동영상/텍스트)
+         - 아이템 추가 버튼
+         ============================================================ -->
     <div id="step1Panel" class="step-panel active">
       <div class="step1-sections">
 
-        <!-- 1) 날짜 -->
+        <!-- 1) 날짜 선택 -->
         <section class="s1-section">
           <div class="s1-head">
             <div class="s1-title">날짜</div>
@@ -1330,7 +1371,12 @@ body.theme-light .record-controls .fx-label{
       </div>
     </div>
 
-    <!-- STEP 2 -->
+    <!-- ============================================================
+         [STEP 2] 타임라인 편집 패널
+         - 타임라인 편집 안내
+         - 영상 제목 배경 스타일 (블러/딤)
+         - 제스처 컨트롤 (드래그/핀치/회전)
+         ============================================================ -->
     <div id="step2Panel" class="step-panel">
       <p class="hint">
         타임라인에서 아이템을 <b>길게 누르면</b> 편집 모드로 들어갑니다.<br/>
@@ -1370,10 +1416,15 @@ body.theme-light .record-controls .fx-label{
   </div>
 </div>
 
-      
+
     </div>
 
-    <!-- STEP 3 -->
+    <!-- ============================================================
+         [STEP 3] 애니메이션 재생 패널
+         - 애니메이션 모드 선택 (스크롤만 / 스크롤+순차등장)
+         - 재생 시간 조절
+         - 전체 화면 재생
+         ============================================================ -->
     <div id="step3Panel" class="step-panel">
 
       <div style="margin-top:8px;">
@@ -1404,13 +1455,19 @@ body.theme-light .record-controls .fx-label{
   </div>
 </div>
 
-
+<!-- ============================================================
+     MAIN VIEWPORT: 타임라인 프리뷰 영역
+     - Step 1: Placeholder 메시지
+     - Step 2/3: 타임라인 뷰포트 (편집/재생)
+     ============================================================ -->
   <div class="main">
+    <!-- [STEP 1] Placeholder: 아이템 추가 안내 -->
     <div class="step1-placeholder">
       2단계에서 타임라인을 편집할 수 있어요.<br/>
       먼저 1단계에서 아이템을 추가해주세요.
     </div>
 
+<!-- [STEP 2/3] Timeline Viewport: 실제 타임라인 컨테이너 -->
 <div class="timeline-viewport" id="viewport">
 <!-- ✅ Step2 제목 프리뷰용: 하단 고정 블러/딤 컨트롤 -->
 <div class="record-controls" id="titlePreviewControls" aria-label="제목 프리뷰 컨트롤">
@@ -1449,10 +1506,21 @@ body.theme-light .record-controls .fx-label{
 
   <script>
 (() => {
-  /* ================================
-     Timeline Story Editor v2.1 (CLEAN)
-     - 기능 그대로 / JS 정리
-     ================================ */
+/* ============================================================================
+   Timeline Story Editor v2.1 - JavaScript
+
+   구조:
+   1. [COMMON] 공통 (상수, DOM, 유틸리티, 상태관리, 저장/복원)
+   2. [STEP 1] 아이템 추가 (시간옵션, 블록생성, 아이템추가, 제목배경)
+   3. [STEP 2] 타임라인 편집 (타이틀페이지, 편집모드, 제스처)
+   4. [STEP 3] 애니메이션 재생 (애니메이션, 전체화면)
+   5. [EVENT LISTENERS] 모든 이벤트 리스너 초기화
+============================================================================ */
+
+
+/* ============================================================================
+   [COMMON] 공통 코드
+============================================================================ */
 
   /* ---------- Constants ---------- */
   const HOUR_HEIGHT = 120;
@@ -2072,7 +2140,12 @@ if (snap.titleBg) {
 
   return true;
 }
-  
+
+
+/* ============================================================================
+   [STEP 1] 아이템 추가 관련 코드
+============================================================================ */
+
   /* ---------- Block / List ---------- */
   function updateBlockList() {
     blockListEl.innerHTML = '';
@@ -2372,9 +2445,12 @@ function buildHourGrid() {
     return el;
   }
 
-  /* =========================
-   Title Page (Step2 - Title)
-   ========================= */
+
+/* ============================================================================
+   [STEP 2] 타임라인 편집 관련 코드
+============================================================================ */
+
+  /* ---------- Title Page (Step2 - Title) ---------- */
 
 function ensureTitleItem(){
   const titleText = (videoTitleInput.value || '').trim();
@@ -2631,6 +2707,11 @@ function scatterExtraTitleBgItems(extraUrls){
     viewport.classList.remove('edit-mode');
   }
 
+
+/* ============================================================================
+   [STEP 3] 애니메이션 재생 관련 코드
+============================================================================ */
+
   /* ---------- Animation ---------- */
   function stopAnimation(){
     if (animFrameId!==null){
@@ -2840,8 +2921,7 @@ function exitRecordMode() {
   recordModeReason = null;
 }
 
-
-  /* ---------- Gestures ---------- */
+  /* ---------- Gestures (Step2 편집용) ---------- */
   function onGesturePointerDown(e) {
   const el = e.currentTarget;
   const item = getItemByElement(el);
@@ -3000,8 +3080,13 @@ if (activeTouches.length === 2 && editingItemEl === el) {
     }
   }
 
-  /* ---------- Events ---------- */
- // 초기 적용(저장 없이 UI만 반영)
+
+/* ============================================================================
+   [EVENT LISTENERS] 초기화 및 이벤트 리스너 등록
+============================================================================ */
+
+  /* ---------- 초기 UI 적용 ---------- */
+  // 초기 적용(저장 없이 UI만 반영)
 applyTitleFontUI(currentTitleFont);
 applyTextFontUI(currentTextFont);
 
@@ -3024,7 +3109,9 @@ if (!restored) {
 
   updateStep2SubNavVisibility();
 }
-  
+
+  /* ---------- [STEP 1] Event Listeners ---------- */
+
  dateInput.addEventListener('change', () => {
   resetTimelineDataAndDom();
   updateHeaderDateByScroll(viewport.scrollTop);
@@ -3086,10 +3173,14 @@ if (!restored) {
   textInputGroup.style.display='none';
   imageInputGroup.style.display='block';
 
-  speedInput.addEventListener('input',()=>{ 
+  /* ---------- [STEP 3] Event Listeners ---------- */
+
+  speedInput.addEventListener('input',()=>{
     speedLabel.textContent = speedInput.value + '초';
     markDirtyAndSave('speedChange');   });
   speedLabel.textContent = speedInput.value + '초';
+
+  /* ---------- [STEP 1] Add Item Button ---------- */
 
   addItemBtn.addEventListener('click',()=>{
     if (!dateInput.value){
@@ -3167,6 +3258,8 @@ if (!restored) {
     markDirtyAndSave('addItem');
   });
 
+  /* ---------- [STEP 3] Play Buttons ---------- */
+
   playBtn.addEventListener('click', runAnimation);
 
    playFullscreenBtn.addEventListener('click', async () => {
@@ -3209,9 +3302,13 @@ if (!restored) {
   }
 });
 
+  /* ---------- [COMMON] Viewport Scroll ---------- */
+
   viewport.addEventListener('scroll',()=>{
     if (animFrameId===null) highlightHourByScroll(viewport.scrollTop);
   });
+
+  /* ---------- [COMMON] Step Navigation ---------- */
 
  stepButtons.forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -3250,6 +3347,7 @@ if (!restored) {
   });
 });
 
+  /* ---------- [STEP 2] Sub Navigation ---------- */
 
   // ✅ Step2 서브탭 클릭
 step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
@@ -3258,6 +3356,8 @@ step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
     markDirtyAndSave('step2SubViewChange');
   });
 });
+
+  /* ---------- [COMMON] Theme Toggle ---------- */
 
 themeToggleBtn.addEventListener('click', () => {
   const body = document.body;
@@ -3273,7 +3373,8 @@ themeToggleBtn.addEventListener('click', () => {
   markDirtyAndSave('themeChange'); // ✅ 추가
 });
 
-  /* ---------- Title BG State ---------- */
+  /* ---------- [STEP 1] Title Background Functions ---------- */
+
   function applyTitleBgToOverlay(){
     if (!titleBgDataUrl) {
       titleOverlay.classList.remove('has-bg');
@@ -3432,6 +3533,8 @@ function clearTitleBg(){
     step2TitleControls.style.display = show ? 'block' : 'none';
   }
 
+  /* ---------- [STEP 1] Title Background Event Listeners ---------- */
+
   // ✅ 파일 추가 버튼 -> 파일 선택 열기
   titleBgPickBtn.addEventListener('click', () => titleBgFile.click());
 
@@ -3447,6 +3550,9 @@ function clearTitleBg(){
 
   // ✅ X 삭제
   titleBgClearBtn.addEventListener('click', () => clearTitleBg());
+
+  /* ---------- [STEP 2] Title Background Preview Controls ---------- */
+
   pvBlurRange.addEventListener('input', () => {
   titleBgBlurPx = Number(pvBlurRange.value || 0);
 
@@ -3488,7 +3594,8 @@ pvDimRange.addEventListener('input', () => {
     markDirtyAndSave('titleDimRange');
   });
 
-  
+  /* ---------- [STEP 2] Timeline Background Click (Exit Edit Mode) ---------- */
+
   // 타임라인 배경 클릭 시 편집 모드 해제
   timeline.addEventListener('click', (e) => {
     if (e.target === timeline || e.target.classList.contains('timeline-inner')) {
