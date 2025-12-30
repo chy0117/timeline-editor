@@ -1198,7 +1198,7 @@ body.theme-light .record-controls .fx-label{
 </style>
 
 </head>
-<body class="theme-dark" data-step="1">
+<body data-step="1">
 <div class="sidebar">
 
 
@@ -1966,14 +1966,12 @@ if (typeof snap.speedSec === 'number' && !Number.isNaN(snap.speedSec)) {
   // 혹시 값 없으면 현재 값 기준으로 라벨만 정리
   speedLabel.textContent = speedInput.value + '초';
 }
- // ✅ theme 복원
+ // ✅ theme 복원 (수정: theme-dark 제거, theme-light만 사용)
 if (snap.theme === 'light') {
-  document.body.classList.remove('theme-dark');
   document.body.classList.add('theme-light');
   themeToggleBtn.textContent = '다크 모드';
 } else {
   document.body.classList.remove('theme-light');
-  document.body.classList.add('theme-dark');
   themeToggleBtn.textContent = '라이트 모드';
 }
 
@@ -3267,14 +3265,13 @@ step2SubNav.querySelectorAll('.sub-btn').forEach(btn=>{
 
 themeToggleBtn.addEventListener('click', () => {
   const body = document.body;
-  if (body.classList.contains('theme-dark')) {
-    body.classList.remove('theme-dark');
+  // ✅ 수정: theme-light 클래스만 토글 (CSS에 theme-dark 스타일 없음)
+  if (body.classList.contains('theme-light')) {
+    body.classList.remove('theme-light');
+    themeToggleBtn.textContent = '라이트 모드';
+  } else {
     body.classList.add('theme-light');
     themeToggleBtn.textContent = '다크 모드';
-  } else {
-    body.classList.remove('theme-light');
-    body.classList.add('theme-dark');
-    themeToggleBtn.textContent = '라이트 모드';
   }
   markDirtyAndSave('themeChange'); // ✅ 추가
 });
