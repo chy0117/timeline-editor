@@ -1638,5 +1638,4 @@ async function setTitleBgFiles(fileList){
   scatterExtraTitleBgItems(urls.slice(1)); // 나머지는 랜덤 흩뿌리기
 }
 
-
-function clearTitleBg(){
+})();
