@@ -3342,17 +3342,6 @@ function refreshTitleBgMetaUI(){
   titleBgMeta.style.display = 'flex';
 }
 
-
-
-  function refreshTitleBgMetaUI(){
-    if (!titleBgDataUrl) {
-      titleBgMeta.style.display = 'none';
-      titleBgName.textContent = '';
-      return;
-    }
-    titleBgMeta.style.display = 'flex';
-  }
-
 function readAsDataURL(file){
   return new Promise((resolve, reject) => {
     const r = new FileReader();
