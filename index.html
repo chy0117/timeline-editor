@@ -1508,8 +1508,7 @@ body.theme-light .record-controls .fx-label{
  // ✅ Preview Controls DOM (하단 고정)
 const pvBlurRange = document.getElementById('pvBlurRange');
 const pvDimRange  = document.getElementById('pvDimRange');
-const pvBlurPill  = document.getElementById('pvBlurPill');
-const pvDimPill   = document.getElementById('pvDimPill');
+
 
 function syncPreviewControlsFromState(){
   if (!pvBlurRange || !pvDimRange) return;
@@ -2364,7 +2363,7 @@ function buildHourGrid() {
     el.addEventListener('contextmenu', e => e.preventDefault());
     el.addEventListener('dragstart', e => e.preventDefault());
 
-    el.style.touchAction = 'none';
+    el.style.touchAction = 'pan-y';
     el.style.userSelect = 'none';
     el.style.webkitUserSelect = 'none';
 
@@ -3343,16 +3342,6 @@ function refreshTitleBgMetaUI(){
 }
 
 
-
-  function refreshTitleBgMetaUI(){
-    if (!titleBgDataUrl) {
-      titleBgMeta.style.display = 'none';
-      titleBgName.textContent = '';
-      return;
-    }
-    titleBgMeta.style.display = 'flex';
-  }
-
 function readAsDataURL(file){
   return new Promise((resolve, reject) => {
     const r = new FileReader();
@@ -3503,6 +3492,7 @@ pvDimRange.addEventListener('input', () => {
 <!-- </body> 바로 위(또는 <head> 안) 아무데나 추가 -->
 </body>
 </html>
+
 
 
 
