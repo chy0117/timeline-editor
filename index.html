@@ -1274,13 +1274,11 @@ body.theme-light .record-controls .fx-label{
     <input type="file" id="titleBgFile" accept="image/*" style="display:none;" />
   </div>
 
-  <div id="titleBgMeta"
-       style="display:none; margin-top:8px; align-items:center; justify-content:space-between; gap:8px;">
-    <span id="titleBgName"
-          style="font-size:13px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-    </span>
-    <button type="button" id="titleBgClearBtn" class="block-delete-btn" aria-label="배경 사진 삭제">✕</button>
-  </div>
+<div id="titleBgMeta" style="display:none; margin-top:8px; align-items:center; justify-content:space-between; gap:8px;">
+  <span id="titleBgName"
+        style="font-size:13px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+  </span>
+  <button type="button" id="titleBgClearBtn" class="block-delete-btn" aria-label="배경 사진 삭제">✕</button>
 </div>
         </section>
 
@@ -1499,19 +1497,31 @@ const titleBgClearBtn = document.getElementById('titleBgClearBtn');
 
 let titleBgObjectUrl = null;
 
+function setTitleBgMetaVisible(visible, filename = '') {
+  if (!titleBgMeta) return;
+  titleBgMeta.style.display = visible ? 'flex' : 'none';
+  if (titleBgName) titleBgName.textContent = visible ? filename : '';
+}
+
+// ✅ 초기 상태에서 무조건 숨김 (혹시 CSS/HTML이 꼬여있어도 강제)
+setTitleBgMetaVisible(false);
+
 titleBgPickBtn?.addEventListener('click', () => {
-  titleBgFile?.click(); // ✅ 이게 없으면 버튼 눌러도 파일창 안 뜸
+  titleBgFile?.click();
 });
 
 titleBgFile?.addEventListener('change', (e) => {
   const file = e.target.files?.[0];
-  if (!file) return;
 
-  // ✅ 아래에 파일명 표시
-  if (titleBgName) titleBgName.textContent = file.name;
-  if (titleBgMeta) titleBgMeta.style.display = 'flex';
+  // 파일 선택 취소한 경우 -> 숨김 유지
+  if (!file) {
+    setTitleBgMetaVisible(false);
+    return;
+  }
 
-  // ✅ (선택) 배경 적용 로직
+  setTitleBgMetaVisible(true, file.name);
+
+  // (선택) 배경 적용 로직
   if (titleBgObjectUrl) URL.revokeObjectURL(titleBgObjectUrl);
   titleBgObjectUrl = URL.createObjectURL(file);
 
@@ -1525,8 +1535,7 @@ titleBgFile?.addEventListener('change', (e) => {
 
 titleBgClearBtn?.addEventListener('click', () => {
   if (titleBgFile) titleBgFile.value = '';
-  if (titleBgName) titleBgName.textContent = '';
-  if (titleBgMeta) titleBgMeta.style.display = 'none';
+  setTitleBgMetaVisible(false);
 
   const target = document.querySelector('.title-preview'); // ← 동일하게
   if (target) target.style.backgroundImage = '';
@@ -1536,7 +1545,6 @@ titleBgClearBtn?.addEventListener('click', () => {
     titleBgObjectUrl = null;
   }
 });
-
 
 
   // ✅ Step2 제목 배경 스타일 컨트롤
@@ -3539,6 +3547,7 @@ pvDimRange.addEventListener('input', () => {
 <!-- </body> 바로 위(또는 <head> 안) 아무데나 추가 -->
 </body>
 </html>
+
 
 
 
