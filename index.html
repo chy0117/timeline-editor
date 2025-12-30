@@ -1280,6 +1280,7 @@ body.theme-light .record-controls .fx-label{
   </span>
   <button type="button" id="titleBgClearBtn" class="block-delete-btn" aria-label="배경 사진 삭제">✕</button>
 </div>
+  </div>
         </section>
 
         <!-- 3) 아이템 추가 -->
@@ -1549,31 +1550,30 @@ titleBgClearBtn?.addEventListener('click', () => {
 
   // ✅ Step2 제목 배경 스타일 컨트롤
   const step2TitleControls = document.getElementById('step2TitleControls');
-  const titleBlurRange = document.getElementById('titleBlurRange');
-const titleBlurLabel = document.getElementById('titleBlurLabel');
+const blurRange = document.getElementById('titleBlurRange');
+const blurLabel = document.getElementById('titleBlurLabel');
 
-const titleDimRange = document.getElementById('titleDimRange');
-const titleDimLabel = document.getElementById('titleDimLabel');
+const dimRange  = document.getElementById('titleDimRange');
+const dimLabel  = document.getElementById('titleDimLabel');
 
-function updateTitleBlurUI(){
-  const v = Number(titleBlurRange.value);
-  titleBlurLabel.textContent = (v === 0) ? '0px (OFF)' : `${v}px`;
-  // TODO: 실제 적용 대상에 blur 적용 로직 연결
-  // ex) titleEl.style.backdropFilter = `blur(${v}px)`;
+function updateBlurLabel() {
+  if (!blurRange || !blurLabel) return;
+  const v = Number(blurRange.value);
+  blurLabel.textContent = (v === 0) ? '0px (OFF)' : `${v}px`;
 }
 
-function updateTitleDimUI(){
-  const v = Number(titleDimRange.value);
-  titleDimLabel.textContent = `${v}%`;
-  // TODO: 실제 적용 대상에 dim 적용 로직 연결
-  // ex) overlayEl.style.opacity = (v/100);
+function updateDimLabel() {
+  if (!dimRange || !dimLabel) return;
+  const v = Number(dimRange.value);
+  dimLabel.textContent = `${v}%`;
 }
 
-titleBlurRange.addEventListener('input', updateTitleBlurUI);
-titleDimRange.addEventListener('input', updateTitleDimUI);
+if (blurRange) blurRange.addEventListener('input', updateBlurLabel);
+if (dimRange)  dimRange.addEventListener('input', updateDimLabel);
 
-updateTitleBlurUI();
-updateTitleDimUI();
+// 처음 로드 시에도 현재 value 기준으로 한번 맞춰줌
+updateBlurLabel();
+updateDimLabel();
 
  // ✅ Preview Controls DOM (하단 고정)
 const pvBlurRange = document.getElementById('pvBlurRange');
@@ -3568,6 +3568,7 @@ pvDimRange.addEventListener('input', () => {
 <!-- </body> 바로 위(또는 <head> 안) 아무데나 추가 -->
 </body>
 </html>
+
 
 
 
