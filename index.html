@@ -1266,15 +1266,11 @@ body.theme-light .record-controls .fx-label{
       배경사진(선택)
     </div>
 
-    <!-- ✅ 아이템 '파일 선택'과 같은 UI로: btn-secondary 대신 동일 클래스 사용 추천 -->
+    <!-- 아이템 '파일 선택' 버튼과 같은 클래스 사용 -->
     <button type="button" id="titleBgPickBtn" class="file-btn" style="flex:0 0 auto; width:auto;">
       파일 선택
     </button>
 
-    <!-- ✅ 파일명 기본 표시 -->
-    <span id="titleBgHint" class="file-name">선택된 파일 없음</span>
-
-    <!-- ✅ 배경은 보통 1장만이면 multiple 빼는 게 안전 -->
     <input type="file" id="titleBgFile" accept="image/*" style="display:none;" />
   </div>
 
@@ -1497,36 +1493,29 @@ body.theme-light .record-controls .fx-label{
     // ✅ Title BG DOM
 const titleBgPickBtn = document.getElementById('titleBgPickBtn');
 const titleBgFile = document.getElementById('titleBgFile');
-
 const titleBgMeta = document.getElementById('titleBgMeta');
 const titleBgName = document.getElementById('titleBgName');
-const titleBgHint = document.getElementById('titleBgHint');
 const titleBgClearBtn = document.getElementById('titleBgClearBtn');
 
 let titleBgObjectUrl = null;
 
 titleBgPickBtn?.addEventListener('click', () => {
-  // ✅ 이게 없으면 버튼 눌러도 파일창이 안 열림
-  titleBgFile?.click();
+  titleBgFile?.click(); // ✅ 이게 없으면 버튼 눌러도 파일창 안 뜸
 });
 
 titleBgFile?.addEventListener('change', (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
 
-  // 파일명 표시
+  // ✅ 아래에 파일명 표시
   if (titleBgName) titleBgName.textContent = file.name;
-  if (titleBgHint) titleBgHint.textContent = file.name;
-
-  // 메타 영역 표시
   if (titleBgMeta) titleBgMeta.style.display = 'flex';
 
-  // ✅ 여기서 실제 배경 적용 로직 연결
+  // ✅ (선택) 배경 적용 로직
   if (titleBgObjectUrl) URL.revokeObjectURL(titleBgObjectUrl);
   titleBgObjectUrl = URL.createObjectURL(file);
 
-  // 예시: 적용 대상 셀렉터는 네 프로젝트에 맞게 바꿔
-  const target = document.querySelector('.title-preview'); // <- 여기를 네 배경 적용 위치로
+  const target = document.querySelector('.title-preview'); // ← 너 적용 위치로 바꿔
   if (target) {
     target.style.backgroundImage = `url("${titleBgObjectUrl}")`;
     target.style.backgroundSize = 'cover';
@@ -1535,16 +1524,11 @@ titleBgFile?.addEventListener('change', (e) => {
 });
 
 titleBgClearBtn?.addEventListener('click', () => {
-  // 파일 입력 초기화
   if (titleBgFile) titleBgFile.value = '';
-
-  // 표시 초기화
   if (titleBgName) titleBgName.textContent = '';
-  if (titleBgHint) titleBgHint.textContent = '선택된 파일 없음';
   if (titleBgMeta) titleBgMeta.style.display = 'none';
 
-  // 배경 제거
-  const target = document.querySelector('.title-preview'); // <- 동일하게
+  const target = document.querySelector('.title-preview'); // ← 동일하게
   if (target) target.style.backgroundImage = '';
 
   if (titleBgObjectUrl) {
@@ -1552,6 +1536,7 @@ titleBgClearBtn?.addEventListener('click', () => {
     titleBgObjectUrl = null;
   }
 });
+
 
 
   // ✅ Step2 제목 배경 스타일 컨트롤
@@ -3554,6 +3539,7 @@ pvDimRange.addEventListener('input', () => {
 <!-- </body> 바로 위(또는 <head> 안) 아무데나 추가 -->
 </body>
 </html>
+
 
 
 
