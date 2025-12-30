@@ -1267,12 +1267,11 @@ body.theme-light .record-controls .fx-label{
     </div>
 
     <!-- 아이템 '파일 선택' 버튼과 같은 클래스 사용 -->
-   <button type="button" id="titleBgPickBtn" class="file-upload-button" style="flex:0 0 auto; width:auto;">
-  파일 선택
+<button type="button" id="titleBgPickBtn" class="file-btn" style="flex:0 0 auto; width:auto;">
+  배경 파일 선택
 </button>
-
-    <input type="file" id="titleBgFile" accept="image/*" style="display:none;" />
-  </div>
+    
+<input type="file" id="imageFile" accept="image/*" hidden>
 
 <div id="titleBgMeta" style="display:none; margin-top:8px; align-items:center; justify-content:space-between; gap:8px;">
   <span id="titleBgName"
@@ -3568,6 +3567,7 @@ pvDimRange.addEventListener('input', () => {
 <!-- </body> 바로 위(또는 <head> 안) 아무데나 추가 -->
 </body>
 </html>
+
 
 
 
