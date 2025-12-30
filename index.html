@@ -1271,8 +1271,7 @@ body.theme-light .record-controls .fx-label{
   배경 파일 선택
 </button>
     
-<input type="file" id="imageFile" accept="image/*" hidden>
-
+<input type="file" id="titleBgFile" accept="image/*" hidden multiple>
 <div id="titleBgMeta" style="display:none; margin-top:8px; align-items:center; justify-content:space-between; gap:8px;">
   <span id="titleBgName"
         style="font-size:13px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
@@ -1314,7 +1313,7 @@ body.theme-light .record-controls .fx-label{
           </div>
 
           <div id="imageInputGroup" style="margin-top:10px;">
-            <input type="file" id="imageFile" accept="image/*,video/*" />
+            <input type="file" id="itemFile" accept="image/*,video/*" />
           </div>
 
           <div class="s1-divider"></div>
@@ -1413,15 +1412,18 @@ body.theme-light .record-controls .fx-label{
 <div class="record-controls" id="titlePreviewControls" aria-label="제목 프리뷰 컨트롤">
   <div class="rc-card">
 
-    <div class="fx-control">
-      <span class="fx-label">흐리게</span>
-      <input class="fx-range" type="range" id="pvBlurRange" min="0" max="20" step="1" value="0" />
-    </div>
+  <div class="fx-control">
+  <span class="fx-label">흐리게</span>
+  <input class="fx-range" type="range" id="pvBlurRange" min="0" max="20" step="1" value="0" />
+  <span id="pvBlurPill" class="fx-badge">0px (OFF)</span>
+</div>
 
-    <div class="fx-control" style="margin-top:8px;">
-      <span class="fx-label">어둡게</span>
-      <input class="fx-range" type="range" id="pvDimRange" min="0" max="80" step="1" value="45" />
-    </div>
+<div class="fx-control" style="margin-top:8px;">
+  <span class="fx-label">어둡게</span>
+  <input class="fx-range" type="range" id="pvDimRange" min="0" max="80" step="1" value="45" />
+  <span id="pvDimPill" class="fx-badge">45%</span>
+</div>
+
 
   </div>
 </div>
@@ -1472,7 +1474,7 @@ body.theme-light .record-controls .fx-label{
   const endTimeSelect = document.getElementById('endTime');
 
   const textContentInput = document.getElementById('textContent');
-  const imageFileInput = document.getElementById('imageFile');
+  const itemFileInput = document.getElementById('itemFile');
   const textInputGroup = document.getElementById('textInputGroup');
   const imageInputGroup = document.getElementById('imageInputGroup');
 
@@ -1488,63 +1490,96 @@ body.theme-light .record-controls .fx-label{
   const playFullscreenBtn = document.getElementById('playFullscreenBtn');
   const videoTitleInput = document.getElementById('videoTitle');
   
-    // ✅ Title BG DOM
+  // ✅ Title BG DOM
 const titleBgPickBtn = document.getElementById('titleBgPickBtn');
-const titleBgFile = document.getElementById('titleBgFile');
-const titleBgMeta = document.getElementById('titleBgMeta');
-const titleBgName = document.getElementById('titleBgName');
-const titleBgClearBtn = document.getElementById('titleBgClearBtn');
+const titleBgFile    = document.getElementById('titleBgFile');
+const titleBgMeta    = document.getElementById('titleBgMeta');
+const titleBgName    = document.getElementById('titleBgName');
+const titleBgClearBtn= document.getElementById('titleBgClearBtn');
 
-let titleBgObjectUrl = null;
-
-function setTitleBgMetaVisible(visible, filename = '') {
-  if (!titleBgMeta) return;
-  titleBgMeta.style.display = visible ? 'flex' : 'none';
-  if (titleBgName) titleBgName.textContent = visible ? filename : '';
-}
-
-// ✅ 초기 상태에서 무조건 숨김 (혹시 CSS/HTML이 꼬여있어도 강제)
-setTitleBgMetaVisible(false);
-
-titleBgPickBtn?.addEventListener('click', () => {
-  titleBgFile?.click();
-});
-
-titleBgFile?.addEventListener('change', (e) => {
-  const file = e.target.files?.[0];
-
-  // 파일 선택 취소한 경우 -> 숨김 유지
-  if (!file) {
-    setTitleBgMetaVisible(false);
+// UI
+function refreshTitleBgMetaUI(){
+  if (!titleBgMeta || !titleBgName) return;
+  if (!titleBgDataUrl) {
+    titleBgMeta.style.display = 'none';
+    titleBgName.textContent = '';
     return;
   }
+  titleBgMeta.style.display = 'flex';
+  titleBgName.textContent = (titleBgList.length > 1)
+    ? `배경 ${titleBgList.length}장 선택됨`
+    : `배경 1장 선택됨`;
+}
 
-  setTitleBgMetaVisible(true, file.name);
+// 파일 읽기
+function readAsDataURL(file){
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result || ''));
+    r.onerror = () => reject(r.error || new Error('read failed'));
+    r.readAsDataURL(file);
+  });
+}
 
-  // (선택) 배경 적용 로직
-  if (titleBgObjectUrl) URL.revokeObjectURL(titleBgObjectUrl);
-  titleBgObjectUrl = URL.createObjectURL(file);
+// 여러 장 지원
+async function setTitleBgFiles(fileList){
+  const files = Array.from(fileList || []).filter(Boolean);
+  if (!files.length) return;
 
-  const target = document.querySelector('.title-preview'); // ← 너 적용 위치로 바꿔
-  if (target) {
-    target.style.backgroundImage = `url("${titleBgObjectUrl}")`;
-    target.style.backgroundSize = 'cover';
-    target.style.backgroundPosition = 'center';
-  }
-});
+  const urls = await Promise.all(files.map(readAsDataURL));
 
-titleBgClearBtn?.addEventListener('click', () => {
+  titleBgList = urls;
+  titleBgDataUrl = urls[0] || null;
+
+  refreshTitleBgMetaUI();
+
+  // ✅ 타이틀 오버레이 + 타이틀 탭 레이어 반영
+  applyTitleBgToOverlay();      // 내부에서 applyTitleBgToTitlePage()도 호출함
+  ensureTitleBgItem();
+  clearExtraTitleBgItems();
+  scatterExtraTitleBgItems(titleBgList.slice(1));
+
+  updateStep2TitleControlsVisibility?.();
+  markDirtyAndSave('titleBgSet');
+}
+
+function clearTitleBg(){
   if (titleBgFile) titleBgFile.value = '';
-  setTitleBgMetaVisible(false);
+  titleBgList = [];
+  titleBgDataUrl = null;
 
-  const target = document.querySelector('.title-preview'); // ← 동일하게
-  if (target) target.style.backgroundImage = '';
+  refreshTitleBgMetaUI();
 
-  if (titleBgObjectUrl) {
-    URL.revokeObjectURL(titleBgObjectUrl);
-    titleBgObjectUrl = null;
+  applyTitleBgToOverlay(); // overlay/딤/블러 정리
+  clearExtraTitleBgItems();
+
+  // 메인 BG DOM 숨김/정리
+  if (titleBgItemEl) titleBgItemEl.style.display = 'none';
+
+  updateStep2TitleControlsVisibility?.();
+  markDirtyAndSave('titleBgClear');
+}
+
+// 초기 UI
+refreshTitleBgMetaUI();
+
+titleBgPickBtn?.addEventListener('click', () => titleBgFile?.click());
+
+titleBgFile?.addEventListener('change', async (e) => {
+  const files = e.target.files;
+  if (!files || !files.length) {
+    refreshTitleBgMetaUI();
+    return;
+  }
+  try {
+    await setTitleBgFiles(files);
+  } catch (err) {
+    console.warn(err);
+    alert('배경 이미지를 불러오지 못했어요.');
   }
 });
+
+titleBgClearBtn?.addEventListener('click', clearTitleBg);
 
 
   // ✅ Step2 제목 배경 스타일 컨트롤
@@ -3196,7 +3231,7 @@ dateInput.value = todayKST;
       itemData.text=text;
       itemData.fontKey = currentTextFont;
     } else {
-      const file = imageFileInput.files[0];
+      const file = itemFileInput.files[0];
       if (!file){ alert('파일을 선택해주세요.'); return; }
       itemData.src = URL.createObjectURL(file);
       itemType = file.type && file.type.startsWith('video/') ? 'video' : 'image';
@@ -3236,7 +3271,7 @@ dateInput.value = todayKST;
 
     scrollToBlock(block.id);
 
-    if (itemType==='image'||itemType==='video') imageFileInput.value='';
+    if (itemType==='image'||itemType==='video') itemFileInput.value='';
     updateBlockList();
     markDirtyAndSave('addItem');
   });
@@ -3567,6 +3602,7 @@ pvDimRange.addEventListener('input', () => {
 <!-- </body> 바로 위(또는 <head> 안) 아무데나 추가 -->
 </body>
 </html>
+
 
 
 
