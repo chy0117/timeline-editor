@@ -1,0 +1,311 @@
+   [STEP 2] 타임라인 편집 전용 스타일
+============================================================================ */
+
+/* ---------- Timeline Viewport ---------- */
+.timeline-viewport{
+  width:360px;
+  height:640px;
+  max-width:100%;
+  border-radius:24px;
+  background:var(--viewport-bg);
+  border:2px solid var(--border);
+  overflow-y:auto;
+  overflow-x:hidden;
+  position:relative;
+  box-shadow:0 20px 40px rgba(0,0,0,0.3);
+}
+
+/* 편집 모드 배경 오버레이 */
+.timeline-viewport::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,0.4);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.3s;
+  z-index:5;
+}
+body.theme-light .timeline-viewport::before{ background:rgba(0,0,0,0.2); }
+.timeline-viewport.edit-mode::before{ opacity:1; }
+
+.viewport-header{
+  position:sticky;
+  top:0;
+  left:0;
+  right:0;
+  text-align:center;
+  font-size:12px;
+  color:var(--muted);
+  padding:6px 0;
+  background:linear-gradient(to bottom,rgba(2,6,23,0.9),rgba(2,6,23,0));
+  z-index:6;
+}
+body.theme-light .viewport-header{
+  background:linear-gradient(to bottom,rgba(249,250,251,0.95),rgba(249,250,251,0));
+}
+
+/* ---------- Title Overlay (중앙) ---------- */
+.timeline-title-overlay{
+  position:absolute;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  text-align:center;
+  font-size:32px;
+  font-weight:700;
+  line-height:1.4;
+  background:rgba(0,0,0,0.6);
+  color:#f9fafb;
+  z-index:7;
+
+  --title-font:"PretendardSemiBoldLocal";
+  font-family:var(--title-font),system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+.timeline-title-overlay > *{
+  position:relative;
+  z-index:2;
+}
+body.theme-light .timeline-title-overlay{
+  background:rgba(15,23,42,0.25);
+  color:#020617;
+}
+.timeline-title-overlay.titlefont-bagel{ --title-font:"BagelFatOneLocal"; }
+.timeline-title-overlay.titlefont-nanum{ --title-font:"NanumNaMuJeongWeonLocal"; }
+.timeline-title-overlay.titlefont-pretendard{ --title-font:"PretendardSemiBoldLocal"; }
+.timeline-title-overlay.titlefont-laudrygo{ --title-font:"LaudrygoLocal"; }
+
+/* ✅ Title Overlay Background Image Support */
+.timeline-title-overlay{
+  isolation:isolate; /* pseudo-element z-index 안정화 */
+}
+
+.timeline-title-overlay.has-bg{
+  background: transparent !important; /* 기본 rgba 배경 대신, bg사진+딤을 사용 */
+}
+
+.timeline-title-overlay.has-bg::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background-image: var(--title-bg-url);
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.05); /* 블러 가장자리 티 방지 */
+  filter: blur(var(--title-bg-blur, 0px));
+  z-index:-2;
+}
+
+.timeline-title-overlay.has-bg::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: rgba(0,0,0,var(--title-bg-dim, 0.45)); /* 0~0.8 */
+  z-index:-1;
+}
+
+/* ✅ Step2 '영상 제목' 탭: 타임라인 대신 타이틀 페이지 레이어를 보여줌 */
+.title-page-layer{
+  position:absolute;
+  inset:0;
+  display:none;
+  z-index:6;          /* timeline 위, titleOverlay(7) 아래 */
+  overflow:hidden;
+}
+
+    /* ✅ Title 편집 화면에서도 딤 레이어(블러는 JS에서 img에 직접 적용) */
+#titleBgDimLayer{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:9997;      /* titleItem(9998) 바로 아래 */
+  display:none;
+}
+
+body[data-step="2"][data-step2view="title"] #titlePageLayer{
+  display:block;
+}
+
+body[data-step="2"][data-step2view="title"] #timeline{
+  display:none !important;   /* ✅ 타임라인 숨김 */
+}
+
+/* 제목 탭에서는 스크롤 필요 없으니 잠깐 막기 */
+body[data-step="2"][data-step2view="title"] #viewport{
+  overflow:hidden !important;
+}
+
+
+    
+/* ---------- Timeline Inner / Grid ---------- */
+.timeline-inner{
+  position:relative;
+  width:100%;
+  height:5760px;
+   background: var(--tl-bg);      
+}
+
+
+.hour-label{
+  position:absolute;
+  left:10px;
+  width:48px;
+  font-weight:700;
+  letter-spacing:-0.2px;
+  color: var(--tl-label);
+  font-size:15px;      /* ✅ 글씨 조금 크게 */
+  line-height:1;
+}
+.hour-label.active{
+  color:var(--accent);
+  font-weight:800;
+}
+    
+
+.hour-line{
+  position:absolute;
+  left:44px;                       /* ✅ 라벨 영역만 남기고 */
+  right:10px;
+  height:0;
+   border-top: 1px dotted var(--tl-line);
+  background:none;
+}
+
+    .half-line{
+  position:absolute;
+  left:44px;
+  right:10px;
+  height:0;
+    border-top: 1px dotted var(--tl-line-soft);
+}
+
+/* ---------- Day Boundary (24h) ---------- */
+.day-boundary{
+  position:absolute;
+  left:0;
+  right:0;
+  height:0;
+  z-index:2;
+  pointer-events:none;
+}
+
+.day-boundary-line{
+  position:absolute;
+  left:44px;
+  right:10px;
+  height:0;
+   border-top: 2px solid var(--tl-boundary);
+}
+
+.day-boundary-label{
+  position:absolute;
+  left:10px;            /* hour-label과 같은 라인 */
+  top:-12px;            /* 선 위로 살짝 */
+  padding:4px 8px;
+  border-radius:10px;
+  background: var(--tl-boundary-label-bg);
+ color: var(--tl-boundary-label-fg);
+  font-size:14px;       /* ✅ 글씨 조금 크게 */
+  font-weight:800;
+  letter-spacing:-0.2px;
+  box-shadow:0 6px 14px rgba(0,0,0,0.06);
+  border: 1px solid var(--tl-boundary-label-border);
+}
+    
+
+
+/* ---------- Time Block ---------- */
+.time-block{
+  position:absolute;
+  left:60px;
+  right:12px;
+  border-radius:18px;
+  background:transparent;
+  border:none;
+  padding:4px;
+  box-shadow:none;
+  overflow:hidden;
+  pointer-events:none;
+}
+.time-block-inner{
+  position:relative;
+  width:100%;
+  height:100%;
+  border-radius:14px;
+  background:transparent;
+}
+
+/* ---------- Timeline Item ---------- */
+.timeline-item{
+  position:absolute;
+  border-radius:12px;
+  overflow:hidden;
+  cursor:pointer;
+  box-shadow:0 0 0 1px rgba(148,163,184,0.4);
+  transform-origin:center center;
+  background:transparent;
+  opacity:1;
+  transition:opacity .4s ease;
+  z-index:1;
+  touch-action: pan-y;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+  will-change:transform;
+}
+.timeline-item.edit-mode,
+.timeline-item.editing,
+.timeline-viewport.edit-mode .timeline-item{
+  touch-action: none; 
+}  /* ✅ 편집 모드일 때만 제스처 직접 처리 */
+  
+.timeline-item.editing{ transition:none; }
+.timeline-item.edit-mode{
+  box-shadow:0 0 0 3px var(--accent), 0 8px 20px rgba(34,197,94,0.3);
+  z-index:10 !important;
+}
+.timeline-item.dragging{
+  transform:scale(1.05);
+  box-shadow:0 0 0 3px var(--accent), 0 12px 24px rgba(0,0,0,0.4);
+}
+
+.timeline-item img,
+.timeline-item video{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  transform:translateZ(0);
+  -webkit-transform:translateZ(0);
+}
+
+.timeline-item-text{
+  width:auto;          /* ✅ 100% 제거 */
+  height:auto;         /* ✅ 100% 제거 */
+  display:inline-block; /* ✅ 내용 크기만큼 */
+  padding:6px 8px;
+  font-size:24px;
+  line-height:1.35;
+  color:#f9fafb;
+  white-space:pre-wrap;
+  word-break:break-word;
+  background:transparent;
+}
+body.theme-light .timeline-item-text{
+  color:#111827;
+  background:transparent;
+}
+
+.timeline-item.reveal-hidden{ opacity:0; }
+.timeline-item.reveal-visible{ opacity:1; }
+
+
+/* ============================================================================
