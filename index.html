@@ -1550,9 +1550,30 @@ titleBgClearBtn?.addEventListener('click', () => {
   // ✅ Step2 제목 배경 스타일 컨트롤
   const step2TitleControls = document.getElementById('step2TitleControls');
   const titleBlurRange = document.getElementById('titleBlurRange');
-  const titleBlurLabel = document.getElementById('titleBlurLabel');
-  const titleDimRange = document.getElementById('titleDimRange');
-  const titleDimLabel = document.getElementById('titleDimLabel');
+const titleBlurLabel = document.getElementById('titleBlurLabel');
+
+const titleDimRange = document.getElementById('titleDimRange');
+const titleDimLabel = document.getElementById('titleDimLabel');
+
+function updateTitleBlurUI(){
+  const v = Number(titleBlurRange.value);
+  titleBlurLabel.textContent = (v === 0) ? '0px (OFF)' : `${v}px`;
+  // TODO: 실제 적용 대상에 blur 적용 로직 연결
+  // ex) titleEl.style.backdropFilter = `blur(${v}px)`;
+}
+
+function updateTitleDimUI(){
+  const v = Number(titleDimRange.value);
+  titleDimLabel.textContent = `${v}%`;
+  // TODO: 실제 적용 대상에 dim 적용 로직 연결
+  // ex) overlayEl.style.opacity = (v/100);
+}
+
+titleBlurRange.addEventListener('input', updateTitleBlurUI);
+titleDimRange.addEventListener('input', updateTitleDimUI);
+
+updateTitleBlurUI();
+updateTitleDimUI();
 
  // ✅ Preview Controls DOM (하단 고정)
 const pvBlurRange = document.getElementById('pvBlurRange');
@@ -3547,6 +3568,7 @@ pvDimRange.addEventListener('input', () => {
 <!-- </body> 바로 위(또는 <head> 안) 아무데나 추가 -->
 </body>
 </html>
+
 
 
 
