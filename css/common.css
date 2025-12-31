@@ -370,7 +370,7 @@ input[type="file"]{
 }
 @font-face{
   font-family:"LaudrygoLocal";
-  src:url("../fonts/laudrygo Regular.woff") format("woff");
+  src:url("../fonts/laudrygo%20Regular.woff") format("woff");
   font-weight:400;
   font-style:normal;
   font-display:swap;
@@ -408,3 +408,4 @@ input[type="file"]{
     
 /* Step3: '애니메이션 재생' 버튼 숨김 */
 #playBtn { display:none !important; }
+
