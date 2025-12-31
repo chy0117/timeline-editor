@@ -1,4 +1,13 @@
 (() => {
+  
+  // ✅ (임시) 저장 함수가 없어서 Title BG가 터지는 걸 방지하는 스텁
+// - markDirtyAndSave가 원래 프로젝트에 있으면 그걸 사용
+// - 없으면 아무것도 안 하는 함수로 대체
+const markDirtyAndSave =
+  (typeof window.markDirtyAndSave === 'function')
+    ? window.markDirtyAndSave
+    : (() => {});
+  
   /* ================================
      Timeline Story Editor v2.1 (CLEAN)
      - 기능 그대로 / JS 정리
@@ -1673,6 +1682,7 @@ function applyTitleBgToTitlePage(){
   // 최초 1회 적용
   applyLock();
 })();
+
 
 
 
