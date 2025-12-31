@@ -1398,81 +1398,82 @@ dateInput.addEventListener('change', () => {
   textInputGroup.style.display='none';
   imageInputGroup.style.display='block';
 
-  speedInput.addEventListener('input',()=>{ 
-  // ✅ speed 표시: 처음에도 값 보이게
+ // ✅ speed 표시: 처음에도 값 보이게
 speedLabel.textContent = speedInput.value + '초';
 
+// ✅ speed 변경 시 라벨 갱신 (한 번만 등록)
 speedInput.addEventListener('input', () => {
   speedLabel.textContent = speedInput.value + '초';
 });
 
-// ✅ 아이템 추가 (원래 로직을 click 핸들러로 복원)
-  addItemBtn.addEventListener('click', () => {
-    const startMinutes = parseInt(startTimeSelect.value,10);
-    const endMinutes = parseInt(endTimeSelect.value,10);
+// ✅ 아이템 추가 (원래 로직 click 핸들러)
+addItemBtn.addEventListener('click', () => {
+  const startMinutes = parseInt(startTimeSelect.value,10);
+  const endMinutes = parseInt(endTimeSelect.value,10);
 
-    if (isNaN(startMinutes)||isNaN(endMinutes)||endMinutes<=startMinutes){
-      alert('시작/끝 시간을 올바르게 선택해주세요.');
-      return;
-    }
+  if (isNaN(startMinutes)||isNaN(endMinutes)||endMinutes<=startMinutes){
+    alert('시작/끝 시간을 올바르게 선택해주세요.');
+    return;
+  }
 
-    const itemData = {
-      id:'item-'+Date.now()+'-'+Math.random().toString(16).slice(2),
-      blockId:null,
-      type:'',
-      x:0,y:0,w:0,h:0,
-      rotation:0
-    };
+  const itemData = {
+    id:'item-'+Date.now()+'-'+Math.random().toString(16).slice(2),
+    blockId:null,
+    type:'',
+    x:0,y:0,w:0,h:0,
+    rotation:0
+  };
 
-    let itemType;
+  let itemType;
 
-    if (currentItemType==='text'){
-      const text = textContentInput.value.trim();
-      if (!text){ alert('텍스트를 입력해주세요.'); return; }
-      itemType='text';
-      itemData.text=text;
-      itemData.fontKey = currentTextFont;
-    } else {
-      const file = itemFileInput.files[0];
-      if (!file){ alert('파일을 선택해주세요.'); return; }
-      itemData.src = URL.createObjectURL(file);
-      itemType = file.type.startsWith('video/') ? 'video' : 'image';
-    }
+  if (currentItemType==='text'){
+    const text = textContentInput.value.trim();
+    if (!text){ alert('텍스트를 입력해주세요.'); return; }
+    itemType='text';
+    itemData.text=text;
+    itemData.fontKey = currentTextFont;
+  } else {
+    const file = itemFileInput.files[0];
+    if (!file){ alert('파일을 선택해주세요.'); return; }
+    itemData.src = URL.createObjectURL(file);
+    itemType = file.type.startsWith('video/') ? 'video' : 'image';
+  }
 
-    itemData.type=itemType;
+  itemData.type=itemType;
 
-    const block = blocks.find(b=>b.start===startMinutes && b.end===endMinutes);
-    if (!block){
-      alert('해당 시간 구간의 블록을 찾을 수 없습니다.\n(블록 생성/시간 선택을 확인해주세요)');
-      return;
-    }
+  // ✅ 여기 로직도 현재 코드랑 필드명이 안 맞음(아래 3번 참고)
+  const block = blocks.find(b => b.startMinutes === startMinutes && b.endMinutes === endMinutes);
+  if (!block){
+    alert('해당 시간 구간의 블록을 찾을 수 없습니다.\n(블록 생성/시간 선택을 확인해주세요)');
+    return;
+  }
 
-    itemData.blockId = block.id;
+  itemData.blockId = block.id;
 
-    // --- 기본 크기/위치 세팅 ---
-    // (기존 로직 그대로)
-    const blockEl = document.querySelector(`.block[data-id="${block.id}"]`);
-    if (blockEl){
-      const blockRect = blockEl.getBoundingClientRect();
-      const vpRect = viewport.getBoundingClientRect();
+  // --- 기본 크기/위치 세팅 ---
+  const blockEl = document.querySelector(`.time-block[data-id="${block.id}"]`);
+  if (blockEl){
+    const blockRect = blockEl.getBoundingClientRect();
+    const vpRect = viewport.getBoundingClientRect();
 
-      const blockTop = (blockRect.top - vpRect.top) + viewport.scrollTop;
-      const w = Math.max(120, Math.min(420, blockRect.width*0.7));
-      const h = Math.max(MIN_ITEM_HEIGHT, Math.max(80, blockRect.height*0.5));
+    const blockTop = (blockRect.top - vpRect.top) + viewport.scrollTop;
+    const w = Math.max(120, Math.min(420, blockRect.width*0.7));
+    const h = Math.max(MIN_ITEM_HEIGHT, Math.max(80, blockRect.height*0.5));
 
-      itemData.w=w; itemData.h=h;
-      itemData.x=70 + (blockRect.width-w)/2;
-      itemData.y=blockTop + (blockRect.height-h)/2;
-    }
+    itemData.w=w; itemData.h=h;
+    itemData.x=70 + (blockRect.width-w)/2;
+    itemData.y=blockTop + (blockRect.height-h)/2;
+  }
 
-    items.push(itemData);
-    createItemElement(itemData);
+  items.push(itemData);
+  createItemElement(itemData);
 
-    scrollToBlock(block.id);
+  scrollToBlock(block.id);
 
-    if (itemType==='image'||itemType==='video') itemFileInput.value='';
-    updateBlockList();
-  });
+  if (itemType==='image'||itemType==='video') itemFileInput.value='';
+  updateBlockList();
+});
+
 
   playBtn.addEventListener('click', runAnimation);
 
@@ -1700,4 +1701,5 @@ async function setTitleBgFiles(fileList){
   // 최초 1회 적용
   applyLock();
 })();
+
 
