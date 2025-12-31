@@ -41,6 +41,10 @@
   const playFullscreenBtn = document.getElementById('playFullscreenBtn');
   const videoTitleInput = document.getElementById('videoTitle');
   
+ // ✅ Title BG State (선언을 DOM/UI 함수보다 위에서 먼저)
+let titleBgDataUrl = null;
+let titleBgList = [];
+ 
   // ✅ Title BG DOM
 const titleBgPickBtn = document.getElementById('titleBgPickBtn');
 const titleBgFile    = document.getElementById('titleBgFile');
@@ -192,8 +196,6 @@ let titleItemEl = null;
   // ✅ 제목 위치를 사용자가 옮겼는지
 let titleItemUserMoved = false;
 
-  let titleBgDataUrl = null;        // base64 (복원용)
-
   let editingItemEl = null;
   let animFrameId = null;
 
@@ -207,7 +209,6 @@ let titleItemUserMoved = false;
 
   let step2View = 'timeline'; // 'timeline' | 'title'
 
-  let titleBgList = [];          // ✅ 여러 장 지원: [dataUrl, dataUrl, ...]
 let titleBgItem = null;        // 메인 배경 아이템 state
 let titleBgItemEl = null;      // 메인 배경 DOM
   
@@ -1701,5 +1702,6 @@ async function setTitleBgFiles(fileList){
   // 최초 1회 적용
   applyLock();
 })();
+
 
 
