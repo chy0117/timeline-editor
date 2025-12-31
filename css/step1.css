@@ -144,4 +144,11 @@ body[data-step="1"] .bg-editor-panel{
   display: none !important;
 }
 
+/* STEP1에서 배경 딤/블러 관련 오버레이가 터치를 먹지 않게 */
+body[data-step="1"] .overlay,
+body[data-step="1"] .dim-overlay,
+body[data-step="1"] .bg-overlay{
+  pointer-events: none !important;
+}
+
 
