@@ -1399,14 +1399,17 @@ dateInput.addEventListener('change', () => {
   imageInputGroup.style.display='block';
 
   speedInput.addEventListener('input',()=>{ 
-    speedLabel.textContent = speedInput.value + '초';
-  speedLabel.textContent = speedInput.value + '초';
+  // ✅ speed 표시: 처음에도 값 보이게
+speedLabel.textContent = speedInput.value + '초';
 
-  addItemBtn.addEventListener('click',()=>{
-    if (!dateInput.value){
-      alert('날짜를 먼저 선택해주세요.');
-      return;
-    }
+speedInput.addEventListener('input', () => {
+  speedLabel.textContent = speedInput.value + '초';
+});
+
+addItemBtn.addEventListener('click', () => {
+  // 기존 addItemBtn 로직 그대로
+});
+
 
     const startMinutes = parseInt(startTimeSelect.value,10);
     const endMinutes = parseInt(endTimeSelect.value,10);
@@ -1639,3 +1642,4 @@ async function setTitleBgFiles(fileList){
 }
 
 })();
+
