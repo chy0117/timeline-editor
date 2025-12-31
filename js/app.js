@@ -95,6 +95,7 @@ async function setTitleBgFiles(fileList){
   scatterExtraTitleBgItems(titleBgList.slice(1));
 
   markDirtyAndSave('titleBgSet');
+  if (typeof markDirtyAndSave === 'function') markDirtyAndSave('titleBgSet');
 }
 
 function clearTitleBg(){
@@ -111,6 +112,8 @@ function clearTitleBg(){
   if (titleBgItemEl) titleBgItemEl.style.display = 'none';
 
   markDirtyAndSave('titleBgClear');
+  if (typeof markDirtyAndSave === 'function') markDirtyAndSave('titleBgClear');
+
 }
 
 // 초기 UI
@@ -1442,17 +1445,14 @@ addItemBtn.addEventListener('click', () => {
 
   itemData.type=itemType;
 
-  // ✅ 여기 로직도 현재 코드랑 필드명이 안 맞음(아래 3번 참고)
-  const block = blocks.find(b => b.startMinutes === startMinutes && b.endMinutes === endMinutes);
-  if (!block){
-    alert('해당 시간 구간의 블록을 찾을 수 없습니다.\n(블록 생성/시간 선택을 확인해주세요)');
-    return;
-  }
+ // ✅ 블록이 없으면 자동 생성 (팝업 제거)
+const block = getOrCreateBlock(startMinutes, endMinutes);
+itemData.blockId = block.id;
 
-  itemData.blockId = block.id;
+// --- 기본 크기/위치 세팅 ---
+const blockEl = block.element; // ✅ querySelector 안 쓰고 확정 DOM 사용
 
-  // --- 기본 크기/위치 세팅 ---
-  const blockEl = document.querySelector(`.time-block[data-id="${block.id}"]`);
+  
   if (blockEl){
     const blockRect = blockEl.getBoundingClientRect();
     const vpRect = viewport.getBoundingClientRect();
@@ -1597,45 +1597,6 @@ function applyTitleBgToTitlePage(){
   // 배경 이미지는 ensureTitleBgItem()에서 이미 처리됨
 }
 
-function refreshTitleBgMetaUI(){
-  if (!titleBgDataUrl) {
-    titleBgMeta.style.display = 'none';
-    titleBgName.textContent = '';
-    return;
-  }
-  titleBgMeta.style.display = 'flex';
-}
-
-function readAsDataURL(file){
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(String(r.result || ''));
-    r.onerror = () => reject(r.error || new Error('read failed'));
-    r.readAsDataURL(file);
-  });
-}
-
-async function setTitleBgFiles(fileList){
-  const files = Array.from(fileList || []);
-  if (!files.length) return;
-
-  const urls = await Promise.all(files.map(f => readAsDataURL(f)));
-
-  titleBgList = urls;
-  titleBgDataUrl = urls[0] || null;
-
-  // 파일명 표시(첫번째 기준)
-  titleBgName.textContent =
-    (files[0].name || '선택된 이미지') + (files.length > 1 ? ` (+${files.length-1})` : '');
-
-  refreshTitleBgMetaUI();
-  applyTitleBgToOverlay();     // ✅ 애니메이션 titleOverlay에도 그대로 적용됨
-
-  // ✅ 타이틀 페이지 아이템으로 반영
-  ensureTitleBgItem();         // 첫번째는 9:16 꽉 채우는 메인 배경
-  clearExtraTitleBgItems();
-  scatterExtraTitleBgItems(urls.slice(1)); // 나머지는 랜덤 흩뿌리기
-}
 
 })();
 
@@ -1702,6 +1663,7 @@ async function setTitleBgFiles(fileList){
   // 최초 1회 적용
   applyLock();
 })();
+
 
 
 
