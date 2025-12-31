@@ -1150,7 +1150,10 @@ endScroll = clamp(endScroll, 0, maxScroll);
       titleOverlay.textContent = title;
       titleOverlay.style.display = 'flex';
 
-      const initialScroll = Math.max(contentMinTop - viewportHeight * 0.9, 0);
+      // ✅ 제목 이후 스크롤 시작: 첫 아이템이 "아래에서 올라오게"
+// startScroll + viewportHeight < contentMinTop 이면 처음엔 아이템이 화면 아래에 있음
+const initialScroll = Math.max(contentMinTop - viewportHeight - 20, 0);
+
       clampEndToStart(initialScroll);
 
       viewport.scrollTop = initialScroll;
@@ -1768,6 +1771,7 @@ function applyTitleBgToTitlePage(){
   // 최초 1회 적용
   applyLock();
 })();
+
 
 
 
