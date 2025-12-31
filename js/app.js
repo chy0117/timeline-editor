@@ -205,7 +205,56 @@ titleBgClearBtn?.addEventListener('click', clearTitleBg);
 let titleItemEl = null;
   // ✅ 제목 위치를 사용자가 옮겼는지
 let titleItemUserMoved = false;
+// ✅ Title State Save/Load (Step2 편집값을 Step3에서도 그대로 쓰기)
+const TITLE_STATE_KEY = 'tse_title_state_v1';
+let titleItemPreset = null; // 로드된 제목 위치/크기/회전/폰트 프리셋
 
+function saveTitleState(){
+  try{
+    const payload = {
+      titleItem: titleItem ? {
+        x: titleItem.x, y: titleItem.y, w: titleItem.w, h: titleItem.h,
+        rotation: titleItem.rotation || 0,
+        fontKey: titleItem.fontKey || currentTitleFont,
+        fontSize: titleItem.fontSize || 32
+      } : null,
+      titleItemUserMoved: !!titleItemUserMoved,
+      titleBgList: Array.isArray(titleBgList) ? titleBgList : [],
+      titleBgDataUrl: titleBgDataUrl || null
+    };
+    localStorage.setItem(TITLE_STATE_KEY, JSON.stringify(payload));
+  }catch(e){
+    // 저장 실패해도 앱이 죽으면 안 됨
+    console.warn('saveTitleState failed', e);
+  }
+}
+
+function loadTitleState(){
+  try{
+    const raw = localStorage.getItem(TITLE_STATE_KEY);
+    if (!raw) return;
+
+    const data = JSON.parse(raw);
+    titleItemPreset = data?.titleItem || null;
+    titleItemUserMoved = !!data?.titleItemUserMoved;
+
+    // 배경도 같이 복구 (선택사항이지만 같이 해두는 게 안정적)
+    if (Array.isArray(data?.titleBgList) && data.titleBgList.length){
+      titleBgList = data.titleBgList;
+      titleBgDataUrl = data.titleBgDataUrl || data.titleBgList[0] || null;
+
+      refreshTitleBgMetaUI();
+      applyTitleBgToOverlay();
+      ensureTitleBgItem();
+      clearExtraTitleBgItems();
+      scatterExtraTitleBgItems(titleBgList.slice(1));
+    }
+  }catch(e){
+    console.warn('loadTitleState failed', e);
+  }
+}
+
+  
   let editingItemEl = null;
   let animFrameId = null;
 
@@ -1712,6 +1761,7 @@ function applyTitleBgToTitlePage(){
   // 최초 1회 적용
   applyLock();
 })();
+
 
 
 
