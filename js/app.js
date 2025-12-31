@@ -1406,11 +1406,8 @@ speedInput.addEventListener('input', () => {
   speedLabel.textContent = speedInput.value + '초';
 });
 
-addItemBtn.addEventListener('click', () => {
-  // 기존 addItemBtn 로직 그대로
-});
-
-
+// ✅ 아이템 추가 (원래 로직을 click 핸들러로 복원)
+  addItemBtn.addEventListener('click', () => {
     const startMinutes = parseInt(startTimeSelect.value,10);
     const endMinutes = parseInt(endTimeSelect.value,10);
 
@@ -1439,31 +1436,28 @@ addItemBtn.addEventListener('click', () => {
       const file = itemFileInput.files[0];
       if (!file){ alert('파일을 선택해주세요.'); return; }
       itemData.src = URL.createObjectURL(file);
-      itemType = file.type && file.type.startsWith('video/') ? 'video' : 'image';
+      itemType = file.type.startsWith('video/') ? 'video' : 'image';
     }
 
     itemData.type=itemType;
 
-    const block = getOrCreateBlock(startMinutes,endMinutes);
-    itemData.blockId=block.id;
+    const block = blocks.find(b=>b.start===startMinutes && b.end===endMinutes);
+    if (!block){
+      alert('해당 시간 구간의 블록을 찾을 수 없습니다.\n(블록 생성/시간 선택을 확인해주세요)');
+      return;
+    }
 
-    const blockRect = block.element.getBoundingClientRect();
-    const blockTop = parseFloat(block.element.style.top) || 0;
-    const blockHeight = parseFloat(block.element.style.height) || 0;
+    itemData.blockId = block.id;
 
-    const existing = items.filter(it=>it.blockId===block.id);
+    // --- 기본 크기/위치 세팅 ---
+    // (기존 로직 그대로)
+    const blockEl = document.querySelector(`.block[data-id="${block.id}"]`);
+    if (blockEl){
+      const blockRect = blockEl.getBoundingClientRect();
+      const vpRect = viewport.getBoundingClientRect();
 
-    if (!existing.length){
-      const padding=12;
-      const availableWidth = blockRect.width - 32;
-      const availableHeight = Math.max(MIN_ITEM_HEIGHT, blockHeight - padding*2);
-
-      itemData.x=70;
-      itemData.y=blockTop + padding;
-      itemData.w=availableWidth;
-      itemData.h=availableHeight;
-    } else {
-      const w = Math.max(80, blockRect.width*0.5);
+      const blockTop = (blockRect.top - vpRect.top) + viewport.scrollTop;
+      const w = Math.max(120, Math.min(420, blockRect.width*0.7));
       const h = Math.max(MIN_ITEM_HEIGHT, Math.max(80, blockRect.height*0.5));
 
       itemData.w=w; itemData.h=h;
@@ -1642,4 +1636,5 @@ async function setTitleBgFiles(fileList){
 }
 
 })();
+
 
