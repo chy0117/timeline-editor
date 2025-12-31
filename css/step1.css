@@ -125,3 +125,7 @@ body.theme-light .s1-divider{
 }
 
   /* ✅ h1 + step-nav를 한 덩어리로 상단 고정 */
+
+/* 테스트용: 배경편집 overlay가 진짜 범인이면 이거 넣는 순간 터치가 살아남 */
+.preview-overlay, .bg-editor-overlay, .dim-overlay, .blur-overlay { display:none !important; }
+
