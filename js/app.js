@@ -104,6 +104,7 @@ async function setTitleBgFiles(fileList){
   scatterExtraTitleBgItems(titleBgList.slice(1));
 
   if (typeof markDirtyAndSave === 'function') markDirtyAndSave('titleBgSet');
+  saveTitleState(); // ✅ 추가 (Step3 반영용)
 }
 
 function clearTitleBg(){
@@ -120,6 +121,7 @@ function clearTitleBg(){
   if (titleBgItemEl) titleBgItemEl.style.display = 'none';
 
   if (typeof markDirtyAndSave === 'function') markDirtyAndSave('titleBgClear');
+  saveTitleState(); // ✅ 추가
 
 }
 
@@ -754,26 +756,29 @@ function ensureTitleItem(){
   const titleText = (videoTitleInput.value || '').trim();
   if (!titleText) return;
 
-  if (!titleItem) {
-    titleItem = {
-      id: 'title-item',
-      blockId: null,
-      type: 'text',
-      text: titleText,
-      x: 24,
-      y: 90,
-      w: 312,
-      h: 120,
-      rotation: 0,
-      fontKey: currentTitleFont,
-      fontSize: 32
-    };
-    items.push(titleItem);
-  } else {
-    titleItem.text = titleText;
-    titleItem.fontKey = currentTitleFont;
-  }
+ if (!titleItem) {
+  const preset = titleItemPreset;
 
+  titleItem = {
+    id: 'title-item',
+    blockId: null,
+    type: 'text',
+    text: titleText,
+
+    x: preset?.x ?? 24,
+    y: preset?.y ?? 90,
+    w: preset?.w ?? 312,
+    h: preset?.h ?? 120,
+    rotation: preset?.rotation ?? 0,
+
+    fontKey: preset?.fontKey ?? currentTitleFont,
+    fontSize: preset?.fontSize ?? 32
+  };
+  items.push(titleItem);
+} else {
+  titleItem.text = titleText;
+  titleItem.fontKey = currentTitleFont;
+}
   if (!titleItemEl) {
     titleItemEl = document.createElement('div');
     titleItemEl.className = 'timeline-item';
@@ -1028,63 +1033,54 @@ function scatterExtraTitleBgItems(extraUrls){
     const blocksSorted = blocks.slice().sort((a,b)=>a.startMinutes - b.startMinutes);
 const viewportHeight = viewport.clientHeight;
 
-// ✅ (변경) 실제 아이템 위치 기준으로 시작/끝 계산
-const itemEls = Array.from(timeline.querySelectorAll('.timeline-item'));
+// ✅ 실제 아이템 기준으로 시작/끝 계산 (마지막 아이템이 "화면 중앙"에 올 때 종료)
+const itemElsAll = Array.from(timeline.querySelectorAll('.timeline-item'));
 
-// 아이템이 하나도 없으면(예외) 기존 blocks 기준으로 fallback
+// (안전) 타이틀/배경류가 timeline에 섞이는 경우 제외하고 싶으면 필터 유지
+const itemEls = itemElsAll.filter(el => {
+  const id = String(el.dataset.id || '');
+  if (!id) return true;
+  if (id === 'title-item') return false;
+  if (id === 'title-bg-item') return false;
+  if (id.startsWith('title-bg-extra-')) return false;
+  return true;
+});
+
+const maxScroll = Math.max(0, timeline.scrollHeight - viewportHeight);
+
 let contentMinTop = 0;
-let contentMaxBottom = 0;
+let lastItemCenter = 0;
 
 if (itemEls.length > 0) {
-  const itemTops = itemEls.map(el => parseFloat(el.style.top) || 0);
-  const itemBottoms = itemEls.map(el => {
+  const bounds = itemEls.map(el => {
     const top = parseFloat(el.style.top) || 0;
     const h = el.offsetHeight || (parseFloat(el.style.height) || 0);
-    return top + h;
+    const center = top + h / 2;
+    return { top, center };
   });
 
-  contentMinTop = Math.min(...itemTops);
-  contentMaxBottom = Math.max(...itemBottoms);
+  contentMinTop = Math.min(...bounds.map(b => b.top));
+
+  // ✅ "마지막" = 가장 아래쪽에 있는 아이템(센터가 가장 큰 것)
+  lastItemCenter = Math.max(...bounds.map(b => b.center));
+
 } else {
-  // fallback: 시간 블록 기준(기존 로직)
+  // fallback: 시간 블록 기준
   const tops = blocks.map(b => parseFloat(b.element.style.top) || 0);
   const bottoms = blocks.map(b => {
     const top = parseFloat(b.element.style.top) || 0;
     return top + b.element.offsetHeight;
   });
+
   contentMinTop = Math.min(...tops);
-  contentMaxBottom = Math.max(...bottoms);
+
+  // 블록 기준 마지막 중앙(대충 마지막 블록의 하단을 중앙으로)
+  const maxBottom = Math.max(...bottoms);
+  lastItemCenter = maxBottom; 
 }
 
-// 끝 스크롤 위치
-// ✅ 마지막 아이템의 "중앙"이 뷰포트 중앙에 오도록 endScroll 계산
-const maxScroll = Math.max(0, timeline.scrollHeight - viewportHeight);
-
-let endScroll = 0;
-
-if (itemEls.length > 0) {
-  // 마지막(가장 아래) 아이템 찾기
-  let lastTop = 0;
-  let lastH = 0;
-  let lastBottom = -Infinity;
-
-  itemEls.forEach(el => {
-    const top = parseFloat(el.style.top) || 0;
-    const h = el.offsetHeight || (parseFloat(el.style.height) || 0);
-    const bottom = top + h;
-
-    if (bottom > lastBottom) {
-      lastBottom = bottom;
-      lastTop = top;
-      lastH = h;
-    }
-  });
-
-  const lastCenterY = lastTop + lastH / 2;
-  endScroll = lastCenterY - viewportHeight / 2;
-} else {
-  // fallback: 아이템 없으면 기존 방식
-  endScroll = contentMaxBottom - viewportHeight + 40;
+// ✅ 끝점: 마지막 아이템 "중앙"이 화면 중앙에 오도록
+let endScroll = clamp(lastItemCenter - viewportHeight / 2, 0, maxScroll);
 }
 
 endScroll = clamp(endScroll, 0, maxScroll);
@@ -1400,15 +1396,25 @@ if (activeTouches.length === 2 && editingItemEl === el) {
 
     activeTouches = activeTouches.filter(t => t.id !== e.pointerId);
 
-    if (activeTouches.length === 0) {
-      gestureState = null;
-        // ✅ [추가] title-item을 사용자가 실제로 건드렸으면 이후엔 중앙정렬 안 함
-    if (editingItemEl && editingItemEl.dataset.id === 'title-item') {
-      titleItemUserMoved = true;
-    }
-      // ✅ 드래그/핀치/회전 조작이 끝나는 순간 즉시 저장 + 3분 백업 예약
-    }
+   if (activeTouches.length === 0) {
+  gestureState = null;
+
+  const editedId = editingItemEl?.dataset?.id || '';
+
+  if (editedId === 'title-item') {
+    titleItemUserMoved = true;
   }
+
+  // ✅ 제목/배경 관련 조작이면 바로 저장
+  if (
+    editedId === 'title-item' ||
+    editedId === 'title-bg-item' ||
+    editedId.startsWith('title-bg-extra-')
+  ){
+    saveTitleState();
+  }
+}
+
 
   /* ---------- Events ---------- */
  // 초기 적용(저장 없이 UI만 반영)
@@ -1418,6 +1424,7 @@ applyTextFontUI(currentTextFont);
 buildTimeOptions();
 
 // ✅ 초기화
+loadTitleState();        // <-- 추가
 resetTimelineDataAndDom();
 
 const today = new Date().toISOString().slice(0,10);
@@ -1761,6 +1768,7 @@ function applyTitleBgToTitlePage(){
   // 최초 1회 적용
   applyLock();
 })();
+
 
 
 
