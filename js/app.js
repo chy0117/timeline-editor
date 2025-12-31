@@ -94,7 +94,6 @@ async function setTitleBgFiles(fileList){
   clearExtraTitleBgItems();
   scatterExtraTitleBgItems(titleBgList.slice(1));
 
-  markDirtyAndSave('titleBgSet');
   if (typeof markDirtyAndSave === 'function') markDirtyAndSave('titleBgSet');
 }
 
@@ -111,7 +110,6 @@ function clearTitleBg(){
   // 메인 BG DOM 숨김/정리
   if (titleBgItemEl) titleBgItemEl.style.display = 'none';
 
-  markDirtyAndSave('titleBgClear');
   if (typeof markDirtyAndSave === 'function') markDirtyAndSave('titleBgClear');
 
 }
@@ -1453,18 +1451,30 @@ itemData.blockId = block.id;
 const blockEl = block.element; // ✅ querySelector 안 쓰고 확정 DOM 사용
 
   
-  if (blockEl){
-    const blockRect = blockEl.getBoundingClientRect();
-    const vpRect = viewport.getBoundingClientRect();
+ if (blockEl) {
+  const blockTop = block.startMinutes * MINUTE_PX;
+  const blockH   = (block.endMinutes - block.startMinutes) * MINUTE_PX;
 
-    const blockTop = (blockRect.top - vpRect.top) + viewport.scrollTop;
-    const w = Math.max(120, Math.min(420, blockRect.width*0.7));
-    const h = Math.max(MIN_ITEM_HEIGHT, Math.max(80, blockRect.height*0.5));
+  const tw = (timeline?.clientWidth || viewport?.clientWidth || 360);
+  const pad = 8;
 
-    itemData.w=w; itemData.h=h;
-    itemData.x=70 + (blockRect.width-w)/2;
-    itemData.y=blockTop + (blockRect.height-h)/2;
-  }
+  // 기본 크기
+  let w = Math.max(120, Math.min(420, Math.floor(tw * 0.82)));
+  let h = Math.max(80,  Math.floor(blockH * 0.6));
+
+  // ✅ 블록이 짧으면 블록 안에 들어가게 강제
+  h = Math.min(h, Math.max(60, blockH - pad * 2));
+
+  itemData.w = w;
+  itemData.h = h;
+
+  // ✅ 중앙 정렬 + 블록 내부 클램프
+  itemData.x = Math.round((tw - w) / 2);
+  itemData.y = Math.round(blockTop + (blockH - h) / 2);
+
+  // y가 블록 밖으로 튀는 것 방지
+  itemData.y = Math.max(blockTop + pad, Math.min(itemData.y, blockTop + blockH - h - pad));
+}
 
   items.push(itemData);
   createItemElement(itemData);
@@ -1663,6 +1673,7 @@ function applyTitleBgToTitlePage(){
   // 최초 1회 적용
   applyLock();
 })();
+
 
 
 
