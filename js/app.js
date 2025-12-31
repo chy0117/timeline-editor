@@ -1008,7 +1008,37 @@ if (itemEls.length > 0) {
 }
 
 // 끝 스크롤 위치
-let endScroll = Math.max(contentMaxBottom - viewportHeight + 40, 0);
+// ✅ 마지막 아이템의 "중앙"이 뷰포트 중앙에 오도록 endScroll 계산
+const maxScroll = Math.max(0, timeline.scrollHeight - viewportHeight);
+
+let endScroll = 0;
+
+if (itemEls.length > 0) {
+  // 마지막(가장 아래) 아이템 찾기
+  let lastTop = 0;
+  let lastH = 0;
+  let lastBottom = -Infinity;
+
+  itemEls.forEach(el => {
+    const top = parseFloat(el.style.top) || 0;
+    const h = el.offsetHeight || (parseFloat(el.style.height) || 0);
+    const bottom = top + h;
+
+    if (bottom > lastBottom) {
+      lastBottom = bottom;
+      lastTop = top;
+      lastH = h;
+    }
+  });
+
+  const lastCenterY = lastTop + lastH / 2;
+  endScroll = lastCenterY - viewportHeight / 2;
+} else {
+  // fallback: 아이템 없으면 기존 방식
+  endScroll = contentMaxBottom - viewportHeight + 40;
+}
+
+endScroll = clamp(endScroll, 0, maxScroll);
 
     const durationSec = parseFloat(speedInput.value) || 8;
     const durationMs = durationSec * 1000;
@@ -1682,6 +1712,7 @@ function applyTitleBgToTitlePage(){
   // 최초 1회 적용
   applyLock();
 })();
+
 
 
 
