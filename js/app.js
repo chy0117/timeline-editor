@@ -1637,4 +1637,67 @@ async function setTitleBgFiles(fileList){
 
 })();
 
+/* =========================
+   STEP1: 딤/블러 완전 비활성화(모바일 터치 보호)
+   - 함수명이 뭐든 상관없이 input/change/click을 캡처 단계에서 차단
+   - data-step 변하면 자동으로 다시 적용
+   ========================= */
+
+(function step1DisableDimBlur(){
+  const STEP_ATTR = 'data-step';
+
+  const isStep1 = () => document.body?.getAttribute(STEP_ATTR) === '1';
+
+  // ✅ 네 코드에서 실제로 쓰는 id가 다르면 여기만 바꾸면 끝
+  const dimBlurIds = new Set([
+    'pvDimRange', 'pvBlurRange',   // range
+    'pvDimPill',  'pvBlurPill',    // pill
+  ]);
+
+  const isDimBlurEl = (el) => {
+    if (!el) return false;
+    // target이 input 자체거나, 그 안쪽 span 등일 수도 있으니 closest로도 체크
+    const t = el.closest?.('[id]') || el;
+    return !!t?.id && dimBlurIds.has(t.id);
+  };
+
+  const applyLock = () => {
+    const lock = isStep1();
+
+    dimBlurIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+
+      // STEP1에서는 "안 보여야" 한다고 했으니 숨김
+      el.style.display = lock ? 'none' : '';
+
+      // 혹시 display 숨김으로도 이벤트가 들어오는 케이스 방지
+      el.style.pointerEvents = lock ? 'none' : '';
+      if ('disabled' in el) el.disabled = lock;
+    });
+  };
+
+  // ✅ 캡처 단계에서 선빵쳐서 막기 (기존 리스너가 뭐든 상관없음)
+  const stopIfStep1 = (e) => {
+    if (!isStep1()) return;
+    if (!isDimBlurEl(e.target)) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+  };
+
+  // input/change는 range 조작, click/touchstart는 모바일 터치 선차단
+  document.addEventListener('input', stopIfStep1, true);
+  document.addEventListener('change', stopIfStep1, true);
+  document.addEventListener('click', stopIfStep1, true);
+  document.addEventListener('touchstart', stopIfStep1, { capture: true, passive: false });
+
+  // ✅ step 변경될 때마다 자동 적용
+  const mo = new MutationObserver(() => applyLock());
+  mo.observe(document.body, { attributes: true, attributeFilter: [STEP_ATTR] });
+
+  // 최초 1회 적용
+  applyLock();
+})();
 
