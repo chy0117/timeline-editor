@@ -1181,8 +1181,6 @@ if (hasTitle2) {
   startScrollAnimationFrom(startScroll);
 }
 
-  }
-
     /* ---------- True Fullscreen (REAL) ---------- */
   function requestViewportFullscreen() {
     const el = viewport;
@@ -1780,6 +1778,7 @@ function applyTitleBgToTitlePage(){
   // 최초 1회 적용
   applyLock();
 })();
+
 
 
 
