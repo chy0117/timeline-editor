@@ -126,6 +126,22 @@ body.theme-light .s1-divider{
 
   /* ✅ h1 + step-nav를 한 덩어리로 상단 고정 */
 
-/* 테스트용: 배경편집 overlay가 진짜 범인이면 이거 넣는 순간 터치가 살아남 */
-.preview-overlay, .bg-editor-overlay, .dim-overlay, .blur-overlay { display:none !important; }
+/* =========================
+   STEP1: 배경(딤/블러) 편집 UI 완전 비활성화
+   ========================= */
+
+/* STEP1에서 preview(딤/블러) 컨트롤 영역 숨김 (id 기반) */
+body[data-step="1"] #pvDimRange,
+body[data-step="1"] #pvBlurRange,
+body[data-step="1"] #pvDimPill,
+body[data-step="1"] #pvBlurPill{
+  display: none !important;
+}
+
+/* 혹시 컨트롤이 감싸는 래퍼가 있으면 여기도 같이 숨김(있을 때만 적용됨) */
+body[data-step="1"] .preview-controls,
+body[data-step="1"] .bg-editor-panel{
+  display: none !important;
+}
+
 
