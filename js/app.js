@@ -1146,32 +1146,41 @@ endScroll = clamp(endScroll, 0, maxScroll);
       animFrameId = requestAnimationFrame(frame);
     }
 
-    if (hasTitle){
-      titleOverlay.textContent = title;
-      titleOverlay.style.display = 'flex';
+// ✅ 제목은 titleItem.text를 우선 사용(입력창 값이 비어/동기화 안 된 경우 대비)
+const safeTitle = (titleItem?.text || videoTitleInput.value || '').trim();
+const hasTitle2 = !!safeTitle;
 
-      // ✅ 제목 이후 스크롤 시작: 첫 아이템이 "아래에서 올라오게"
-// startScroll + viewportHeight < contentMinTop 이면 처음엔 아이템이 화면 아래에 있음
-const initialScroll = Math.max(contentMinTop - viewportHeight - 20, 0);
+const maxScroll = Math.max(0, timeline.scrollHeight - viewportHeight);
 
-      clampEndToStart(initialScroll);
+if (hasTitle2) {
+  titleOverlay.textContent = safeTitle;
+  titleOverlay.style.display = 'flex';
 
-      viewport.scrollTop = initialScroll;
-      highlightHourByScroll(initialScroll);
+  // ✅ 제목 끝난 뒤 “아이템이 아래에서 올라오게” 시작 위치를 아래로 빼기
+  // 첫 아이템 top이 화면 아래(vh + 40px)에 있도록
+  const initialScroll = clamp(contentMinTop - viewportHeight - 40, 0, maxScroll);
 
-      setTimeout(()=>{
-        titleOverlay.style.display = 'none';
-        startScrollAnimationFrom(initialScroll);
-      }, 5000);
+  clampEndToStart(initialScroll);
 
-    } else {
-      const startScroll = Math.max(contentMinTop - 40, 0);
-      clampEndToStart(startScroll);
+  viewport.scrollTop = initialScroll;
+  highlightHourByScroll(initialScroll);
 
-      viewport.scrollTop = startScroll;
-      highlightHourByScroll(startScroll);
-      startScrollAnimationFrom(startScroll);
-    }
+  setTimeout(() => {
+    titleOverlay.style.display = 'none';
+    startScrollAnimationFrom(initialScroll);
+  }, 5000);
+
+} else {
+  // 제목 없을 땐 기존처럼 바로 시작(원하면 이것도 아래에서 올라오게 동일하게 바꿀 수 있음)
+  const startScroll = clamp(contentMinTop - 40, 0, maxScroll);
+
+  clampEndToStart(startScroll);
+
+  viewport.scrollTop = startScroll;
+  highlightHourByScroll(startScroll);
+  startScrollAnimationFrom(startScroll);
+}
+
   }
 
     /* ---------- True Fullscreen (REAL) ---------- */
@@ -1771,6 +1780,7 @@ function applyTitleBgToTitlePage(){
   // 최초 1회 적용
   applyLock();
 })();
+
 
 
 
