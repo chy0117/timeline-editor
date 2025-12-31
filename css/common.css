@@ -92,13 +92,6 @@ body{
   z-index:2;
 }
 
-/* ✅ 고정 영역 (H1 + STEP NAV) */
-.sidebar-top{
-  flex:0 0 auto;
-  padding:18px 20px 10px;
-  background:var(--sidebar-bg);
-  border-bottom:1px solid rgba(148,163,184,0.10);
-}
 
 /* ✅ 스크롤 영역 (STEP 패널들 전부) */
 .sidebar-scroll{
@@ -408,4 +401,5 @@ input[type="file"]{
     
 /* Step3: '애니메이션 재생' 버튼 숨김 */
 #playBtn { display:none !important; }
+
 
